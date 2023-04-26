@@ -78,7 +78,6 @@ Window::Window(std::size_t id)
 Window::~Window()
 {
     glfwDestroyWindow(window);
-    glfwTerminate();
 }
 
 void Window::Update()

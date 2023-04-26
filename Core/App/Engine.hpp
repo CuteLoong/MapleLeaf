@@ -1,9 +1,13 @@
 #pragma once
 #include "ElapsedTime.hpp"
+#include "Module.hpp"
 #include "NonCopyable.hpp"
 #include "Time.hpp"
+#include "TypeInfo.hpp"
 #include <cmath>
+#include <map>
 #include <string>
+
 namespace MapleLeaf {
 class Delta
 {
@@ -44,15 +48,23 @@ class Engine : NonCopyable
 public:
     static Engine* Get() { return Instance; }
 
-    explicit Engine(std::string argv0);
+    explicit Engine(std::string argv0, ModuleFilter&& moduleFilter = {});
     ~Engine();
 
     const Time& GetDelta() const { return deltaUpdate.change; }
 
 private:
-    std::string argv0;
+    void CreateModule(Module::TRegistryMap::const_iterator it, const ModuleFilter& filter);
+    void DestroyModule(TypeId id);
+    void UpdateStage(Module::Stage stage);
 
     static Engine* Instance;
-    Delta          deltaUpdate;
+
+    std::string argv0;
+
+    std::map<TypeId, std::unique_ptr<Module>>    modules;
+    std::map<Module::Stage, std::vector<TypeId>> moduleStages;
+
+    Delta deltaUpdate;
 };
 }   // namespace MapleLeaf
