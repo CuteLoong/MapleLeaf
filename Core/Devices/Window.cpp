@@ -32,7 +32,7 @@ void CallbackFramebufferSize(GLFWwindow* glfwWindow, int32_t width, int32_t heig
         window->fullscreenSize = {width, height};
     else
         window->size = {width, height};
-    // TODO: set window to resized
+    // TODO: set framebuffer to resized
 }
 
 void CallbackWindowFocus(GLFWwindow* glfwWindow, int32_t focused)
@@ -78,6 +78,7 @@ Window::Window(std::size_t id)
 Window::~Window()
 {
     glfwDestroyWindow(window);
+    closed = true;
 }
 
 void Window::Update()
