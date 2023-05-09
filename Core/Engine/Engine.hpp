@@ -1,4 +1,5 @@
 #pragma once
+#include "App.hpp"
 #include "ElapsedTime.hpp"
 #include "Module.hpp"
 #include "NonCopyable.hpp"
@@ -7,6 +8,7 @@
 #include <cmath>
 #include <map>
 #include <string>
+
 
 namespace MapleLeaf {
 class Delta
@@ -51,6 +53,12 @@ public:
     explicit Engine(std::string argv0, ModuleFilter&& moduleFilter = {});
     ~Engine();
 
+    const std::string& GetArgv0() const { return argv0; };
+    const Version&     GetVersion() const { return engineVersion; }
+
+    App* GetApp() const { return app.get(); }
+    void SetApp(std::unique_ptr<App>&& app) { this->app = std::move(app); }
+
     const Time& GetDelta() const { return deltaUpdate.change; }
 
 private:
@@ -61,6 +69,9 @@ private:
     static Engine* Instance;
 
     std::string argv0;
+    Version     engineVersion;
+
+    std::unique_ptr<App> app;
 
     std::map<TypeId, std::unique_ptr<Module>>    modules;
     std::map<Module::Stage, std::vector<TypeId>> moduleStages;
