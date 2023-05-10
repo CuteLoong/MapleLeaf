@@ -1,9 +1,21 @@
 #include "Graphics.hpp"
+#include "Devices.hpp"
+#include "LogicalDevice.hpp"
+#include "PhysicalDevice.hpp"
+#include "Surface.hpp"
+#include "Window.hpp"
+#include <memory>
+
 
 namespace MapleLeaf {
 Graphics::Graphics()
     : instance(std::make_unique<Instance>())
-{}
+    , physicalDevice(std::make_unique<PhysicalDevice>(*instance))
+    , logicalDevice(std::make_unique<LogicalDevice>(*instance, *physicalDevice))
+{
+    Window* window = Devices::Get()->CreateWindow();
+    surface        = std::make_unique<Surface>(*instance, *physicalDevice, *logicalDevice, *window);
+}
 Graphics::~Graphics() {}
 
 void Graphics::Update() {}

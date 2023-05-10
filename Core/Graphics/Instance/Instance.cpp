@@ -5,7 +5,7 @@
 #include "Log.hpp"
 #include <iostream>
 
-#define MAPLE_DEBUG
+#define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
 const std::vector<const char*> Instance::ValidationLayers = {"VK_LAYER_KHRONOS_validation"};   // "VK_LAYER_RENDERDOC_Capture"
@@ -59,7 +59,7 @@ uint32_t Instance::FindMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties* d
 
 Instance::Instance()
 {
-#ifdef MAPLE_DEBUG
+#ifdef MAPLELEAF_DEBUG
     enableValidationLayers = true;
 #endif
     CreateInstance();
@@ -68,7 +68,7 @@ Instance::Instance()
 
 Instance::~Instance()
 {
-#ifdef MAPLE_DEBUG
+#ifdef MAPLELEAF_DEBUG
     FvkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 #endif
     vkDestroyInstance(instance, nullptr);
@@ -81,7 +81,7 @@ bool Instance::CheckValidationLayerSupport() const
     std::vector<VkLayerProperties> instanceLayerProperties(instanceLayerPropertyCount);
     vkEnumerateInstanceLayerProperties(&instanceLayerPropertyCount, instanceLayerProperties.data());
 
-#ifdef MAPLE_DEBUG
+#ifdef MAPLELEAF_DEBUG
     LogVulkanLayers(instanceLayerProperties);
 #endif
 
