@@ -25,9 +25,9 @@ public:
     static uint32_t FindMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties* deviceMemoryProperties,
                                         const VkMemoryRequirements* memoryRequirements, VkMemoryPropertyFlags requiredProperties);
 
-    operator const VkInstance&() const;
+    operator const VkInstance&() const { return instance; }
 
-    bool GetEnableValidationLayers() const;
+    bool GetEnableValidationLayers() const { return enableValidationLayers; }
 
 private:
     VkInstance instance               = VK_NULL_HANDLE;
