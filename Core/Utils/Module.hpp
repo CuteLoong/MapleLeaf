@@ -4,6 +4,7 @@
 #include "TypeInfo.hpp"
 #include <bitset>
 #include <functional>
+#include <memory>
 #include <sys/stat.h>
 #include <unordered_map>
 

@@ -7,6 +7,7 @@ Engine* Engine::Instance = nullptr;
 Engine::Engine(std::string argv0, ModuleFilter&& moduleFilter)
     : argv0(std::move(argv0))
     , engineVersion(1, 0, 0)
+    , running(true)
 {
     Instance = this;
     Log::OpenLog(Time::GetDateTime("Logs/%Y%m%d%H%M%S.txt"));
@@ -18,6 +19,21 @@ Engine::~Engine()
     for (auto it = modules.rbegin(); it != modules.rend(); ++it) DestroyModule(it->first);
 
     Log::CloseLog();
+}
+
+int32_t Engine::Run()
+{
+    while (running) {
+        if (app) {
+            if (!app->started) {
+                app->Start();
+                app->started = true;
+            }
+            app->Update();
+        }
+    }
+
+    return EXIT_SUCCESS;
 }
 
 void Engine::CreateModule(Module::TRegistryMap::const_iterator it, const ModuleFilter& filter)

@@ -53,6 +53,8 @@ public:
     explicit Engine(std::string argv0, ModuleFilter&& moduleFilter = {});
     ~Engine();
 
+    int32_t Run();
+
     const std::string& GetArgv0() const { return argv0; };
     const Version&     GetVersion() const { return engineVersion; }
 
@@ -75,6 +77,8 @@ private:
 
     std::map<TypeId, std::unique_ptr<Module>>    modules;
     std::map<Module::Stage, std::vector<TypeId>> moduleStages;
+
+    bool running;
 
     Delta deltaUpdate;
 };
