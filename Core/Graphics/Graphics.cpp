@@ -16,9 +16,56 @@ Graphics::Graphics()
     Window* window = Devices::Get()->CreateWindow();
     surface        = std::make_unique<Surface>(*instance, *physicalDevice, *logicalDevice, *window);
 }
-Graphics::~Graphics() {}
+Graphics::~Graphics()
+{
+    auto graphicsQueue = logicalDevice->GetGraphicsQueue();
 
-void Graphics::Update() {}
+    renderer = nullptr;
+}
+
+void Graphics::Update()
+{
+    if (!renderer || Devices::Get()->GetWindow()->IsIconified()) return;
+
+    if (!renderer->started) {
+        ResetRenderStages();
+        renderer->Start();
+        renderer->started = true;
+    }
+
+    renderer->Update();
+}
+
+void Graphics::ResetRenderStages()
+{
+    RecreateSwapchain();
+
+    for (const auto& renderStage : renderer->renderStages) {
+        renderStage->Rebuild(*swapchain);
+    }
+    // reset swapchain and attachment
+}
+
+void Graphics::RecreateSwapchain()
+{
+    vkDeviceWaitIdle(*logicalDevice);
+    VkExtent2D displayExtent = {Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y};
+#ifdef MAPLELEAF_DEBUG
+    if (swapchain) {
+        Log::Out("Recreating swapchain old (",
+                 swapchain->GetExtent().width,
+                 ", ",
+                 swapchain->GetExtent().height,
+                 ") new (",
+                 displayExtent.width,
+                 ", ",
+                 displayExtent.height,
+                 ")\n");
+    }
+#endif
+    swapchain = std::make_unique<Swapchain>(*physicalDevice, *surface, *logicalDevice, displayExtent, swapchain.get());
+    // update semaphore and commandbuffers
+}
 
 std::string Graphics::StringifyResultVk(VkResult result)
 {
