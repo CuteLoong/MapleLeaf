@@ -107,6 +107,7 @@ void Image::CreateImage(VkImage& image, VkDeviceMemory& memory, const VkExtent3D
     memoryAllocateInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     memoryAllocateInfo.allocationSize       = memoryRequirements.size;
     memoryAllocateInfo.memoryTypeIndex      = FindMemoryType(memoryRequirements.memoryTypeBits, properties);
+    Graphics::CheckVk(vkAllocateMemory(*logicalDevice, &memoryAllocateInfo, nullptr, &memory));
 
     Graphics::CheckVk(vkBindImageMemory(*logicalDevice, image, memory, 0));
 }
