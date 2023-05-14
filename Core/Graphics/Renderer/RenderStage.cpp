@@ -1,7 +1,9 @@
 #include "RenderStage.hpp"
 #include "Devices.hpp"
 #include "Graphics.hpp"
+#include "Log.hpp"
 
+#define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
 RenderStage::RenderStage(std::vector<Attachment> images, std::vector<SubpassType> subpasses, const Viewport& viewport)
@@ -74,9 +76,9 @@ void RenderStage::Rebuild(const Swapchain& swapchain)
     if (depthAttachment)
         depthStencil = std::make_unique<ImageDepth>(renderArea.GetExtent(), depthAttachment->IsMultisampled() ? msaaSamples : VK_SAMPLE_COUNT_1_BIT);
 
-    // if (!renderpass)
-    //     renderpass = std::make_unique<Renderpass>(
-    //         *logicalDevice, *this, depthStencil ? depthStencil->GetFormat() : VK_FORMAT_UNDEFINED, surface->GetFormat().format, msaaSamples);
+    if (!renderpass)
+        renderpass = std::make_unique<Renderpass>(
+            *logicalDevice, *this, depthStencil ? depthStencil->GetFormat() : VK_FORMAT_UNDEFINED, surface->GetFormat().format, msaaSamples);
 
     framebuffers = std::make_unique<Framebuffers>(*logicalDevice, swapchain, *this, *renderpass, *depthStencil, renderArea.GetExtent(), msaaSamples);
     outOfDate    = false;
