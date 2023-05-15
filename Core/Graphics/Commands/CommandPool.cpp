@@ -1,0 +1,24 @@
+#include "CommandPool.hpp"
+#include "Graphics.hpp"
+
+namespace MapleLeaf {
+CommandPool::CommandPool(const uint32_t id)
+    : poolId(id)
+{
+    auto logicalDevice  = Graphics::Get()->GetLogicalDevice();
+    auto graphicsFamily = logicalDevice->GetGraphicsFamily();
+
+    VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+    commandPoolCreateInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    commandPoolCreateInfo.flags                   = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    commandPoolCreateInfo.queueFamilyIndex        = graphicsFamily;
+    Graphics::CheckVk(vkCreateCommandPool(*logicalDevice, &commandPoolCreateInfo, nullptr, &commandPool));
+}
+
+CommandPool::~CommandPool()
+{
+    auto logicalDevice = Graphics::Get()->GetLogicalDevice();
+
+    vkDestroyCommandPool(*logicalDevice, commandPool, nullptr);
+}
+}   // namespace MapleLeaf

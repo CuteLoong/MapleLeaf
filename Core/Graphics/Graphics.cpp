@@ -1,4 +1,5 @@
 #include "Graphics.hpp"
+#include "CommandBuffer.hpp"
 #include "Devices.hpp"
 #include "LogicalDevice.hpp"
 #include "PhysicalDevice.hpp"
@@ -23,6 +24,12 @@ Graphics::~Graphics()
     renderer = nullptr;
 }
 
+const std::shared_ptr<CommandPool>& Graphics::GetCommandPool()
+{
+    if (!commandPool) commandPool = std::make_shared<CommandPool>(0);
+    return commandPool;
+}
+
 void Graphics::Update()
 {
     if (!renderer || Devices::Get()->GetWindow()->IsIconified()) return;
@@ -39,6 +46,8 @@ void Graphics::Update()
 void Graphics::ResetRenderStages()
 {
     RecreateSwapchain();
+
+    if (surface->GetFilghtFences().size() != swapchain->GetImageCount()) RecreateCommandBuffers();
 
     for (const auto& renderStage : renderer->renderStages) {
         renderStage->Rebuild(*swapchain);
@@ -65,6 +74,35 @@ void Graphics::RecreateSwapchain()
 #endif
     swapchain = std::make_unique<Swapchain>(*physicalDevice, *surface, *logicalDevice, displayExtent, swapchain.get());
     // update semaphore and commandbuffers
+}
+
+void Graphics::RecreateCommandBuffers()
+{
+    for (std::size_t i = 0; i < surface->GetFilghtFences().size(); i++) {
+        vkDestroyFence(*logicalDevice, surface->GetFilghtFences()[i], nullptr);
+        vkDestroySemaphore(*logicalDevice, surface->GetPresentSemaphores()[i], nullptr);
+        vkDestroySemaphore(*logicalDevice, surface->GetRenderSemaphores()[i], nullptr);
+    }
+
+    surface->SetPresentSemaphoreSize(swapchain->GetImageCount());
+    surface->SetRenderSemaphoreSize(swapchain->GetImageCount());
+    surface->SetFilghtFenceSize(swapchain->GetImageCount());
+    surface->SetCommandBufferSize(swapchain->GetImageCount());
+
+    VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+    semaphoreCreateInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceCreateInfo = {};
+    fenceCreateInfo.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceCreateInfo.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (std::size_t i = 0; i < surface->GetFilghtFences().size(); i++) {
+        CheckVk(vkCreateSemaphore(*logicalDevice, &semaphoreCreateInfo, nullptr, &surface->GetPresentSemaphores()[i]));
+        CheckVk(vkCreateSemaphore(*logicalDevice, &semaphoreCreateInfo, nullptr, &surface->GetRenderSemaphores()[i]));
+        CheckVk(vkCreateFence(*logicalDevice, &fenceCreateInfo, nullptr, &surface->GetFilghtFences()[i]));
+
+        surface->GetCommandBuffers()[i] = std::make_unique<CommandBuffer>(false);
+    }
 }
 
 std::string Graphics::StringifyResultVk(VkResult result)
