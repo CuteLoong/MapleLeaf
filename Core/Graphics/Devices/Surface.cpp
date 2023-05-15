@@ -51,5 +51,12 @@ Surface::Surface(const Instance& instance, const PhysicalDevice& physicalDevice,
 Surface::~Surface()
 {
     vkDestroySurfaceKHR(instance, surface, nullptr);
+
+    for (std::size_t i = 0; i < flightFences.size(); i++) {
+        vkDestroyFence(logicalDevice, flightFences[i], nullptr);
+        vkDestroySemaphore(logicalDevice, renderCompletes[i], nullptr);
+        vkDestroySemaphore(logicalDevice, presentCompletes[i], nullptr);
+    }
+    commandBuffers.clear();
 }
 }   // namespace MapleLeaf

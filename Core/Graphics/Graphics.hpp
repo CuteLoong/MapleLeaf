@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommandPool.hpp"
 #include "Devices.hpp"
 #include "Engine.hpp"
 #include "Instance.hpp"
@@ -26,7 +27,10 @@ public:
     const LogicalDevice*  GetLogicalDevice() const { return logicalDevice.get(); }
     const Surface*        GetSurface() const { return surface.get(); }
 
-    void SetRenderer(std::unique_ptr<Renderer>&& renderer) { this->renderer = std::move(renderer); }
+    const std::shared_ptr<CommandPool>& GetCommandPool();
+
+    Renderer* GetRenderer() const { return renderer.get(); }
+    void      SetRenderer(std::unique_ptr<Renderer>&& renderer) { this->renderer = std::move(renderer); }
 
     static std::string StringifyResultVk(VkResult result);
     static void        CheckVk(VkResult result);
@@ -41,7 +45,10 @@ private:
     std::unique_ptr<Swapchain>      swapchain;
     std::unique_ptr<Surface>        surface;
 
+    std::shared_ptr<CommandPool> commandPool;
+
     void ResetRenderStages();
     void RecreateSwapchain();
+    void RecreateCommandBuffers();
 };
 }   // namespace MapleLeaf
