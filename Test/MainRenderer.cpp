@@ -5,6 +5,16 @@
 #include <iostream>
 
 namespace Test {
+class TestSubrender : public Subrender
+{
+public:
+    explicit TestSubrender(const Pipeline::Stage& stage)
+        : Subrender(stage)
+    {}
+
+    void Render(const CommandBuffer& commandBuffer) override { std::cout << "Render" << std::endl; }
+};
+
 MainRenderer::MainRenderer()
 {
     // attachment 一定不能跨index,必须要是连续的,不然会导致framebuffer读取view时索引越界,且renderpass的attachment索引也会对不上
@@ -19,7 +29,7 @@ MainRenderer::MainRenderer()
 
 void MainRenderer::Start()
 {
-    std::cout << "Main Renderer Start" << std::endl;
+    AddSubrender<TestSubrender>({0, 0});
 }
 
 void MainRenderer::Update()
