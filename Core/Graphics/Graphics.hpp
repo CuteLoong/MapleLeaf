@@ -6,6 +6,7 @@
 #include "Instance.hpp"
 #include "LogicalDevice.hpp"
 #include "PhysicalDevice.hpp"
+#include "RenderStage.hpp"
 #include "Renderer.hpp"
 #include "Surface.hpp"
 #include "Swapchain.hpp"
@@ -50,5 +51,8 @@ private:
     void ResetRenderStages();
     void RecreateSwapchain();
     void RecreateCommandBuffers();
+    void RecreatePass(RenderStage& renderStage);
+    bool StartRenderpass(RenderStage& renderStage);
+    void EndRenderpass(RenderStage& renderStage);
 };
 }   // namespace MapleLeaf

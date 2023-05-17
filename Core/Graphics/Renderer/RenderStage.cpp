@@ -102,4 +102,11 @@ std::optional<Attachment> RenderStage::GetAttachment(uint32_t binding) const
     if (it != attachments.end()) return *it;
     return std::nullopt;
 }
+
+const VkFramebuffer& RenderStage::GetActiveFramebuffer(uint32_t activeSwapchainImage) const
+{
+    if (activeSwapchainImage > framebuffers->GetFramebuffers().size()) return framebuffers->GetFramebuffers().at(0);
+
+    return framebuffers->GetFramebuffers().at(activeSwapchainImage);
+}
 }   // namespace MapleLeaf

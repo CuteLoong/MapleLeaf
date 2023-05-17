@@ -150,7 +150,7 @@ public:
      * @param rate The rate to go from current to the target.
      * @return The changed color.
      */
-    constexpr Color SmoothStep(const Color& target, const Color& rate) const
+    Color SmoothStep(const Color& target, const Color& rate) const
     {
         float r = glm::smoothstep(this->r, target.r, rate.r);
         float g = glm::smoothstep(this->g, target.g, rate.g);
@@ -163,7 +163,7 @@ public:
      * Gets a colour representing the unit value of this color.
      * @return The unit color.
      */
-    constexpr Color GetUnit() const
+    Color GetUnit() const
     {
         auto l = Length();
         return {r / l, g / l, b / l, a / l};

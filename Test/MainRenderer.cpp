@@ -2,7 +2,6 @@
 
 #include "Graphics.hpp"
 #include "RenderStage.hpp"
-#include <iostream>
 
 namespace Test {
 class TestSubrender : public Subrender
@@ -12,7 +11,7 @@ public:
         : Subrender(stage)
     {}
 
-    void Render(const CommandBuffer& commandBuffer) override { std::cout << "Render" << std::endl; }
+    void Render(const CommandBuffer& commandBuffer) override {}
 };
 
 MainRenderer::MainRenderer()

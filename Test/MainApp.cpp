@@ -1,4 +1,6 @@
 #include "MainApp.hpp"
+#include "Devices.hpp"
+#include "Engine.hpp"
 #include "Graphics.hpp"
 #include "Log.hpp"
 #include "MainRenderer.hpp"
@@ -12,6 +14,11 @@ int main(int argc, char** argv)
     engine->SetApp(std::make_unique<MainApp>());
 
     auto exitCode = engine->Run();
+    engine        = nullptr;
+
+    std::cout << "Press enter to continue...";
+    std::cin.get();
+    return exitCode;
 }
 
 namespace Test {
@@ -32,6 +39,8 @@ void MainApp::Start()
 
 void MainApp::Update()
 {
-    Graphics::Get()->Update();
+    if (Devices::Get()->GetWindow()->IsClosed()) {
+        Engine::Get()->RequestClose();
+    }
 }
 }   // namespace Test
