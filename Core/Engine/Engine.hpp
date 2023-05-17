@@ -62,6 +62,12 @@ public:
     void SetApp(std::unique_ptr<App>&& app) { this->app = std::move(app); }
 
     const Time& GetDelta() const { return deltaUpdate.change; }
+    const Time& GetDeltaRender() const { return deltaRender.change; }
+
+    uint32_t GetUps() const { return ups.value; }
+    uint32_t GetFps() const { return fps.value; }
+
+    void RequestClose() { running = false; }
 
 private:
     void CreateModule(Module::TRegistryMap::const_iterator it, const ModuleFilter& filter);
@@ -78,8 +84,11 @@ private:
     std::map<TypeId, std::unique_ptr<Module>>    modules;
     std::map<Module::Stage, std::vector<TypeId>> moduleStages;
 
-    bool running;
+    float fpsLimit;
+    bool  running;
 
-    Delta deltaUpdate;
+    Delta           deltaUpdate, deltaRender;
+    ElapsedTime     elapsedUpdate, elapsedRender;
+    ChangePerSecond ups, fps;
 };
 }   // namespace MapleLeaf

@@ -1,5 +1,6 @@
 #include "Engine.hpp"
 #include "Log.hpp"
+#include "Module.hpp"
 
 namespace MapleLeaf {
 Engine* Engine::Instance = nullptr;
@@ -8,6 +9,9 @@ Engine::Engine(std::string argv0, ModuleFilter&& moduleFilter)
     : argv0(std::move(argv0))
     , engineVersion(1, 0, 0)
     , running(true)
+    , elapsedUpdate(15.77ms)
+    , elapsedRender(-1s)
+    , fpsLimit(-1.0f)
 {
     Instance = this;
     Log::OpenLog(Time::GetDateTime("Logs/%Y%m%d%H%M%S.txt"));
@@ -31,7 +35,39 @@ int32_t Engine::Run()
             }
             app->Update();
         }
+
+        elapsedRender.SetInterval(Time::Seconds(1.0f / fpsLimit));
+
+        UpdateStage(Module::Stage::Always);
+
+        if (elapsedUpdate.GetElapsed() != 0) {
+            // Resets the timer.
+            ups.Update(Time::Now());
+
+            // Pre-Update.
+            UpdateStage(Module::Stage::Pre);
+            // Update.
+            UpdateStage(Module::Stage::Normal);
+            // Post-Update.
+            UpdateStage(Module::Stage::Post);
+
+            // Updates the engines delta.
+            deltaUpdate.Update();
+        }
+
+        // Renders when needed.
+        if (elapsedRender.GetElapsed() != 0) {
+            // Resets the timer.
+            fps.Update(Time::Now());
+
+            // Render
+            UpdateStage(Module::Stage::Render);
+
+            // Updates the render delta, and render time extension.
+            deltaRender.Update();
+        }
     }
+
 
     return EXIT_SUCCESS;
 }

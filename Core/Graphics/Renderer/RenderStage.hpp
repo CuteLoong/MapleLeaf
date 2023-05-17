@@ -133,7 +133,7 @@ public:
     std::optional<Attachment> GetAttachment(const std::string& name) const;
     std::optional<Attachment> GetAttachment(uint32_t binding) const;
 
-    // const VkFramebuffer& GetActiveFramebuffer(uint32_t activeSwapchainImage) const;
+    const VkFramebuffer& GetActiveFramebuffer(uint32_t activeSwapchainImage) const;
 
     const std::vector<Attachment>&  GetAttachments() const { return attachments; }
     const std::vector<SubpassType>& GetSubpasses() const { return subpasses; }

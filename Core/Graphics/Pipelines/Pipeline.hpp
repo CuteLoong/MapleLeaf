@@ -8,7 +8,7 @@ class Pipeline
 {
 public:
     /**
-     * Represents position in the render structure, first value being the renderpass and second for subpass.
+     * Represents position in the render structure, first value being the renderpass(renderstage) and second for subpass.
      */
     using Stage = std::pair<uint32_t, uint32_t>;
 

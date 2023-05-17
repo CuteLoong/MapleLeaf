@@ -26,6 +26,18 @@ public:
     {}
 
     /**
+     * Creates a time value from a number of seconds.
+     * @tparam Rep The type of value to be casted to.
+     * @param seconds Number of seconds.
+     * @return Time value constructed from the amount of seconds.
+     */
+    template<typename Rep = float>
+    constexpr static Time Seconds(const Rep& seconds)
+    {
+        return Time(std::chrono::duration<Rep>(seconds));
+    }
+
+    /**
      * Creates a time value from a number of milliseconds
      * @tparam Rep The type of value to be casted to.
      * @param milliseconds Number of milliseconds.
