@@ -30,7 +30,7 @@ public:
     };
 
 private:
-    Stage                              stage;
     std::vector<std::filesystem::path> shaderStages;
+    std::vector<Shader::VertexInput>   vertexInputs;
 };
 }   // namespace MapleLeaf
