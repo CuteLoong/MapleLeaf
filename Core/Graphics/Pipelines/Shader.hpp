@@ -237,6 +237,8 @@ private:
     std::map<uint32_t, VkDescriptorType>           descriptorTypes;
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 
+    mutable std::vector<std::string> notFoundNames;
+
     static void    IncrementDescriptorPool(std::map<VkDescriptorType, uint32_t>& descriptorPoolCounts, VkDescriptorType type);
     void           LoadUniformBlock(const glslang::TProgram& program, VkShaderStageFlags stageFlag, int32_t i);
     void           LoadUniform(const glslang::TProgram& program, VkShaderStageFlags stageFlag, int32_t i);

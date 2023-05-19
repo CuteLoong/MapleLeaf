@@ -26,6 +26,36 @@ Image::~Image()
     vkDestroyImage(*logicalDevice, image, nullptr);
 }
 
+WriteDescriptorSet Image::GetWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const
+{
+    VkDescriptorImageInfo imageInfo = {};
+    imageInfo.sampler               = sampler;
+    imageInfo.imageView             = view;
+    imageInfo.imageLayout           = layout;
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet               = VK_NULL_HANDLE;   // Will be set in the descriptor handler.
+    descriptorWrite.dstBinding           = binding;
+    descriptorWrite.dstArrayElement      = 0;
+    descriptorWrite.descriptorCount      = 1;
+    descriptorWrite.descriptorType       = descriptorType;
+
+    return {descriptorWrite, imageInfo};
+}
+
+VkDescriptorSetLayoutBinding Image::GetDescriptorSetLayout(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stage,
+                                                           uint32_t count)
+{
+    VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
+    descriptorSetLayoutBinding.binding                      = binding;
+    descriptorSetLayoutBinding.descriptorType               = descriptorType;
+    descriptorSetLayoutBinding.descriptorCount              = count;
+    descriptorSetLayoutBinding.stageFlags                   = stage;
+    descriptorSetLayoutBinding.pImmutableSamplers           = nullptr;
+    return descriptorSetLayoutBinding;
+}
+
 uint32_t Image::GetMipLevels(const VkExtent3D& extent)
 {
     return static_cast<uint32_t>(std::floor(std::log2(std::max(extent.width, std::max(extent.height, extent.depth)))) + 1);
