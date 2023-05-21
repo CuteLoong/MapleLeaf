@@ -6,8 +6,8 @@
 #include "RenderStage.hpp"
 #include "Surface.hpp"
 #include "Window.hpp"
+#include "glslang/Public/ShaderLang.h"
 #include <memory>
-
 
 namespace MapleLeaf {
 Graphics::Graphics()
@@ -26,12 +26,30 @@ Graphics::~Graphics()
     renderer  = nullptr;
     swapchain = nullptr;
     surface   = nullptr;
+
+    glslang::FinalizeProcess();
+    vkDestroyPipelineCache(*logicalDevice, pipelineCache, nullptr);
+
+    commandPool = nullptr;
 }
 
 const std::shared_ptr<CommandPool>& Graphics::GetCommandPool()
 {
     if (!commandPool) commandPool = std::make_shared<CommandPool>(0);
     return commandPool;
+}
+
+void Graphics::CreatePipelineCache()
+{
+    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+    pipelineCacheCreateInfo.sType                     = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+    CheckVk(vkCreatePipelineCache(*logicalDevice, &pipelineCacheCreateInfo, nullptr, &pipelineCache));
+}
+
+const RenderStage* Graphics::GetRenderStage(uint32_t index) const
+{
+    if (renderer) return renderer->GetRenderStage(index);
+    return nullptr;
 }
 
 void Graphics::Update()

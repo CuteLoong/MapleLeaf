@@ -44,6 +44,9 @@ RenderStage::RenderStage(std::vector<Attachment> images, std::vector<SubpassType
 
 void RenderStage::Update()
 {
+#ifdef MAPLELEAF_DEBUG
+    auto debugStart = Time::Now();
+#endif
     auto lastRenderArea = renderArea;
 
     renderArea.SetOffset(viewport.GetOffset());
@@ -58,6 +61,20 @@ void RenderStage::Update()
     renderArea.SetExtent({renderArea.GetExtent().x + renderArea.GetOffset().x, renderArea.GetExtent().y + renderArea.GetOffset().y});
 
     outOfDate = renderArea != lastRenderArea;
+
+    descriptors.clear();
+    auto where = descriptors.end();
+
+    for (const auto& image : attachments) {
+        if (image.GetType() == Attachment::Type::Depth)
+            where = descriptors.insert(where, {image.GetName(), depthStencil.get()});
+        else
+            where = descriptors.insert(where, {image.GetName(), framebuffers->GetAttachment(image.GetBinding())});
+    }
+
+#ifdef MAPLELEAF_DEBUG
+    Log::Out("Render Stage created in ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+#endif
 }
 
 void RenderStage::Rebuild(const Swapchain& swapchain)

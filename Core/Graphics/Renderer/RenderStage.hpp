@@ -5,6 +5,7 @@
 #include "ImageDepth.hpp"
 #include "Renderpass.hpp"
 #include "glm/glm.hpp"
+#include <map>
 #include <optional>
 
 namespace MapleLeaf {
@@ -145,9 +146,9 @@ public:
 
     bool IsOutOfDate() const { return outOfDate; }
 
-    const Renderpass* GetRenderpass() const { return renderpass.get(); }
-    const ImageDepth* GetDepthStencil() const { return depthStencil.get(); }
-    // const Framebuffers *GetFramebuffers() const { return framebuffers.get(); }
+    const Renderpass*   GetRenderpass() const { return renderpass.get(); }
+    const ImageDepth*   GetDepthStencil() const { return depthStencil.get(); }
+    const Framebuffers* GetFramebuffers() const { return framebuffers.get(); }
 
     const std::vector<VkClearValue>& GetClearValues() const { return clearValues; }
     uint32_t                         GetAttachmentCount(uint32_t subpass) const { return subpassAttachmentCount[subpass]; }
@@ -165,7 +166,7 @@ private:
     std::unique_ptr<ImageDepth>   depthStencil;
     std::unique_ptr<Framebuffers> framebuffers;
 
-    // std::map<std::string, const Descriptor *> descriptors;
+    std::map<std::string, const Descriptor*> descriptors;
 
     std::vector<VkClearValue> clearValues;
     std::vector<uint32_t>     subpassAttachmentCount;
