@@ -30,6 +30,8 @@ public:
             , attributeDescriptions(std::move(attributeDescriptions))
         {}
 
+        bool operator<(const VertexInput& rhs) const { return bindingDescriptions.front().binding < rhs.bindingDescriptions.front().binding; }
+
         const std::vector<VkVertexInputBindingDescription>&   GetBindingDescriptions() const { return bindingDescriptions; }
         const std::vector<VkVertexInputAttributeDescription>& GetAttributeDescriptions() const { return attributeDescriptions; }
 

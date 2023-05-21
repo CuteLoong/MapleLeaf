@@ -422,6 +422,23 @@ void Shader::CreateReflection()
         descriptorLocations.emplace(uniformName, uniform.binding);
         descriptorSizes.emplace(uniformName, uniform.size);
     }
+
+    for (const auto& [type, descriptorCount] : descriptorPoolCounts) {
+        VkDescriptorPoolSize descriptorPoolSize = {};
+        descriptorPoolSize.type                 = type;
+        descriptorPoolSize.descriptorCount      = descriptorCount == 0 ? 2048 : descriptorCount;
+        descriptorPools.emplace_back(descriptorPoolSize);
+    }
+
+    std::sort(descriptorSetLayouts.begin(),
+              descriptorSetLayouts.end(),
+              [](const VkDescriptorSetLayoutBinding& l, const VkDescriptorSetLayoutBinding& r) { return l.binding < r.binding; });
+
+    if (!descriptorSetLayouts.empty()) lastDescriptorBinding = descriptorSetLayouts.back().binding;
+
+    for (const auto& descriptor : descriptorSetLayouts) descriptorTypes.emplace(descriptor.binding, descriptor.descriptorType);
+
+    
 }
 
 void Shader::IncrementDescriptorPool(std::map<VkDescriptorType, uint32_t>& descriptorPoolCounts, VkDescriptorType type)
