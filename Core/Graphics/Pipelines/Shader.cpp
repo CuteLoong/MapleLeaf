@@ -10,6 +10,8 @@
 #include "glslang/Public/ShaderLang.h"
 #include "glslang/SPIRV/GlslangToSpv.h"
 
+#define MAPLELEAF_DEBUG
+
 namespace MapleLeaf {
 class ShaderIncluder : public glslang::TShader::Includer
 {
@@ -301,11 +303,11 @@ VkShaderModule Shader::CreateShaderModule(const std::filesystem::path& moduleNam
     shader.setStringsWithLengthsAndNames(&shaderSource, nullptr, &shaderNameCstr, 1);
     shader.setPreamble(preamble.c_str());
 
-    auto defaultVersion = glslang::EShTargetVulkan_1_3;
+    auto defaultVersion = glslang::EShTargetVulkan_1_1;
     shader.setEnvInput(glslang::EShSourceGlsl, language, glslang::EShClientVulkan, 450);
     shader.setEnvClient(glslang::EShClientVulkan, defaultVersion);
     shader.setEnvTarget(glslang::EShTargetSpv,
-                        volkGetInstanceVersion() >= VK_API_VERSION_1_3 ? glslang::EShTargetSpv_1_6 : glslang::EShTargetSpv_1_0);
+                        volkGetInstanceVersion() >= VK_API_VERSION_1_1 ? glslang::EShTargetSpv_1_3 : glslang::EShTargetSpv_1_0);
 
     ShaderIncluder includer;
 
@@ -437,8 +439,6 @@ void Shader::CreateReflection()
     if (!descriptorSetLayouts.empty()) lastDescriptorBinding = descriptorSetLayouts.back().binding;
 
     for (const auto& descriptor : descriptorSetLayouts) descriptorTypes.emplace(descriptor.binding, descriptor.descriptorType);
-
-    
 }
 
 void Shader::IncrementDescriptorPool(std::map<VkDescriptorType, uint32_t>& descriptorPoolCounts, VkDescriptorType type)
