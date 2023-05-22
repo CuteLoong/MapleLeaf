@@ -17,6 +17,8 @@ Graphics::Graphics()
 {
     Window* window = Devices::Get()->CreateWindow();
     surface        = std::make_unique<Surface>(*instance, *physicalDevice, *logicalDevice, *window);
+
+    if (!glslang::InitializeProcess()) throw std::runtime_error("Failed to initialize glslang process");
 }
 Graphics::~Graphics()
 {
