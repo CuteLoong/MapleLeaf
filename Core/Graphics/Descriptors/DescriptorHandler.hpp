@@ -3,11 +3,36 @@
 #include "Descriptor.hpp"
 #include "DescriptorSet.hpp"
 #include "Shader.hpp"
+#include <iomanip>
+#include <memory>
+#include <optional>
+
 
 namespace MapleLeaf {
 class DescriptorsHandler
 {
 public:
+    DescriptorsHandler() = default;
+    explicit DescriptorsHandler(const Pipeline& pipeline);
+
+    template<typename T>
+    void Push(const std::string& descriptorName, const T& descriptor, const std::optional<OffsetSize>& offsetSize = std::nullopt)
+    {
+        if (!shader) return;
+
+        auto it = descriptors.find(descriptorName);
+
+        if (it != descriptors.end()) {
+            if (it->second.descriptor == std::addressof(descriptor) && it->second.offsetSize == descriptor->offsetSize) return;
+
+            descriptors.erase(it);
+        }
+
+        if (!std::addressof(descriptor)) return;
+
+        auto location = shader->GetDescriptorLocation(descriptorName);
+    }
+
 private:
     class DescriptorValue
     {
