@@ -15,9 +15,9 @@ public:
     {
         if (!uniformBlock || !uniformBuffer) return;
 
-        if (!bound) {
+        if (!bind) {
             uniformBuffer->MapMemory(&this->data);
-            bound = true;
+            bind = true;
         }
 
         // If the buffer is already changed we can skip a memory comparison and just copy.
@@ -50,7 +50,7 @@ private:
     std::optional<Shader::UniformBlock> uniformBlock;
     uint32_t                            size  = 0;
     void*                               data  = nullptr;
-    bool                                bound = false;
+    bool                                bind = false;
     std::unique_ptr<UniformBuffer>      uniformBuffer;
     Buffer::Status                      handlerStatus;
 };

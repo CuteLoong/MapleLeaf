@@ -1,20 +1,20 @@
-#include "UniformHandler.hpp"
+#include "StorageHandler.hpp"
 
 namespace MapleLeaf {
-UniformHandler::UniformHandler(bool multipipeline)
+StorageHandler::StorageHandler(bool multipipeline)
     : multipipeline(multipipeline)
-    , handlerStatus(Buffer::Status::Normal)
+    , handlerStatus(Buffer::Status::Reset)
 {}
 
-UniformHandler::UniformHandler(const Shader::UniformBlock& uniformBlock, bool multipipeline)
+StorageHandler::StorageHandler(const Shader::UniformBlock& uniformBlock, bool multipipeline)
     : multipipeline(multipipeline)
     , uniformBlock(uniformBlock)
     , size(static_cast<uint32_t>(this->uniformBlock->GetSize()))
-    , uniformBuffer(std::make_unique<UniformBuffer>(static_cast<VkDeviceSize>(size)))
-    , handlerStatus(Buffer::Status::Normal)
+    , storageBuffer(std::make_unique<StorageBuffer>(static_cast<VkDeviceSize>(size)))
+    , handlerStatus(Buffer::Status::Changed)
 {}
 
-bool UniformHandler::Update(const std::optional<Shader::UniformBlock>& uniformBlock)
+bool StorageHandler::Update(const std::optional<Shader::UniformBlock>& uniformBlock)
 {
     if (handlerStatus == Buffer::Status::Reset || multipipeline && !this->uniformBlock || !multipipeline && this->uniformBlock != uniformBlock) {
         if (size == 0 && !this->uniformBlock ||
@@ -24,14 +24,14 @@ bool UniformHandler::Update(const std::optional<Shader::UniformBlock>& uniformBl
 
         this->uniformBlock = uniformBlock;
         bind               = false;
-        uniformBuffer      = std::make_unique<UniformBuffer>(static_cast<VkDeviceSize>(size));
+        storageBuffer      = std::make_unique<StorageBuffer>(static_cast<VkDeviceSize>(size));
         handlerStatus      = Buffer::Status::Changed;
         return false;
     }
 
     if (handlerStatus != Buffer::Status::Normal) {
         if (bind) {
-            uniformBuffer->UnmapMemory();
+            storageBuffer->UnmapMemory();
             bind = false;
         }
 
