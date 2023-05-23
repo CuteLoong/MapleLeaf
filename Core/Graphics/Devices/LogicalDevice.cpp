@@ -5,7 +5,7 @@
 
 
 namespace MapleLeaf {
-const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
 
 LogicalDevice::LogicalDevice(const Instance& instance, const PhysicalDevice& physicalDevice)
     : instance(instance)
