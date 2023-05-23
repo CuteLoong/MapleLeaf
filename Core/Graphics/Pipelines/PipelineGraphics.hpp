@@ -126,6 +126,41 @@ private:
 class PipelineGraphicsCreate
 {
 public:
+    PipelineGraphicsCreate(std::vector<std::filesystem::path> shaderStages = {}, std::vector<Shader::VertexInput> vertexInputs = {},
+                           std::vector<Shader::Define> defines = {}, PipelineGraphics::Mode mode = PipelineGraphics::Mode::Polygon,
+                           PipelineGraphics::Depth depth = PipelineGraphics::Depth::ReadWrite,
+                           VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL,
+                           VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT, VkFrontFace frontFace = VK_FRONT_FACE_CLOCKWISE,
+                           bool pushDescriptors = false)
+        : shaderStages(std::move(shaderStages))
+        , vertexInputs(std::move(vertexInputs))
+        , defines(std::move(defines))
+        , mode(mode)
+        , depth(depth)
+        , topology(topology)
+        , polygonMode(polygonMode)
+        , cullMode(cullMode)
+        , frontFace(frontFace)
+        , pushDescriptors(pushDescriptors)
+    {}
+
+    PipelineGraphics* Create(const Pipeline::Stage& pipelineStage) const
+    {
+        return new PipelineGraphics(
+            pipelineStage, shaderStages, vertexInputs, defines, mode, depth, topology, polygonMode, cullMode, frontFace, pushDescriptors);
+    }
+
+    const std::vector<std::filesystem::path>& GetShaderStages() const { return shaderStages; }
+    const std::vector<Shader::VertexInput>&   GetVertexInputs() const { return vertexInputs; }
+    const std::vector<Shader::Define>&        GetDefines() const { return defines; }
+    PipelineGraphics::Mode                    GetMode() const { return mode; }
+    PipelineGraphics::Depth                   GetDepth() const { return depth; }
+    VkPrimitiveTopology                       GetTopology() const { return topology; }
+    VkPolygonMode                             GetPolygonMode() const { return polygonMode; }
+    VkCullModeFlags                           GetCullMode() const { return cullMode; }
+    VkFrontFace                               GetFrontFace() const { return frontFace; }
+    bool                                      GetPushDescriptors() const { return pushDescriptors; }
+
 private:
     std::vector<std::filesystem::path> shaderStages;
     std::vector<Shader::VertexInput>   vertexInputs;
