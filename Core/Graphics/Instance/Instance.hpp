@@ -22,6 +22,10 @@ public:
                                                     const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
     static void FvkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator);
 
+    static void FvkCmdPushDescriptorSetKHR(VkDevice device, VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint,
+                                           VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount,
+                                           const VkWriteDescriptorSet* pDescriptorWrites);
+
     static uint32_t FindMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties* deviceMemoryProperties,
                                         const VkMemoryRequirements* memoryRequirements, VkMemoryPropertyFlags requiredProperties);
 

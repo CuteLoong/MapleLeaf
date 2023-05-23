@@ -43,6 +43,14 @@ void Instance::FvkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtil
     if (func) return func(instance, messenger, pAllocator);
 }
 
+void Instance::FvkCmdPushDescriptorSetKHR(VkDevice device, VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint,
+                                          VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount,
+                                          const VkWriteDescriptorSet* pDescriptorWrites)
+{
+    auto func = reinterpret_cast<PFN_vkCmdPushDescriptorSetKHR>(vkGetDeviceProcAddr(device, "vkCmdPushDescriptorSetKHR"));
+    if (func) func(commandBuffer, pipelineBindPoint, layout, set, descriptorWriteCount, pDescriptorWrites);
+}
+
 uint32_t Instance::FindMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties* deviceMemoryProperties, const VkMemoryRequirements* memoryRequirements,
                                        VkMemoryPropertyFlags requiredProperties)
 {
