@@ -48,7 +48,6 @@ public:
 private:
     std::vector<Shader::Define> GetDefines() const;
 
-    bool                     animated = false;
     Color                    baseDiffuse;
     std::shared_ptr<Image2d> imageDiffuse;
 
