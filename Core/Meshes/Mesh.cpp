@@ -1,5 +1,6 @@
 #include "Mesh.hpp"
 
+#include "Entity.hpp"
 #include "glm/glm.hpp"
 
 namespace MapleLeaf {
@@ -8,9 +9,24 @@ Mesh::Mesh(std::shared_ptr<Model> model, std::unique_ptr<Material>&& material)
     , material(std::move(material))
 {}
 
+void Mesh::Start()
+{
+    if (material) material->CreatePipeline(GetVertexInput());
+}
+
+void Mesh::Update()
+{
+    if (material) {
+        auto transform = GetEntity()->GetComponent<glm::mat4>();
+        material->PushUniforms(uniformObject, transform);
+    }
+}
+
 bool Mesh::CmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniformScene, const Pipeline::Stage& pipelineStage)
 {
     if (!model || !material) return false;
+
+    // TODO: check mesh in view
 
     // Check if we are in the correct pipeline stage.
     auto materialPipeline = material->GetPipelineMaterial();
@@ -51,6 +67,7 @@ bool Mesh::operator<(const Mesh& rhs) const
     // auto otherDistance2 = (camera->GetPosition() - transform1->GetPosition()).LengthSquared();
 
     // return thisDistance2 > otherDistance2;
+    return true;
 }
 
 bool Mesh::operator>(const Mesh& rhs) const

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/gtx/hash.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
