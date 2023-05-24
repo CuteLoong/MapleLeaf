@@ -36,7 +36,7 @@ public:
     class Registrar : public Base
     {
     protected:
-        static bool Register(const std::string& extension)
+        static bool Register(const std::string& typeName, const std::string& extension)
         {
             ModelFactory::RegistryFilename()[extension] = [](const std::filesystem::path& filename) -> TCreateReturn { return T::Create(filename); };
             return true;
