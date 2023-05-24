@@ -14,11 +14,11 @@ end
 
 add_requires("volk", "glm", "glfw", "spirv-tools", "glslang")
 add_packages("glm", "glfw", "volk", "spirv-tools", "glslang")
-add_includedirs("Core/Devices", "Core/Utils", "Core/Maths", "Core/Engine", "Core/Graphics", "Core/Graphics/Instance", "Core/Graphics/Devices", "Core/Graphics/Swapchain", "Core/Graphics/Resources", "Core/Graphics/Renderer", "Core/Graphics/Commands", "Core/Graphics/Descriptors/","Core/Graphics/Pipelines", "Core/Files", "Core/Models", "Core/Materials", "Core/Resources", "Core/Meshes")
+add_includedirs("Core/Devices", "Core/Utils", "Core/Maths", "Core/Engine", "Core/Graphics", "Core/Graphics/Instance", "Core/Graphics/Devices", "Core/Graphics/Swapchain", "Core/Graphics/Resources", "Core/Graphics/Renderer", "Core/Graphics/Commands", "Core/Graphics/Descriptors/","Core/Graphics/Pipelines", "Core/Files", "Core/Models", "Core/Materials", "Core/Resources", "Core/Meshes", "Core/Scenes")
 
 target("Core")
     set_kind("static")
-    add_files("Core/Devices/*.cpp", "Core/Utils/*.cpp", "Core/Maths/*.cpp", "Core/Engine/*.cpp", "Core/Graphics/*.cpp", "Core/Graphics/Instance/*.cpp", "Core/Graphics/Devices/*.cpp", "Core/Graphics/Swapchain/*.cpp", "Core/Graphics/Resources/*.cpp", "Core/Graphics/Renderer/*.cpp", "Core/Graphics/Commands/*.cpp", "Core/Graphics/Descriptors/*.cpp", "Core/Graphics/Pipelines/*.cpp", "Core/Files/*.cpp", "Core/Models/*.cpp", "Core/Materials/*.cpp", "Core/Meshes/*.cpp")
+    add_files("Core/Devices/*.cpp", "Core/Utils/*.cpp", "Core/Maths/*.cpp", "Core/Engine/*.cpp", "Core/Graphics/*.cpp", "Core/Graphics/Instance/*.cpp", "Core/Graphics/Devices/*.cpp", "Core/Graphics/Swapchain/*.cpp", "Core/Graphics/Resources/*.cpp", "Core/Graphics/Renderer/*.cpp", "Core/Graphics/Commands/*.cpp", "Core/Graphics/Descriptors/*.cpp", "Core/Graphics/Pipelines/*.cpp", "Core/Files/*.cpp", "Core/Models/*.cpp", "Core/Materials/*.cpp", "Core/Meshes/*.cpp", "Core/Scenes/*.cpp")
 target_end()
 
 target("MapleLeaf")
