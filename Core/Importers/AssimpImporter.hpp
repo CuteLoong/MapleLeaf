@@ -1,15 +1,16 @@
 #pragma once
 
-#include "Material.hpp"
-#include "Model.hpp"
 #include "NonCopyable.hpp"
+#include "Scenes.hpp"
 #include <filesystem>
+#include <vector>
+
 
 namespace MapleLeaf {
 class AssimpImporter : public NonCopyable
 {
 public:
-    static void import(const std::filesystem::path& path, Model& model, Material& material);
+    static void import(const std::filesystem::path& path, SceneBuilder& builder);
 
 private:
     AssimpImporter() = default;

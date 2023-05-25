@@ -4,6 +4,7 @@
 #include "Graphics.hpp"
 #include "Log.hpp"
 #include "MainRenderer.hpp"
+#include "Scenes.hpp"
 #include <memory>
 
 
@@ -35,6 +36,7 @@ void MainApp::Start()
 {
     Devices::Get()->GetWindow()->SetTitle("Test Title");
     Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
+    Scenes::Get()->SetScene(std::make_unique<SceneBuilder>());
 }
 
 void MainApp::Update()

@@ -10,6 +10,13 @@ namespace MapleLeaf {
 class Material : public StreamFactory<Material>
 {
 public:
+    enum class TextureSlot
+    {
+        BaseColor,
+        Material,   // metalic roughness's image
+        Normal,
+    };
+
     virtual ~Material() = default;
 
     virtual void CreatePipeline(const Shader::VertexInput& vertexInput) = 0;
