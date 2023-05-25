@@ -12,8 +12,8 @@ elseif is_plat("linux") then
     set_toolchains("clang")
 end
 
-add_requires("volk", "glm", "glfw", "spirv-tools", "glslang")
-add_packages("glm", "glfw", "volk", "spirv-tools", "glslang")
+add_requires("volk", "glm", "glfw", "spirv-tools", "glslang", "assimp")
+add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp")
 add_includedirs("Core/Devices", "Core/Utils", "Core/Maths", "Core/Engine", "Core/Graphics", "Core/Graphics/Instance", "Core/Graphics/Devices", "Core/Graphics/Swapchain", "Core/Graphics/Resources", "Core/Graphics/Renderer", "Core/Graphics/Commands", "Core/Graphics/Descriptors/","Core/Graphics/Pipelines", "Core/Files", "Core/Models", "Core/Materials", "Core/Resources", "Core/Meshes", "Core/Scenes", "Core/Importers")
 
 target("Core")

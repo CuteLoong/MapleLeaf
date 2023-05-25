@@ -1,6 +1,8 @@
 #include "Scenes.hpp"
 
 namespace MapleLeaf {
+Scenes::Scenes() {}
+
 void Scenes::Update()
 {
     if (!scene) return;
