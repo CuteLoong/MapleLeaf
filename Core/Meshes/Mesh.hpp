@@ -16,7 +16,7 @@ public:
      * @param model The model to use in this mesh.
      * @param material The material to render this mesh with.
      */
-    explicit Mesh(std::shared_ptr<Model> model = nullptr, std::unique_ptr<Material>&& material = nullptr);
+    explicit Mesh(std::shared_ptr<Model> model = nullptr, std::shared_ptr<Material> material = nullptr);
 
     void Start() override;
     void Update() override;
@@ -29,14 +29,14 @@ public:
     void         SetModel(const std::shared_ptr<Model>& model) { this->model = model; }
 
     const Material* GetMaterial() const { return material.get(); }
-    void            SetMaterial(std::unique_ptr<Material>&& material);
+    void            SetMaterial(std::shared_ptr<Material>& material);
 
     bool operator<(const Mesh& rhs) const;
     bool operator>(const Mesh& rhs) const;
 
 private:
     std::shared_ptr<Model>    model;
-    std::unique_ptr<Material> material;
+    std::shared_ptr<Material> material;
 
     DescriptorsHandler descriptorSet;
     UniformHandler     uniformObject;

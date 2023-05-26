@@ -1,22 +1,17 @@
 #include "AssimpImporter.hpp"
-
+#include "Color.hpp"
 #include "DefaultMaterial.hpp"
 #include "Material.hpp"
-#include "assimp/Importer.hpp"
-#include "assimp/material.h"
-#include "assimp/pbrmaterial.h"
-#include "assimp/postprocess.h"
-#include "assimp/scene.h"
+#include "Model.hpp"
+#include "SceneBuilder.hpp"
+#include "Vertex.hpp"
 #include "assimp/types.h"
+#include <memory>
+#include <utility>
+#include <vector>
+
 
 namespace MapleLeaf {
-enum class ImportMode
-{
-    Default,
-    OBJ,
-    GLTF2,
-};
-
 struct TextureMapping
 {
     aiTextureType         aiType;
@@ -49,41 +44,8 @@ static const std::vector<TextureMapping> kTextureMappings[3] = {
         {AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, Material::TextureSlot::Material},
     }};
 
-class ImporterData
-{
-public:
-    std::filesystem::path path;
-    const aiScene*        pScene;
-    SceneBuilder&         builder;
-
-    std::unordered_map<uint32_t, std::unique_ptr<Material>> materialMap;
-
-    ImporterData(const std::filesystem::path& path, const aiScene* pAiScene, SceneBuilder& builder)
-        : path(path)
-        , pScene(pAiScene)
-        , builder(builder)
-    {}
-
-    void addAiNode(const aiNode* pNode)
-    {
-        if (mAiNodes.find(pNode->mName.C_Str()) == mAiNodes.end()) {
-            mAiNodes[pNode->mName.C_Str()] = {};
-        }
-        mAiNodes[pNode->mName.C_Str()].push_back(pNode);
-    }
-    uint32_t getNodeInstanceCount(const std::string& nodeName) const { return (uint32_t)mAiNodes.at(nodeName).size(); }
-
-private:
-    std::map<const std::string, std::vector<const aiNode*>> mAiNodes;
-};
-
-void loadTextures(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath, std::unique_ptr<Material>& pMaterial,
-                  ImportMode importMode);
-void createAllMaterials(ImporterData& data, const std::filesystem::path& searchPath, ImportMode importMode);
-std::unique_ptr<Material> createMaterial(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath,
-                                         ImportMode importMode);
-
-void AssimpImporter::import(const std::filesystem::path& path, SceneBuilder& builder)
+template<typename T>
+void AssimpImporter<T>::Import(const std::filesystem::path& path, SceneBuilder& builder)
 {
 #ifdef MAPLELEAF_DEBUG
     auto debugStart = Time::Now();
@@ -121,10 +83,30 @@ void AssimpImporter::import(const std::filesystem::path& path, SceneBuilder& bui
     ImportMode importMode = ImportMode::Default;
     if (path.extension() == "obj") importMode = ImportMode::OBJ;
     if (path.extension() == "gltf" || path.extension() == "glb") importMode = ImportMode::GLTF2;
+
+    CreateAllMaterials(data, searchPath, importMode);
+#ifdef MAPLELEAF_DEBUG
+    Log::Out("Create materials cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
+
+    CreateSceneGraph(data);
+#ifdef MAPLELEAF_DEBUG
+    Log::Out("Create scene graph cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
+
+    CreateMeshes(data);
+    // TODO instances
+#ifdef MAPLELEAF_DEBUG
+    Log::Out("Create meshes cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
 }
 
-void loadTextures(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath, std::unique_ptr<Material>& pMaterial,
-                  ImportMode importMode)
+template<typename T>
+void AssimpImporter<T>::LoadTextures(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath,
+                                     std::unique_ptr<T>& pMaterial, ImportMode importMode)
 {
     const auto& textureMappings = kTextureMappings[int(importMode)];
 
@@ -150,7 +132,8 @@ void loadTextures(ImporterData& data, const aiMaterial* pAiMaterial, const std::
     }
 }
 
-void createAllMaterials(ImporterData& data, const std::filesystem::path& searchPath, ImportMode importMode)
+template<typename T>
+void AssimpImporter<T>::CreateAllMaterials(ImporterData& data, const std::filesystem::path& searchPath, ImportMode importMode)
 {
     for (uint32_t i = 0; i < data.pScene->mNumMaterials; i++) {
         const aiMaterial* pAiMaterial = data.pScene->mMaterials[i];
@@ -158,8 +141,9 @@ void createAllMaterials(ImporterData& data, const std::filesystem::path& searchP
     }
 }
 
-std::unique_ptr<Material> createMaterial(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath,
-                                         ImportMode importMode)
+template<typename T>
+std::unique_ptr<T> AssimpImporter<T>::CreateMaterial(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath,
+                                                     ImportMode importMode)
 {
     aiString name;
     pAiMaterial->Get(AI_MATKEY_NAME, name);
@@ -170,16 +154,113 @@ std::unique_ptr<Material> createMaterial(ImporterData& data, const aiMaterial* p
         nameStr = "unnamed";
     }
 
-    std::unique_ptr<Material> pMaterial;
+    std::unique_ptr<T> pMaterial;
     if (importMode == ImportMode::GLTF2) pMaterial = std::make_unique<DefaultMaterial>();
     loadTextures(data, pAiMaterial, searchPath, pMaterial, importMode);
 
     float opacity = 1.0f;
-    if(pAiMaterial->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS)
-    {
-        float diffuse = pMaterial->GetBaseDiffuse();
+    if (pAiMaterial->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
+        Color diffuse = pMaterial->GetBaseDiffuse();
+        diffuse.a     = opacity;
+        pMaterial->SetBaseDiffuse(diffuse);
+    }
+
+    // Diffuse color
+    aiColor3D color;
+    if (pAiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS) {
+        Color diffuse(color.r, color.g, color.b, pMaterial->GetBaseDiffuse().a);
+        pMaterial->SetBaseDiffuse(diffuse);
+    }
+
+    if (importMode == ImportMode::GLTF2) {
+        if (pAiMaterial->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, color) == AI_SUCCESS) {
+            Color baseColor = float4(color.r, color.g, color.b, pMaterial->getBaseColor().a);
+            pMaterial->SetBaseDiffuse(baseColor);
+        }
+
+        float metallic;
+        if (pAiMaterial->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallic) == AI_SUCCESS) {
+            pMaterial->SetMetallic(metallic);
+        }
+
+        float roughness;
+        if (pAiMaterial->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS) {
+            pMaterial->SetRoughness(roughness);
+        }
     }
 
     return std::move(pMaterial);
+}
+
+template<typename T>
+void AssimpImporter<T>::CreateSceneGraph(ImporterData& data)
+{
+    // TODO BoneList
+    aiNode* pRoot = data.pScene->mRootNode;
+    parseNode(data, pRoot, false);
+}
+
+template<typename T>
+void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bool hasBoneAncestor)
+{
+    // TODO: store a tree in scene for bone
+    data.AddAiNode(pCurrent);
+    for (uint32_t i = 0; i < pCurrent->mNumChildren; i++) {
+        parseNode(data, pCurrent->mChildren[i], hasBoneAncestor);
+    }
+}
+
+template<typename T>
+void AssimpImporter<T>::CreateMeshes(ImporterData& data)
+{
+    const aiScene* pScene = data.pScene;
+
+    std::vector<const aiMesh*> meshes;
+    for (uint32_t i = 0; i < pScene->mNumMeshes; i++) {
+        const aiMesh* pMesh = pScene->mMeshes[i];
+        if (!pMesh->HasFaces()) {
+            Log::Warning("AssimpImporter: Mesh ", pMesh->mName.C_Str(), " has no faces, ignoring.");
+            continue;
+        }
+        if (pMesh->mFaces->mNumIndices != 3) {
+            Log::Warning("AssimpImporter: Mesh ", pMesh->mName.C_Str(), " is not a triangle mesh, ignoring.");
+            continue;
+        }
+        meshes.push_back(pMesh);
+    }
+
+    for (const auto& pAiMesh : meshes) {
+        std::vector<uint32_t> indexBuffer;
+        std::vector<Vertex3D> vertexBuffer;
+
+        // index buffer read
+        const uint32_t perFaceIndexCount = pAiMesh->mFaces[0].mNumIndices;
+        const uint32_t indexCount        = pAiMesh->mNumFaces * perFaceIndexCount;
+        indexBuffer.resize(indexCount);
+
+        for (uint32_t i = 0; i < pAiMesh->mNumFaces; i++) {
+            assert(pAiMesh->mFaces[i].mNumIndices == perFaceIndexCount);
+            for (uint32_t j = 0; j < perFaceIndexCount; j++) indexBuffer[i * perFaceIndexCount + j] = (uint32_t)(pAiMesh->mFaces[i].mIndices[j]);
+        }
+
+        assert(indexList.size() <= std::numeric_limits<uint32_t>::max());
+        // vertex buffer read
+        assert(pAiMesh->mVertices);
+        vertexBuffer.resize(pAiMesh->mNumVertices);
+        static_assert(sizeof(pAiMesh->mVertices[0]) == sizeof(vertexBuffer[0].position));
+        static_assert(sizeof(pAiMesh->mNormals[0]) == sizeof(vertexBuffer[0].normal));
+
+        for (uint32_t i = 0; i < pAiMesh->mNumVertices; i++) {
+            glm::vec3 position = glm::vec3(pAiMesh->mVertices[i].x, pAiMesh->mVertices[i].y, pAiMesh->mVertices[i].z);
+            glm::vec3 normal   = glm::vec3(pAiMesh->mNormals[i].x, pAiMesh->mNormals[i].y, pAiMesh->mNormals[i].z);
+            glm::vec2 uv;
+            if (pAiMesh->HasTextureCoords(0)) uv = glm::vec2(pAiMesh->mTextureCoords[0][i].x, pAiMesh->mTextureCoords[0][i].y);
+
+            vertexBuffer[i] = std::move(Vertex3D(position, uv, normal));
+        }
+
+        data.builder.AddModel(pAiMesh->mName, std::move(std::make_shared<Model>(vertexBuffer, indexBuffer)));
+        data.builder.materialIds.push_back(pAiMesh->mMaterialIndex);
+    }
 }
 }   // namespace MapleLeaf
