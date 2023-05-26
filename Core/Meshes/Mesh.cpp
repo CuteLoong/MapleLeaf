@@ -2,11 +2,12 @@
 
 #include "Entity.hpp"
 #include "glm/glm.hpp"
+#include <memory>
 
 namespace MapleLeaf {
-Mesh::Mesh(std::shared_ptr<Model> model, std::unique_ptr<Material>&& material)
-    : model(std::move(model))
-    , material(std::move(material))
+Mesh::Mesh(std::shared_ptr<Model> model, std::shared_ptr<Material> material)
+    : model(model)
+    , material(material)
 {}
 
 void Mesh::Start()
@@ -50,9 +51,9 @@ bool Mesh::CmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniform
     return model->CmdRender(commandBuffer);
 }
 
-void Mesh::SetMaterial(std::unique_ptr<Material>&& material)
+void Mesh::SetMaterial(std::shared_ptr<Material>& material)
 {
-    this->material = std::move(material);
+    this->material = material;
     this->material->CreatePipeline(GetVertexInput());
 }
 
