@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Bitmap.hpp"
 #include "Image.hpp"
 #include <filesystem>
+
 
 namespace MapleLeaf {
 class Image2d : public Image
@@ -29,8 +31,21 @@ public:
                      VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
                      bool anisotropic = false, bool mipmap = false);
 
+    /**
+     * Creates a new 2D image.
+     * @param filename The file to load the image from.
+     * @param filter The magnification/minification filter to apply to lookups.
+     * @param addressMode The addressing mode for outside [0..1] range.
+     * @param anisotropic If anisotropic filtering is enabled.
+     * @param mipmap If mapmaps will be generated.
+     * @param load If this resource will be loaded immediately, otherwise {@link Image2d#Load} can be called later.
+     */
+    explicit Image2d(std::filesystem::path filename, VkFilter filter = VK_FILTER_LINEAR,
+                     VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, bool anisotropic = true, bool mipmap = true,
+                     bool load = true);
+
 private:
-    void Load();
+    void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 
     std::filesystem::path filename;
 

@@ -186,21 +186,328 @@ void Image::CreateImageView(const VkImage& image, VkImageView& imageView, VkImag
     Graphics::CheckVk(vkCreateImageView(*logicalDevice, &imageViewCreateInfo, nullptr, &imageView));
 }
 
-// void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkFormat format, VkImageLayout dstImageLayout, uint32_t mipLevels,
-//                           uint32_t baseArrayLayer, uint32_t layerCount)
-// {
-//     auto physicalDevice = Graphics::Get()->GetPhysicalDevice();
+void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkFormat format, VkImageLayout dstImageLayout, uint32_t mipLevels,
+                          uint32_t baseArrayLayer, uint32_t layerCount)
+{
+    auto physicalDevice = Graphics::Get()->GetPhysicalDevice();
 
-//     // Get device properites for the requested Image format.
-//     VkFormatProperties formatProperties;
-//     vkGetPhysicalDeviceFormatProperties(*physicalDevice, format, &formatProperties);
+    // Get device properites for the requested Image format.
+    VkFormatProperties formatProperties;
+    vkGetPhysicalDeviceFormatProperties(*physicalDevice, format, &formatProperties);
 
-//     // Mip-chain generation requires support for blit source and destination
-//     assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT);
-//     assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT);
+    // Mip-chain generation requires support for blit source and destination
+    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT);
+    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT);
 
-// 	CommandBuffer commandBuffer;
+    CommandBuffer commandBuffer;
 
+    for (uint32_t i = 1; i < mipLevels; i++) {
+        VkImageMemoryBarrier barrier0            = {};
+        barrier0.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier0.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier0.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier0.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier0.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier0.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier0.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier0.image                           = image;
+        barrier0.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier0.subresourceRange.baseMipLevel   = i - 1;
+        barrier0.subresourceRange.levelCount     = 1;
+        barrier0.subresourceRange.baseArrayLayer = baseArrayLayer;
+        barrier0.subresourceRange.layerCount     = layerCount;
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier0);
 
-// }
+        VkImageBlit imageBlit                   = {};
+        imageBlit.srcOffsets[1]                 = {int32_t(extent.width >> (i - 1)), int32_t(extent.height >> (i - 1)), 1};
+        imageBlit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageBlit.srcSubresource.mipLevel       = i - 1;
+        imageBlit.srcSubresource.baseArrayLayer = baseArrayLayer;
+        imageBlit.srcSubresource.layerCount     = layerCount;
+        imageBlit.dstOffsets[1]                 = {int32_t(extent.width >> i), int32_t(extent.height >> i), 1};
+        imageBlit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageBlit.dstSubresource.mipLevel       = i;
+        imageBlit.dstSubresource.baseArrayLayer = baseArrayLayer;
+        imageBlit.dstSubresource.layerCount     = layerCount;
+        vkCmdBlitImage(
+            commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit, VK_FILTER_LINEAR);
+
+        VkImageMemoryBarrier barrier1            = {};
+        barrier1.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier1.srcAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier1.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
+        barrier1.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier1.newLayout                       = dstImageLayout;
+        barrier1.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier1.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier1.image                           = image;
+        barrier1.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier1.subresourceRange.baseMipLevel   = i - 1;
+        barrier1.subresourceRange.levelCount     = 1;
+        barrier1.subresourceRange.baseArrayLayer = baseArrayLayer;
+        barrier1.subresourceRange.layerCount     = layerCount;
+        vkCmdPipelineBarrier(
+            commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier1);
+    }
+
+    VkImageMemoryBarrier barrier            = {};
+    barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
+    barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.newLayout                       = dstImageLayout;
+    barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image                           = image;
+    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel   = mipLevels - 1;
+    barrier.subresourceRange.levelCount     = 1;
+    barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
+    barrier.subresourceRange.layerCount     = layerCount;
+    vkCmdPipelineBarrier(
+        commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    commandBuffer.SubmitIdle();
+}
+
+void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImageLayout srcImageLayout, VkImageLayout dstImageLayout,
+                                  VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount,
+                                  uint32_t baseArrayLayer)
+{
+    CommandBuffer commandBuffer;
+
+    VkImageMemoryBarrier imageMemoryBarrier            = {};
+    imageMemoryBarrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageMemoryBarrier.oldLayout                       = srcImageLayout;
+    imageMemoryBarrier.newLayout                       = dstImageLayout;
+    imageMemoryBarrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.image                           = image;
+    imageMemoryBarrier.subresourceRange.aspectMask     = imageAspect;
+    imageMemoryBarrier.subresourceRange.baseMipLevel   = baseMipLevel;
+    imageMemoryBarrier.subresourceRange.levelCount     = mipLevels;
+    imageMemoryBarrier.subresourceRange.baseArrayLayer = baseArrayLayer;
+    imageMemoryBarrier.subresourceRange.layerCount     = layerCount;
+
+    switch (srcImageLayout) {
+    case VK_IMAGE_LAYOUT_UNDEFINED: imageMemoryBarrier.srcAccessMask = 0; break;
+    case VK_IMAGE_LAYOUT_PREINITIALIZED: imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT; break;
+    case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; break;
+    case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL: imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; break;
+    case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT; break;
+    case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; break;
+    case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT; break;
+    default: throw std::runtime_error("Unsupported image layout transition source"); break;
+    }
+
+    switch (dstImageLayout) {
+    case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; break;
+    case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT; break;
+    case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; break;
+    case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+        imageMemoryBarrier.dstAccessMask = imageMemoryBarrier.dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        break;
+    case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+        if (imageMemoryBarrier.srcAccessMask == 0) {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+        }
+
+        imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        break;
+    default: throw std::runtime_error("Unsupported image layout transition destination"); break;
+    }
+
+    vkCmdPipelineBarrier(
+        commandBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+    commandBuffer.SubmitIdle();
+}
+
+void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const VkImage& image, VkAccessFlags srcAccessMask,
+                                     VkAccessFlags dstAccessMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout,
+                                     VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkImageAspectFlags imageAspect,
+                                     uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer)
+{
+    VkImageMemoryBarrier imageMemoryBarrier            = {};
+    imageMemoryBarrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageMemoryBarrier.srcAccessMask                   = srcAccessMask;
+    imageMemoryBarrier.dstAccessMask                   = dstAccessMask;
+    imageMemoryBarrier.oldLayout                       = oldImageLayout;
+    imageMemoryBarrier.newLayout                       = newImageLayout;
+    imageMemoryBarrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.image                           = image;
+    imageMemoryBarrier.subresourceRange.aspectMask     = imageAspect;
+    imageMemoryBarrier.subresourceRange.baseMipLevel   = baseMipLevel;
+    imageMemoryBarrier.subresourceRange.levelCount     = mipLevels;
+    imageMemoryBarrier.subresourceRange.baseArrayLayer = baseArrayLayer;
+    imageMemoryBarrier.subresourceRange.layerCount     = layerCount;
+    vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+}
+
+void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer)
+{
+    CommandBuffer commandBuffer;
+
+    VkBufferImageCopy region               = {};
+    region.bufferOffset                    = 0;
+    region.bufferRowLength                 = 0;
+    region.bufferImageHeight               = 0;
+    region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel       = 0;
+    region.imageSubresource.baseArrayLayer = baseArrayLayer;
+    region.imageSubresource.layerCount     = layerCount;
+    region.imageOffset                     = {0, 0, 0};
+    region.imageExtent                     = extent;
+    vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    commandBuffer.SubmitIdle();
+}
+
+bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
+                      VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer)
+{
+    auto physicalDevice = Graphics::Get()->GetPhysicalDevice();
+    auto surface        = Graphics::Get()->GetSurface();
+
+    // Checks blit swapchain support.
+    auto               supportsBlit = true;
+    VkFormatProperties formatProperties;
+
+    // Check if the device supports blitting from optimal images (the swapchain images are in optimal format).
+    vkGetPhysicalDeviceFormatProperties(*physicalDevice, surface->GetFormat().format, &formatProperties);
+
+    if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
+        Log::Warning("Device does not support blitting from optimal tiled images, using copy instead of blit!\n");
+        supportsBlit = false;
+    }
+
+    // Check if the device supports blitting to linear images.
+    vkGetPhysicalDeviceFormatProperties(*physicalDevice, srcFormat, &formatProperties);
+
+    if (!(formatProperties.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
+        Log::Warning("Device does not support blitting to linear tiled images, using copy instead of blit!\n");
+        supportsBlit = false;
+    }
+
+    CreateImage(dstImage,
+                dstImageMemory,
+                extent,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_SAMPLE_COUNT_1_BIT,
+                VK_IMAGE_TILING_LINEAR,
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                1,
+                1,
+                VK_IMAGE_TYPE_2D);
+
+    // Do the actual blit from the swapchain image to our host visible destination image.
+    CommandBuffer commandBuffer;
+
+    // Transition destination image to transfer destination layout.
+    InsertImageMemoryBarrier(commandBuffer,
+                             dstImage,
+                             0,
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+                             VK_IMAGE_LAYOUT_UNDEFINED,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+
+    // Transition image from previous usage to transfer source layout
+    InsertImageMemoryBarrier(commandBuffer,
+                             srcImage,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_ACCESS_TRANSFER_READ_BIT,
+                             srcImageLayout,
+                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             mipLevel,
+                             1,
+                             arrayLayer);
+
+    // If source and destination support blit we'll blit as this also does automatic format conversion (e.g. from BGR to RGB).
+    if (supportsBlit) {
+        // Define the region to blit (we will blit the whole swapchain image).
+        VkOffset3D blitSize = {static_cast<int32_t>(extent.width), static_cast<int32_t>(extent.height), static_cast<int32_t>(extent.depth)};
+
+        VkImageBlit imageBlitRegion                   = {};
+        imageBlitRegion.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageBlitRegion.srcSubresource.mipLevel       = mipLevel;
+        imageBlitRegion.srcSubresource.baseArrayLayer = arrayLayer;
+        imageBlitRegion.srcSubresource.layerCount     = 1;
+        imageBlitRegion.srcOffsets[1]                 = blitSize;
+        imageBlitRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageBlitRegion.dstSubresource.mipLevel       = 0;
+        imageBlitRegion.dstSubresource.baseArrayLayer = 0;
+        imageBlitRegion.dstSubresource.layerCount     = 1;
+        imageBlitRegion.dstOffsets[1]                 = blitSize;
+        vkCmdBlitImage(commandBuffer,
+                       srcImage,
+                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                       dstImage,
+                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       1,
+                       &imageBlitRegion,
+                       VK_FILTER_NEAREST);
+    }
+    else {
+        // Otherwise use image copy (requires us to manually flip components).
+        VkImageCopy imageCopyRegion                   = {};
+        imageCopyRegion.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.srcSubresource.mipLevel       = mipLevel;
+        imageCopyRegion.srcSubresource.baseArrayLayer = arrayLayer;
+        imageCopyRegion.srcSubresource.layerCount     = 1;
+        imageCopyRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.dstSubresource.mipLevel       = 0;
+        imageCopyRegion.dstSubresource.baseArrayLayer = 0;
+        imageCopyRegion.dstSubresource.layerCount     = 1;
+        imageCopyRegion.extent                        = extent;
+        vkCmdCopyImage(
+            commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageCopyRegion);
+    }
+
+    // Transition destination image to general layout, which is the required layout for mapping the image memory later on.
+    InsertImageMemoryBarrier(commandBuffer,
+                             dstImage,
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_IMAGE_LAYOUT_GENERAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+
+    // Transition back the image after the blit is done.
+    InsertImageMemoryBarrier(commandBuffer,
+                             srcImage,
+                             VK_ACCESS_TRANSFER_READ_BIT,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                             srcImageLayout,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             mipLevel,
+                             1,
+                             arrayLayer);
+
+    commandBuffer.SubmitIdle();
+
+    return supportsBlit;
+}
 }   // namespace MapleLeaf

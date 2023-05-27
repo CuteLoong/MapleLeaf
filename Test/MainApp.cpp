@@ -1,6 +1,4 @@
 #include "MainApp.hpp"
-#include "AssimpImporter.hpp"
-#include "DefaultMaterial.hpp"
 #include "Devices.hpp"
 #include "Engine.hpp"
 #include "Graphics.hpp"
@@ -38,10 +36,8 @@ void MainApp::Start()
     Devices::Get()->GetWindow()->SetTitle("Test Title");
     Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
 
-    std::unique_ptr<SceneBuilder> builder = std::make_unique<SceneBuilder>();
-    AssimpImporter<DefaultMaterial> assimpImporter;
-    assimpImporter.Import("", builder)
-    Scenes::Get()->SetScene(std::move(builder));
+    std::unique_ptr<SceneBuilder> scene = std::make_unique<SceneBuilder>();
+    Scenes::Get()->SetScene(std::move(scene));
 }
 
 void MainApp::Update()
