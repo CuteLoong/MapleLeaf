@@ -8,44 +8,44 @@
 #include <memory>
 
 namespace MapleLeaf {
-template<typename Base>
-class ModelFactory
-{
-public:
-    using TCreateReturn = std::shared_ptr<Base>;
+// template<typename Base>
+// class ModelFactory
+// {
+// public:
+//     using TCreateReturn = std::shared_ptr<Base>;
 
-    using TCreateMethodFilename = std::function<TCreateReturn(const std::filesystem::path&)>;
-    using TRegistryMapFilename  = std::unordered_map<std::string, TCreateMethodFilename>;
+//     using TCreateMethodFilename = std::function<TCreateReturn(const std::filesystem::path&)>;
+//     using TRegistryMapFilename  = std::unordered_map<std::string, TCreateMethodFilename>;
 
-    virtual ~ModelFactory() = default;
+//     virtual ~ModelFactory() = default;
 
-    static TRegistryMapFilename& RegistryFilename()
-    {
-        static TRegistryMapFilename impl;
-        return impl;
-    }
+//     static TRegistryMapFilename& RegistryFilename()
+//     {
+//         static TRegistryMapFilename impl;
+//         return impl;
+//     }
 
-    static TCreateReturn Create(const std::filesystem::path& filename)
-    {
-        auto fileExt = filename.extension().string();
-        auto it      = RegistryFilename().find(fileExt);
-        return it == RegistryFilename().end() ? nullptr : it->second(filename);
-    }
+//     static TCreateReturn Create(const std::filesystem::path& filename)
+//     {
+//         auto fileExt = filename.extension().string();
+//         auto it      = RegistryFilename().find(fileExt);
+//         return it == RegistryFilename().end() ? nullptr : it->second(filename);
+//     }
 
-    template<typename T>
-    class Registrar : public Base
-    {
-    protected:
-        static bool Register(const std::string& typeName, const std::string& extension)
-        {
-            ModelFactory::RegistryFilename()[extension] = [](const std::filesystem::path& filename) -> TCreateReturn { return T::Create(filename); };
-            return true;
-        }
-    };
-    inline static std::string name;
-};
+//     template<typename T>
+//     class Registrar : public Base
+//     {
+//     protected:
+//         static bool Register(const std::string& typeName, const std::string& extension)
+//         {
+//             ModelFactory::RegistryFilename()[extension] = [](const std::filesystem::path& filename) -> TCreateReturn { return T::Create(filename);
+//             }; return true;
+//         }
+//     };
+//     inline static std::string name;
+// };
 
-class Model : public ModelFactory<Model>, public Resource
+class Model : /*public ModelFactory<Model>,*/ public Resource
 {
 public:
     /**
@@ -100,4 +100,83 @@ private:
     glm::vec3 maxExtents;
     float     radius = 0.0f;
 };
+
+template<typename T>
+Model::Model(const std::vector<T>& vertices, const std::vector<uint32_t>& indices)
+    : Model()
+{
+    Initialize(vertices, indices);
+}
+
+template<typename T>
+std::vector<T> Model::GetVertices(std::size_t offset) const
+{
+    Buffer vertexStaging(vertexBuffer->GetSize(),
+                         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    CommandBuffer commandBuffer;
+
+    VkBufferCopy copyRegion = {};
+    copyRegion.size         = vertexStaging.GetSize();
+    vkCmdCopyBuffer(commandBuffer, vertexBuffer->GetBuffer(), vertexStaging.GetBuffer(), 1, &copyRegion);
+
+    commandBuffer.SubmitIdle();
+
+    void* verticesMemory;
+    vertexStaging.MapMemory(&verticesMemory);
+    std::vector<T> vertices(vertexCount);
+
+    auto sizeOfSrcT = vertexStaging.GetSize() / vertexCount;
+
+    for (uint32_t i = 0; i < vertexCount; i++) {
+        std::memcpy(&vertices[i], static_cast<char*>(verticesMemory) + (i * sizeOfSrcT) + offset, sizeof(T));
+    }
+
+    vertexStaging.UnmapMemory();
+    return vertices;
+}
+
+template<typename T>
+void Model::SetVertices(const std::vector<T>& vertices)
+{
+    vertexBuffer = nullptr;
+    vertexCount  = static_cast<uint32_t>(vertices.size());
+
+    if (vertices.empty()) return;
+
+    Buffer vertexStaging(sizeof(T) * vertices.size(),
+                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         vertices.data());
+    vertexBuffer = std::make_unique<Buffer>(vertexStaging.GetSize(),
+                                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    CommandBuffer commandBuffer;
+
+    VkBufferCopy copyRegion = {};
+    copyRegion.size         = vertexStaging.GetSize();
+    vkCmdCopyBuffer(commandBuffer, vertexStaging.GetBuffer(), vertexBuffer->GetBuffer(), 1, &copyRegion);
+
+    commandBuffer.SubmitIdle();
+}
+
+template<typename T>
+void Model::Initialize(const std::vector<T>& vertices, const std::vector<uint32_t>& indices)
+{
+    SetVertices(vertices);
+    SetIndices(indices);
+
+    minExtents = glm::vec3(std::numeric_limits<float>::infinity());
+    maxExtents = glm::vec3(-std::numeric_limits<float>::infinity());
+
+    for (const auto& vertex : vertices) {
+        glm::vec3 position(vertex.position);
+        minExtents = glm::vec3(std::min(minExtents.x, position.x), std::min(minExtents.y, position.y), std::min(minExtents.z, position.z));
+        maxExtents = glm::vec3(std::max(minExtents.x, position.x), std::max(minExtents.y, position.y), std::max(minExtents.z, position.z));
+    }
+
+    radius = glm::length(maxExtents - minExtents) / 2.0;
+}
 }   // namespace MapleLeaf

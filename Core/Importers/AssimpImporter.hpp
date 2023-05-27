@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DefaultBuilder.hpp"
+#include "DefaultMaterial.hpp"
 #include "NonCopyable.hpp"
 #include "assimp/Importer.hpp"
 #include "assimp/material.h"
@@ -7,11 +9,11 @@
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include <filesystem>
-#include <unordered_map>
+#include <map>
 
 namespace MapleLeaf {
 class ImporterData;
-class SceneBuilder;
+class Builder;
 
 enum class ImportMode
 {
@@ -21,19 +23,21 @@ enum class ImportMode
 };
 
 template<typename T>
-class AssimpImporter : public NonCopyable
+class AssimpImporter
 {
 public:
     class ImporterData
     {
     public:
+        ImporterData() = default;
+
         std::filesystem::path path;
         const aiScene*        pScene;
-        SceneBuilder&         builder;
+        Builder&              builder;
 
-        std::unordered_map<uint32_t, std::unique_ptr<T>> materialMap;
+        std::map<uint32_t, std::shared_ptr<T>> materialMap;
 
-        ImporterData(const std::filesystem::path& path, const aiScene* pAiScene, SceneBuilder& builder)
+        ImporterData(const std::filesystem::path& path, const aiScene* pAiScene, Builder& builder)
             : path(path)
             , pScene(pAiScene)
             , builder(builder)
@@ -49,18 +53,18 @@ public:
         uint32_t GetNodeInstanceCount(const std::string& nodeName) const { return (uint32_t)mAiNodes.at(nodeName).size(); }
 
     private:
-        std::unordered_map<const std::string, std::vector<const aiNode*>> mAiNodes;
+        std::map<const std::string, std::vector<const aiNode*>> mAiNodes;
     };
 
     AssimpImporter() = default;
 
-    void Import(const std::filesystem::path& path, SceneBuilder& builder);
+    void Import(const std::filesystem::path& path, Builder& builder);
 
 private:
-    void LoadTextures(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath, std::unique_ptr<T>& pMaterial,
+    void LoadTextures(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath, std::shared_ptr<T>& pMaterial,
                       ImportMode importMode);
     void CreateAllMaterials(ImporterData& data, const std::filesystem::path& searchPath, ImportMode importMode);
-    std::unique_ptr<T> CreateMaterial(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath,
+    std::shared_ptr<T> CreateMaterial(ImporterData& data, const aiMaterial* pAiMaterial, const std::filesystem::path& searchPath,
                                       ImportMode importMode);
 
     void CreateSceneGraph(ImporterData& data);
