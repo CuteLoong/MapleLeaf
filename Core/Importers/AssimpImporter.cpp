@@ -57,7 +57,7 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
     assimpFlags &= ~(aiProcess_RemoveRedundantMaterials);   // Avoid merging materials as it doesn't load all fields we care about, we merge in
                                                             // 'SceneBuilder' instead.
     assimpFlags &= ~(aiProcess_SplitLargeMeshes);           // Avoid splitting large meshes
-    // assimpFlags &= ~aiProcess_OptimizeMeshes;               // Avoid merging original meshes
+    assimpFlags &= ~(aiProcess_OptimizeMeshes);             // Avoid merging original meshes
 
     int removeFlags = aiComponent_COLORS;
     for (uint32_t uvLayer = 1; uvLayer < AI_MAX_NUMBER_OF_TEXTURECOORDS; uvLayer++) removeFlags |= aiComponent_TEXCOORDSn(uvLayer);
@@ -143,7 +143,7 @@ std::shared_ptr<T> AssimpImporter<T>::CreateMaterial(ImporterData& data, const a
 
     std::string nameStr = std::string(name.C_Str());
     if (nameStr.empty()) {
-        Log::Warning("AssimpImporter: Material with no name found -> renaming to 'unnamed'.");
+        Log::Warning("AssimpImporter: Material with no name found -> renaming to 'unnamed'. \n");
         nameStr = "unnamed";
     }
 
@@ -212,11 +212,11 @@ void AssimpImporter<T>::CreateMeshes(ImporterData& data)
     for (uint32_t i = 0; i < pScene->mNumMeshes; i++) {
         const aiMesh* pMesh = pScene->mMeshes[i];
         if (!pMesh->HasFaces()) {
-            Log::Warning("AssimpImporter: Mesh ", pMesh->mName.C_Str(), " has no faces, ignoring.");
+            Log::Warning("AssimpImporter: Mesh ", pMesh->mName.C_Str(), " has no faces, ignoring.\n");
             continue;
         }
         if (pMesh->mFaces->mNumIndices != 3) {
-            Log::Warning("AssimpImporter: Mesh ", pMesh->mName.C_Str(), " is not a triangle mesh, ignoring.");
+            Log::Warning("AssimpImporter: Mesh ", pMesh->mName.C_Str(), " is not a triangle mesh, ignoring.\n");
             continue;
         }
         meshes.push_back(pMesh);
@@ -253,11 +253,10 @@ void AssimpImporter<T>::CreateMeshes(ImporterData& data)
         }
 
         data.builder.AddModel(pAiMesh->mName.C_Str(), std::move(std::make_shared<Model>(vertexBuffer, indexBuffer)));
-        if (pAiMesh->mMaterialIndex) {
+        if (data.materialMap.count(pAiMesh->mMaterialIndex)) {
             data.builder.AddMaterial(pAiMesh->mMaterialIndex, std::move(data.materialMap[pAiMesh->mMaterialIndex]));
             data.materialMap.erase(pAiMesh->mMaterialIndex);
         }
-        // data.builder.materialIds.push_back(pAiMesh->mMaterialIndex);
     }
 }
 template class AssimpImporter<DefaultMaterial>;

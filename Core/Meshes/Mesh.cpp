@@ -19,7 +19,8 @@ void Mesh::Update()
 {
     if (material) {
         // auto transform = GetEntity()->GetComponent<glm::mat4>();
-        material->PushUniforms(uniformObject, nullptr);
+        glm::mat4 I = glm::mat4(1.0f);
+        material->PushUniforms(uniformObject, &I);
     }
 }
 

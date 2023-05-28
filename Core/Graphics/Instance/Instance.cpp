@@ -5,7 +5,7 @@
 #include "Log.hpp"
 #include <iostream>
 
-#define MAPLELEAF_DEBUG
+// #define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
 const std::vector<const char*> Instance::ValidationLayers = {"VK_LAYER_KHRONOS_validation"};   // "VK_LAYER_RENDERDOC_Capture"

@@ -10,6 +10,7 @@ public:
         : nearPlane(0.1f)
         , farPlane(1000.0f)
         , fieldOfView(glm::radians(45.0f))
+        , position(glm::vec3(0, 0, 2.0f))
     {}
 
     virtual ~Camera() = default;
@@ -45,7 +46,7 @@ public:
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
-private:
+protected:
     float nearPlane, farPlane;
     float fieldOfView;
 

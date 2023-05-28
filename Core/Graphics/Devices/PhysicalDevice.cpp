@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <map>
 
-#define MAPLELEAF_DEBUG
+// #define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
 static const std::vector<VkSampleCountFlagBits> STAGE_FLAG_BITS = {
