@@ -118,7 +118,7 @@ public:
 private:
     glm::vec2                 scale = {1.0f, 1.0f};
     std::optional<glm::uvec2> size;
-    glm::ivec2                offset;
+    glm::ivec2                offset = {0.0f, 0.0f};
 };
 
 class RenderStage

@@ -82,9 +82,9 @@ struct hash<MapleLeaf::Vertex3D>
     size_t operator()(const MapleLeaf::Vertex3D& vertex) const noexcept
     {
         size_t seed = 0;
-        MapleLeaf::Maths::HashCombine(seed, vertex.position);
-        MapleLeaf::Maths::HashCombine(seed, vertex.uv);
-        MapleLeaf::Maths::HashCombine(seed, vertex.normal);
+        // MapleLeaf::Maths::HashCombine(seed, vertex.position);
+        // MapleLeaf::Maths::HashCombine(seed, vertex.uv);
+        // MapleLeaf::Maths::HashCombine(seed, vertex.normal);
         return seed;
     }
 };
