@@ -50,6 +50,8 @@ PipelineGraphics::PipelineGraphics(Stage stage, std::vector<std::filesystem::pat
 PipelineGraphics::~PipelineGraphics()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
+    auto graphicsQueue = logicalDevice->GetGraphicsQueue();
+    Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));
 
     for (const auto& shaderModule : modules) vkDestroyShaderModule(*logicalDevice, shaderModule, nullptr);
     vkDestroyDescriptorPool(*logicalDevice, descriptorPool, nullptr);

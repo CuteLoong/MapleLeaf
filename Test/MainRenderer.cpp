@@ -11,7 +11,7 @@ class TestSubrender : public Subrender
 public:
     explicit TestSubrender(const Pipeline::Stage& stage)
         : Subrender(stage)
-        , pipeline(stage, {"E:/MapleLeaf/Resources/Shader/tri1.vert", "E:/MapleLeaf/Resources/Shader/tri1.frag"}, {}, {},
+        , pipeline(stage, {"F:/MapleLeaf/Resources/Shader/tri1.vert", "F:/MapleLeaf/Resources/Shader/tri1.frag"}, {}, {},
                    PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None)
     {}
 

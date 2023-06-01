@@ -55,6 +55,7 @@ public:
 private:
     std::unordered_map<std::string, std::shared_ptr<Model>> models;
     std::unordered_map<uint32_t, std::shared_ptr<Material>> materials;
+    std::unordered_map<std::string, uint32_t> modelMatMap;
     // TODO: Light
 };
 }   // namespace MapleLeaf

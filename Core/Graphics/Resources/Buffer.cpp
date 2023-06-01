@@ -58,6 +58,8 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 Buffer::~Buffer()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
+    auto graphicsQueue = logicalDevice->GetGraphicsQueue();
+    Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));
 
     vkDestroyBuffer(*logicalDevice, buffer, nullptr);
     vkFreeMemory(*logicalDevice, bufferMemory, nullptr);
