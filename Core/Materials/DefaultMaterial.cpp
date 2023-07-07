@@ -25,7 +25,7 @@ void DefaultMaterial::CreatePipeline(const Shader::VertexInput& vertexInput)
 
 void DefaultMaterial::PushUniforms(UniformHandler& uniformObject, const glm::mat4* transform)
 {
-    if (transform) uniformObject.Push("transform", transform);
+    if (transform) uniformObject.Push("transform", *transform);
 
     uniformObject.Push("baseDiffuse", baseDiffuse);
     uniformObject.Push("metallic", metallic);

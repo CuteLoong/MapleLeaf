@@ -9,6 +9,13 @@ class Builder
     friend class SceneBuilder;
 
 public:
+    struct Node
+    {
+        std::string name;
+        glm::mat4 transform;
+        uint32_t parentIndex;
+    };
+
     Builder() = default;
 
     Model* AddModel(const std::string name, std::shared_ptr<Model>&& model);
