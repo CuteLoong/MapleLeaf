@@ -4,7 +4,6 @@
 #include "Module.hpp"
 #include "Window.hpp"
 
-
 namespace MapleLeaf {
 class Devices : public Module::Registrar<Devices>
 {

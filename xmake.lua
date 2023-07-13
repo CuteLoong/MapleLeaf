@@ -7,7 +7,7 @@ add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode/"})
 
 if is_plat("windows") then 
-    set_toolchains("clang-cl")
+    set_toolchains("msvc")
 elseif is_plat("linux") then
     set_toolchains("clang")
 end
