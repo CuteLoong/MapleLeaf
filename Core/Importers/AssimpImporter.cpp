@@ -37,6 +37,14 @@ static const std::vector<TextureMapping> kTextureMappings[3] = {
         {AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, Material::TextureSlot::Material},
     }};
 
+glm::mat4 AiMatToGLMMat(aiMatrix4x4& raw)
+{
+    glm::mat4 ret;
+    memcpy(&ret[0][0], &raw.a1, sizeof(glm::mat4));
+    
+    return ret;
+}
+
 template<typename T>
 void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& builder)
 {
@@ -190,6 +198,8 @@ void AssimpImporter<T>::CreateSceneGraph(ImporterData& data)
 {
     // TODO BoneList
     aiNode* pRoot = data.pScene->mRootNode;
+    // data.builder.sceneRoot = std::make_shared<SceneNode>(pRoot->mName.C_Str(), AiMatToGLMMat(pRoot->mTransformation), pRoot->mNumMeshes == 0);
+    // data.builder.sceneRoot->SetParent(nullptr);
     ParseNode(data, pRoot, false);
 }
 
@@ -199,6 +209,7 @@ void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bo
     // TODO: store a tree in scene for bone
     data.AddAiNode(pCurrent);
     for (uint32_t i = 0; i < pCurrent->mNumChildren; i++) {
+        // data.builder.sceneRoot->SetChild();
         ParseNode(data, pCurrent->mChildren[i], hasBoneAncestor);
     }
 }

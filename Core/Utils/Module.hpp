@@ -102,6 +102,7 @@ public:
 
     using StageIndex = std::pair<Stage, TypeId>;
 
+    Module() { TypeInfo<Module>::GetTypeId<Module>(); }
     virtual ~Module() = default;
 
     /**
@@ -109,8 +110,6 @@ public:
      */
     virtual void Update() = 0;
 };
-
-template class TypeInfo<Module>;
 
 class ModuleFilter
 {

@@ -2,6 +2,7 @@
 
 #include "Image2d.hpp"
 #include "Mesh.hpp"
+#include "SceneGraph.hpp"
 
 namespace MapleLeaf {
 class Builder
@@ -9,13 +10,6 @@ class Builder
     friend class SceneBuilder;
 
 public:
-    struct Node
-    {
-        std::string name;
-        glm::mat4 transform;
-        uint32_t parentIndex;
-    };
-
     Builder() = default;
 
     Model* AddModel(const std::string name, std::shared_ptr<Model>&& model);
@@ -59,10 +53,11 @@ public:
         return true;
     }
 
+    // std::shared_ptr<SceneNode> sceneRoot;
+
 private:
     std::unordered_map<std::string, std::shared_ptr<Model>> models;
     std::unordered_map<uint32_t, std::shared_ptr<Material>> materials;
-    std::unordered_map<std::string, uint32_t> modelMatMap;
     // TODO: Light
 };
 }   // namespace MapleLeaf
