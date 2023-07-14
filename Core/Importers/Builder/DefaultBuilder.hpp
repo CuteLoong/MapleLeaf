@@ -12,24 +12,15 @@ class Builder
 public:
     Builder() = default;
 
-    Model* AddModel(const std::string name, std::shared_ptr<Model>&& model);
-    Model* GetModel(const std::string name);
+    Mesh* GetMesh(const uint32_t index);
+
+    NodeID AddSceneNode(SceneNode&& node);
 
     template<typename T, typename = std::enable_if_t<std::is_convertible_v<T*, Material*>>>
-    T* AddMaterial(const uint32_t index, std::shared_ptr<T>&& material)
+    Mesh* AddMesh(std::shared_ptr<Model>&& model, std::shared_ptr<T>&& material)
     {
-        if (materials.count(index) != 0) Log::Info(index, " material has been added, here maybe some warning!");
-
-        materials[index] = std::move(material);
-        return static_cast<T*>(materials[index].get());
-    }
-
-    template<typename T, typename = std::enable_if_t<std::is_convertible_v<T*, Material*>>>
-    T* GetMaterial(const uint32_t index)
-    {
-        if (auto it = materials.find(index); it != materials.end() && it->second) return static_cast<T*>(it->second.get());
-
-        return nullptr;
+        meshes.push_back(std::make_unique<Mesh>(model, material));
+        return meshes.back().get();
     }
 
     template<typename T, typename = std::enable_if_t<std::is_convertible_v<T*, Material*>>>
@@ -53,11 +44,9 @@ public:
         return true;
     }
 
-    // std::shared_ptr<SceneNode> sceneRoot;
-
 private:
-    std::unordered_map<std::string, std::shared_ptr<Model>> models;
-    std::unordered_map<uint32_t, std::shared_ptr<Material>> materials;
+    std::vector<std::unique_ptr<Mesh>> meshes;
+    SceneGraph                         sceneGraph;
     // TODO: Light
 };
 }   // namespace MapleLeaf

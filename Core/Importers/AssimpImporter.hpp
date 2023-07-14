@@ -3,6 +3,7 @@
 #include "DefaultBuilder.hpp"
 #include "DefaultMaterial.hpp"
 #include "NonCopyable.hpp"
+#include "SceneGraph.hpp"
 #include "assimp/Importer.hpp"
 #include "assimp/material.h"
 #include "assimp/pbrmaterial.h"
@@ -43,8 +44,13 @@ public:
             , builder(builder)
         {}
 
-        void AddAiNode(const aiNode* pNode)
+        NodeID getNodeID(const aiNode* pNode) { return mAiToNodeID[pNode]; }
+
+        void AddAiNode(const aiNode* pNode, NodeID nodeID)
         {
+            assert(mAiToNodeID.find(pNode) == mAiToNodeID.end());
+            mAiToNodeID[pNode] = nodeID;
+
             if (mAiNodes.find(pNode->mName.C_Str()) == mAiNodes.end()) {
                 mAiNodes[pNode->mName.C_Str()] = {};
             }
@@ -54,6 +60,7 @@ public:
 
     private:
         std::map<const std::string, std::vector<const aiNode*>> mAiNodes;
+        std::map<const aiNode*, NodeID>                         mAiToNodeID;
     };
 
     AssimpImporter() = default;
