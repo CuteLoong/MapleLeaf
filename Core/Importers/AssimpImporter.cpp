@@ -1,8 +1,8 @@
 #include "AssimpImporter.hpp"
 #include "Color.hpp"
 #include "DefaultMaterial.hpp"
+#include "SceneGraph.hpp"
 #include <memory>
-#include <stdlib.h>
 
 namespace MapleLeaf {
 struct TextureMapping
@@ -37,11 +37,10 @@ static const std::vector<TextureMapping> kTextureMappings[3] = {
         {AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, Material::TextureSlot::Material},
     }};
 
-glm::mat4 AiMatToGLMMat(aiMatrix4x4& raw)
+glm::mat4 AiCast(const aiMatrix4x4& raw)
 {
     glm::mat4 ret;
     memcpy(&ret[0][0], &raw.a1, sizeof(glm::mat4));
-    
     return ret;
 }
 
@@ -139,6 +138,7 @@ void AssimpImporter<T>::CreateAllMaterials(ImporterData& data, const std::filesy
     for (uint32_t i = 0; i < data.pScene->mNumMaterials; i++) {
         const aiMaterial* pAiMaterial = data.pScene->mMaterials[i];
         data.materialMap[i]           = std::move(CreateMaterial(data, pAiMaterial, searchPath, importMode));
+        // data.builder.AddMaterial(std::move(data.materialMap[i]));
     }
 }
 
@@ -196,20 +196,23 @@ std::shared_ptr<T> AssimpImporter<T>::CreateMaterial(ImporterData& data, const a
 template<typename T>
 void AssimpImporter<T>::CreateSceneGraph(ImporterData& data)
 {
-    // TODO BoneList
     aiNode* pRoot = data.pScene->mRootNode;
-    // data.builder.sceneRoot = std::make_shared<SceneNode>(pRoot->mName.C_Str(), AiMatToGLMMat(pRoot->mTransformation), pRoot->mNumMeshes == 0);
-    // data.builder.sceneRoot->SetParent(nullptr);
+
     ParseNode(data, pRoot, false);
 }
 
 template<typename T>
 void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bool hasBoneAncestor)
 {
-    // TODO: store a tree in scene for bone
-    data.AddAiNode(pCurrent);
+    SceneNode node;
+    node.name      = pCurrent->mName.C_Str();
+    node.transform = AiCast(pCurrent->mTransformation);
+    node.parent    = pCurrent->mParent ? data.getNodeID(pCurrent->mParent) : NodeID::Invalid();
+    node.meshes.resize(pCurrent->mNumMeshes);
+    if(!node.meshes.empty()) std::copy(pCurrent->mMeshes, pCurrent->mMeshes + pCurrent->mNumMeshes, node.meshes.data());
+
+    data.AddAiNode(pCurrent, data.builder.AddSceneNode(std::move(node)));
     for (uint32_t i = 0; i < pCurrent->mNumChildren; i++) {
-        // data.builder.sceneRoot->SetChild();
         ParseNode(data, pCurrent->mChildren[i], hasBoneAncestor);
     }
 }
@@ -263,11 +266,7 @@ void AssimpImporter<T>::CreateMeshes(ImporterData& data)
             vertexBuffer[i] = std::move(Vertex3D(position, uv, normal));
         }
 
-        data.builder.AddModel(pAiMesh->mName.C_Str(), std::move(std::make_shared<Model>(vertexBuffer, indexBuffer)));
-        if (data.materialMap.count(pAiMesh->mMaterialIndex)) {
-            data.builder.AddMaterial(pAiMesh->mMaterialIndex, std::move(data.materialMap[pAiMesh->mMaterialIndex]));
-            data.materialMap.erase(pAiMesh->mMaterialIndex);
-        }
+        data.builder.AddMesh(std::move(std::make_shared<Model>(vertexBuffer, indexBuffer)), std::move(data.materialMap[pAiMesh->mMaterialIndex]));
     }
 }
 template class AssimpImporter<DefaultMaterial>;

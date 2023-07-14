@@ -28,21 +28,19 @@ Bitmap::Bitmap(std::unique_ptr<uint8_t[]>&& data, const glm::uvec2& size, uint32
 
 void Bitmap::Load(const std::filesystem::path& filename)
 {
-    // Registry()[filename.extension().string()].first(*this, filename);
+    auto pathStr = filename.string();
+    std::replace(pathStr.begin(), pathStr.end(), '\\', '/');
 
-    auto fileLoaded = Files::Read(filename);
-
-    if (!fileLoaded) {
+    if (!Files::ExistsInPath(pathStr)) {
         Log::Error("Bitmap could not be loaded: ", filename, '\n');
         return;
     }
 
-    data          = std::unique_ptr<uint8_t[]>(stbi_load_from_memory(reinterpret_cast<uint8_t*>(fileLoaded->data()),
-                                                            static_cast<uint32_t>(fileLoaded->size()),
-                                                            reinterpret_cast<int32_t*>(&size.x),
-                                                            reinterpret_cast<int32_t*>(&size.y),
-                                                            reinterpret_cast<int32_t*>(&bytesPerPixel),
-                                                            STBI_rgb_alpha));
+    data          = std::unique_ptr<uint8_t[]>(stbi_load(pathStr.c_str(),
+                                                        reinterpret_cast<int32_t*>(&size.x),
+                                                        reinterpret_cast<int32_t*>(&size.y),
+                                                        reinterpret_cast<int32_t*>(&bytesPerPixel),
+                                                        STBI_rgb_alpha));
     bytesPerPixel = 4;
 }
 
