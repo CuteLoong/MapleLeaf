@@ -15,7 +15,7 @@ public:
                              bool castsShadows = true, bool ignoreLighting = false, bool ignoreFog = false);
 
     void CreatePipeline(const Shader::VertexInput& vertexInput) override;
-    void PushUniforms(UniformHandler& uniformObject, const glm::mat4* transform) override;
+    void PushUniforms(UniformHandler& uniformObject, const Transform* transform) override;
     void PushDescriptors(DescriptorsHandler& descriptorSet) override;
 
     const Color& GetBaseDiffuse() const { return baseDiffuse; }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Transform.hpp"
 #include "glm/glm.hpp"
 #include <memory>
 #include <string>
@@ -33,13 +34,15 @@ private:
     int32_t index;
 };
 
-struct SceneNode
+class SceneNode
 {
 public:
-    std::string         name;
-    glm::mat4           transform;
-    NodeID              parent;
-    std::vector<NodeID> children;
+    SceneNode() = default;
+
+    std::string           name;
+    Transform*            transform;   // auto free by unique_ptr in component
+    NodeID                parent;
+    std::vector<NodeID>   children;
     std::vector<uint32_t> meshes;
 };
 

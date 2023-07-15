@@ -2,7 +2,7 @@
 #include "Color.hpp"
 #include "DefaultMaterial.hpp"
 #include "SceneGraph.hpp"
-#include <memory>
+#include "Transform.hpp"
 
 namespace MapleLeaf {
 struct TextureMapping
@@ -190,7 +190,7 @@ std::shared_ptr<T> AssimpImporter<T>::CreateMaterial(ImporterData& data, const a
         }
     }
 
-    return std::move(pMaterial);
+    return pMaterial;
 }
 
 template<typename T>
@@ -206,7 +206,7 @@ void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bo
 {
     SceneNode node;
     node.name      = pCurrent->mName.C_Str();
-    node.transform = AiCast(pCurrent->mTransformation);
+    node.transform = new Transform(AiCast(pCurrent->mTransformation));
     node.parent    = pCurrent->mParent ? data.getNodeID(pCurrent->mParent) : NodeID::Invalid();
     node.meshes.resize(pCurrent->mNumMeshes);
     if(!node.meshes.empty()) std::copy(pCurrent->mMeshes, pCurrent->mMeshes + pCurrent->mNumMeshes, node.meshes.data());

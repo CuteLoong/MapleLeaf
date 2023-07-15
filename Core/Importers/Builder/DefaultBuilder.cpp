@@ -1,6 +1,7 @@
 #include "DefaultBuilder.hpp"
 
 namespace MapleLeaf {
+
 NodeID Builder::AddSceneNode(SceneNode&& node)
 {
     if (node.parent.isValid() && node.parent >= sceneGraph.size()) Log::Error("Scene node parent is out of range");
@@ -8,12 +9,14 @@ NodeID Builder::AddSceneNode(SceneNode&& node)
 
     NodeID newNodeID{static_cast<uint32_t>(sceneGraph.size())};
     sceneGraph.push_back(std::move(node));
-    if (node.parent.isValid()) sceneGraph[node.parent].children.push_back(newNodeID);
+    SceneNode& n = sceneGraph.back();
+    if (n.parent.isValid()) {
+        sceneGraph[n.parent].children.push_back(newNodeID);
+        n.transform->SetParent(sceneGraph[n.parent].transform);
+    }
 
     return newNodeID;
 }
-
-
 
 Mesh* Builder::GetMesh(const uint32_t index)
 {
