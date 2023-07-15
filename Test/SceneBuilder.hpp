@@ -4,10 +4,8 @@
 #include "DefaultBuilder.hpp"
 #include "DefaultMaterial.hpp"
 #include "Scene.hpp"
-#include <cstddef>
-#include <filesystem>
 #include "TestCamera.hpp"
-
+#include "Transform.hpp"
 
 namespace MapleLeaf {
 class SceneBuilder : public Scene
@@ -23,10 +21,17 @@ public:
     void Start() override
     {
         assimpImporter.Import(path, builder);
-        // for (const auto& [name, model] : builder.models) {
-        //     auto mesh = CreateEntity();
-        //     mesh->AddComponent<Mesh>(model, std::make_shared<DefaultMaterial>());
-        // }
+
+        for (const auto& node : builder.sceneGraph) {
+            auto entity = CreateEntity();
+            entity->SetName(node.name);
+            entity->AddComponent(std::move(std::make_unique<Transform>(*node.transform)));
+            if (!node.meshes.empty()) {
+                for (int i = 0; i < node.meshes.size(); i++) {
+                    entity->AddComponent(std::move(builder.meshes[node.meshes[i]]));
+                }
+            }
+        }
     }
 
     void Update() override { Scene::Update(); }

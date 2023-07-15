@@ -1,4 +1,5 @@
 #include "DefaultMaterial.hpp"
+#include "Transform.hpp"
 #include <string>
 
 namespace MapleLeaf {
@@ -23,9 +24,9 @@ void DefaultMaterial::CreatePipeline(const Shader::VertexInput& vertexInput)
         {1, 0}, {{"E:/MapleLeaf/Resources/Shader/Defaults/Default.vert", "E:/MapleLeaf/Resources/Shader/Defaults/Default.frag"}, {vertexInput}, GetDefines(), PipelineGraphics::Mode::MRT});
 }
 
-void DefaultMaterial::PushUniforms(UniformHandler& uniformObject, const glm::mat4* transform)
+void DefaultMaterial::PushUniforms(UniformHandler& uniformObject, const Transform* transform)
 {
-    if (transform) uniformObject.Push("transform", *transform);
+    if (transform) uniformObject.Push("transform", transform->GetWorldMatrix());
 
     uniformObject.Push("baseDiffuse", baseDiffuse);
     uniformObject.Push("metallic", metallic);

@@ -26,7 +26,7 @@ Transform::Transform(const glm::mat4 modelMatrix)
 
 Transform::~Transform()
 {
-    delete worldTransform;
+    if(worldTransform) delete worldTransform;
 
     for (auto& child : children) child->parent = nullptr;
 
@@ -64,11 +64,11 @@ glm::vec3 Transform::GetScale() const
 
 void Transform::SetParent(Transform* parent)
 {
-    if (parent) parent->RemoveChild(this);
+    if (this->parent) this->parent->RemoveChild(this);
 
     this->parent = parent;
 
-    if (parent) parent->AddChild(this);
+    if (this->parent) this->parent->AddChild(this);
 }
 
 void Transform::SetParent(Entity* parent)

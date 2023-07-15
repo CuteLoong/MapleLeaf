@@ -110,6 +110,11 @@ void LogicalDevice::CreateLogicalDevice()
     else
         Log::Warning("Selected GPU does not support tessellation shaders!\n");
 
+    if (physicalDeviceFeatures.samplerAnisotropy)
+        enabledFeatures.samplerAnisotropy = VK_TRUE;
+    else
+        Log::Warning("Selected GPU does not support sampler anisotropy!\n");
+
     VkDeviceCreateInfo deviceCreateInfo   = {};
     deviceCreateInfo.sType                = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());

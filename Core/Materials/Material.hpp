@@ -3,6 +3,7 @@
 #include "DescriptorHandler.hpp"
 #include "MaterialPipeline.hpp"
 #include "StreamFactory.hpp"
+#include "Transform.hpp"
 #include "UniformHandler.hpp"
 #include "glm/fwd.hpp"
 
@@ -26,7 +27,7 @@ public:
      * A material can defined it's own uniforms and push them via {@link Material#PushDescriptors()}.
      * @param uniformObject The uniform handler to update.
      */
-    virtual void PushUniforms(UniformHandler& uniformObject, const glm::mat4* transform) = 0;
+    virtual void PushUniforms(UniformHandler& uniformObject, const Transform* transform) = 0;
 
     /**
      * Used to update a descriptor set containing descriptors used in this materials shader.
