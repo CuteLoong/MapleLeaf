@@ -47,6 +47,22 @@ void CallbackWindowIconify(GLFWwindow* glfwWindow, int32_t iconified)
     window->iconified = static_cast<bool>(iconified);
 }
 
+void CallbackMouseButton(GLFWwindow *glfwWindow, int32_t button, int32_t action, int32_t mods) {
+	auto window = static_cast<Window *>(glfwGetWindowUserPointer(glfwWindow));
+	window->onMouseButton(static_cast<MouseButton>(button), static_cast<InputAction>(action), static_cast<InputMod>(mods));
+}
+
+void CallbackCursorPos(GLFWwindow *glfwWindow, double xpos, double ypos) {
+	auto window = static_cast<Window *>(glfwGetWindowUserPointer(glfwWindow));
+	window->mousePosition = {xpos, ypos};
+	window->onMousePosition(window->mousePosition);
+}
+
+void CallbackKey(GLFWwindow *glfwWindow, int32_t key, int32_t scancode, int32_t action, int32_t mods) {
+	auto window = static_cast<Window *>(glfwGetWindowUserPointer(glfwWindow));
+	window->onKey(static_cast<Key>(key), static_cast<InputAction>(action), static_cast<InputMod>(mods));
+}
+
 Window::Window(std::size_t id)
     : windowId(id)
     , size(1080, 720)
@@ -74,6 +90,9 @@ Window::Window(std::size_t id)
     glfwSetWindowIconifyCallback(window, CallbackWindowIconify);
     glfwSetWindowSizeCallback(window, CallbackWindowSize);
     glfwSetFramebufferSizeCallback(window, CallbackFramebufferSize);
+    glfwSetCursorPosCallback(window, CallbackCursorPos);
+    glfwSetMouseButtonCallback(window, CallbackMouseButton);
+    glfwSetKeyCallback(window, CallbackKey);
 }
 Window::~Window()
 {

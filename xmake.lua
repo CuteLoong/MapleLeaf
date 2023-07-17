@@ -12,8 +12,8 @@ elseif is_plat("linux") then
     set_toolchains("clang")
 end
 
-add_requires("volk", "glm", "glfw", "spirv-tools", "glslang", "assimp", "stb")
-add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp", "stb")
+add_requires("volk", "glm", "glfw", "spirv-tools", "glslang", "assimp", "stb", "boost")
+add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp", "stb", "boost")
 add_includedirs(
 "Core/Devices", 
 "Core/Utils", 
@@ -36,7 +36,8 @@ add_includedirs(
 "Core/Scenes", 
 "Core/Importers", 
 "Core/Importers/Builder",
-"Core/Bitmaps"
+"Core/Bitmaps",
+"Core/Inputs"
 )
 
 target("Core")
@@ -62,7 +63,8 @@ target("Core")
     "Core/Scenes/*.cpp", 
     "Core/Importers/*.cpp", 
     "Core/Importers/Builder/*.cpp",
-    "Core/Bitmaps/*.cpp"
+    "Core/Bitmaps/*.cpp",
+    "Core/Inputs/*.cpp"
     )
 target_end()
 
