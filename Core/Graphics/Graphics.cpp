@@ -118,6 +118,7 @@ void Graphics::ResetRenderStages()
             renderStage->Rebuild(*swapchain);
         }
     }
+    RecreateAttachmentsMap();
 }
 
 void Graphics::RecreateSwapchain()
@@ -185,6 +186,16 @@ void Graphics::RecreatePass(RenderStage& renderStage)
             RecreateSwapchain();
         }
         renderStage.Rebuild(*swapchain);
+    }
+    RecreateAttachmentsMap();
+}
+
+void Graphics::RecreateAttachmentsMap()
+{
+    attachments.clear();
+
+    for (const auto& renderStage : renderer->renderStages) {
+        attachments.insert(renderStage->descriptors.begin(), renderStage->descriptors.end());
     }
 }
 

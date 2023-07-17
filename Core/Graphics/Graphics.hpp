@@ -40,9 +40,9 @@ public:
     static void        CheckVk(VkResult result);
 
 private:
-    std::unique_ptr<Renderer> renderer;
-
-    std::unique_ptr<Instance> instance;
+    std::unique_ptr<Renderer>                renderer;
+    std::map<std::string, const Descriptor*> attachments;
+    std::unique_ptr<Instance>                instance;
 
     std::unique_ptr<PhysicalDevice> physicalDevice;
     std::unique_ptr<LogicalDevice>  logicalDevice;
@@ -57,6 +57,7 @@ private:
     void RecreateSwapchain();
     void RecreateCommandBuffers();
     void RecreatePass(RenderStage& renderStage);
+    void RecreateAttachmentsMap();
     bool StartRenderpass(RenderStage& renderStage);
     void EndRenderpass(RenderStage& renderStage);
 };

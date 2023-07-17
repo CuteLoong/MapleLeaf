@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 #include "Devices.hpp"
+#include "Inputs.hpp"
 
 namespace MapleLeaf {
 class TestCamera : public Camera
