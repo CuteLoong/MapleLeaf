@@ -28,7 +28,7 @@ void Inputs::ProcessKeyboard(Key key, InputAction inputAction, InputMod inputMod
     if ((key == Key::A) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.x -= 1.0;
     if ((key == Key::D) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.x += 1.0;
     if ((key == Key::E) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.y += 1.0;
-    if ((key == Key::Q) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.z -= 1.0;
+    if ((key == Key::Q) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.y -= 1.0;
 }
 
 void Inputs::ProcessMousePosition(glm::vec2 value)

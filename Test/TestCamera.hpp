@@ -8,7 +8,10 @@ namespace MapleLeaf {
 class TestCamera : public Camera
 {
 public:
-    TestCamera() {}
+    TestCamera() {
+        position = glm::vec3(0.0f, 0.0f, 2.0f);
+        rotation = glm::vec3(0.0f, 0.0f, glm::radians(270.0f));
+    }
 
     void Start() override {}
     void Update() override

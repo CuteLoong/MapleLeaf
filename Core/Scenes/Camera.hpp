@@ -11,8 +11,6 @@ public:
         : nearPlane(0.1f)
         , farPlane(1000.0f)
         , fieldOfView(glm::radians(60.0f))
-        , position(glm::vec3(0.0f, 0.0f, 0.0f))
-        , rotation(glm::vec3(0.0f, 0.0f, 0.0f))
     {}
 
     virtual ~Camera() = default;
@@ -53,7 +51,7 @@ protected:
     float fieldOfView;
 
     glm::vec3 position;
-    glm::vec3 rotation;
+    glm::vec3 rotation; // x----Pitch y----Yaw
     glm::vec3 velocity;
 
     glm::mat4 viewMatrix;
