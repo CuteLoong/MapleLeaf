@@ -38,7 +38,7 @@ glm::mat4 Transform::GetWorldMatrix() const
     auto worldTransform = GetWorldTransform();
 
     glm::mat4 trans = glm::mat4(1.0f);
-    trans           = glm::scale(trans, rotation);
+    trans           = glm::scale(trans, scale);
     trans           = glm::rotate(trans, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     trans           = glm::rotate(trans, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     trans           = glm::rotate(trans, rotation.y, glm::vec3(0.0f, 0.0f, 1.0f));
