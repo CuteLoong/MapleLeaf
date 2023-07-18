@@ -10,8 +10,9 @@ public:
     Camera()
         : nearPlane(0.1f)
         , farPlane(1000.0f)
-        , fieldOfView(glm::radians(45.0f))
-        , position(glm::vec3(0, 0, 2.0f))
+        , fieldOfView(glm::radians(60.0f))
+        , position(glm::vec3(0.0f, 0.0f, 0.0f))
+        , rotation(glm::vec3(0.0f, 0.0f, 0.0f))
     {}
 
     virtual ~Camera() = default;
