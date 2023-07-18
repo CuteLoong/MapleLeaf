@@ -39,7 +39,7 @@ public:
             forward.y = 0;
             forward.z = std::sin(rotation.y);
         }
-        viewMatrix       = glm::lookAt(position, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+        viewMatrix       = glm::lookAt(position, position + forward, glm::vec3(0.0, 1.0, 0.0));
         projectionMatrix = glm::perspective(GetFieldOfView(), Devices::Get()->GetWindow()->GetAspectRatio(), GetNearPlane(), GetFarPlane());
     }
 };
