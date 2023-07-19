@@ -10,7 +10,7 @@ class TestCamera : public Camera
 public:
     TestCamera() {
         position = glm::vec3(0.0f, 0.0f, 2.0f);
-        rotation = glm::vec3(0.0f, 0.0f, glm::radians(270.0f));
+        rotation = glm::vec3(0.0f, glm::radians(-90.0f), 0.0f);
     }
 
     void Start() override {}

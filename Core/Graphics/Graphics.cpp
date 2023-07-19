@@ -55,6 +55,12 @@ const RenderStage* Graphics::GetRenderStage(uint32_t index) const
     return nullptr;
 }
 
+const Descriptor* Graphics::GetAttachment(const std::string& name) const
+{
+    if (auto it = attachments.find(name); it != attachments.end()) return it->second;
+    return nullptr;
+}
+
 void Graphics::Update()
 {
     if (!renderer || Devices::Get()->GetWindow()->IsIconified()) return;

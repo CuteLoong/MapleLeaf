@@ -40,6 +40,17 @@ add_includedirs(
 "Core/Inputs"
 )
 
+add_includedirs(
+"RenderPass/Deferred"
+)
+
+target("Deferred")
+    set_kind("static")
+    add_files(
+    "RenderPass/Deferred/*.cpp"
+    )
+target_end()
+
 target("Core")
     set_kind("static")
     add_files(
@@ -71,6 +82,7 @@ target_end()
 target("MapleLeaf")
     set_kind("binary")
     add_deps("Core")
+    add_deps("Deferred")
     add_includedirs("Test/")
     add_files("Test/*.cpp")
     -- add_files("./main.cpp") 

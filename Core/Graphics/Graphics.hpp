@@ -35,6 +35,7 @@ public:
     void      SetRenderer(std::unique_ptr<Renderer>&& renderer) { this->renderer = std::move(renderer); }
 
     const RenderStage* GetRenderStage(uint32_t index) const;
+    const Descriptor*  GetAttachment(const std::string& name) const;
 
     static std::string StringifyResultVk(VkResult result);
     static void        CheckVk(VkResult result);
