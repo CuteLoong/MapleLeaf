@@ -19,9 +19,9 @@ layout(location = 0) out vec4 outColour;
 
 void main() {
 	vec3 worldPosition = texture(samplerPosition, inUV).rgb;
-	// vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
+	vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
 
-	// vec4 diffuse = texture(samplerDiffuse, inUV);
+	vec4 diffuse = texture(samplerDiffuse, inUV);
 	// vec3 normal = texture(samplerNormal, inUV).rgb;
 	// vec3 material = texture(samplerMaterial, inUV).rgb;
 
@@ -35,5 +35,5 @@ void main() {
 	// vec3 R = reflect(-V, N); 
 
 	
-	outColour = vec4(0.5f);
+	outColour = vec4(diffuse.rgb, 1.0f);
 }

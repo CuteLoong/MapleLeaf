@@ -23,17 +23,18 @@ void Inputs::ProcessMouseButton(MouseButton mouseButton, InputAction inputAction
 
 void Inputs::ProcessKeyboard(Key key, InputAction inputAction, InputMod inputMod)
 {
-    if ((key == Key::W) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.z += 1.0;
-    if ((key == Key::S) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.z -= 1.0;
-    if ((key == Key::A) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.x -= 1.0;
-    if ((key == Key::D) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.x += 1.0;
-    if ((key == Key::E) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.y += 1.0;
-    if ((key == Key::Q) && (inputAction == InputAction::Press) && (inputMod == InputMod::None)) positionDelta.y -= 1.0;
+    bool moveButtonPressed = inputAction == InputAction::Repeat || inputAction == InputAction::Press;
+    if ((key == Key::W) && moveButtonPressed && (inputMod == InputMod::None)) positionDelta.z += 1.0;
+    if ((key == Key::S) && moveButtonPressed && (inputMod == InputMod::None)) positionDelta.z -= 1.0;
+    if ((key == Key::A) && moveButtonPressed && (inputMod == InputMod::None)) positionDelta.x -= 1.0;
+    if ((key == Key::D) && moveButtonPressed && (inputMod == InputMod::None)) positionDelta.x += 1.0;
+    if ((key == Key::E) && moveButtonPressed && (inputMod == InputMod::None)) positionDelta.y += 1.0;
+    if ((key == Key::Q) && moveButtonPressed && (inputMod == InputMod::None)) positionDelta.y -= 1.0;
 }
 
 void Inputs::ProcessMousePosition(glm::vec2 value)
 {
-    if (cusorLeftPress) rotationDelta += Devices::Get()->GetWindow()->GetMousePositionDelta();
+    if (cusorLeftPress) rotationDelta -= Devices::Get()->GetWindow()->GetMousePositionDelta();
 }
 
 }   // namespace MapleLeaf
