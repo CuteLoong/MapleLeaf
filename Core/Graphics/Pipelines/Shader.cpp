@@ -432,6 +432,20 @@ void Shader::CreateReflection()
         descriptorPools.emplace_back(descriptorPoolSize);
     }
 
+    descriptorPools.resize(6);
+	descriptorPools[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptorPools[0].descriptorCount = 4096;
+	descriptorPools[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	descriptorPools[1].descriptorCount = 2048;
+	descriptorPools[2].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	descriptorPools[2].descriptorCount = 2048;
+	descriptorPools[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+	descriptorPools[3].descriptorCount = 2048;
+	descriptorPools[4].type = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+	descriptorPools[4].descriptorCount = 2048;
+	descriptorPools[5].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	descriptorPools[5].descriptorCount = 2048;
+
     std::sort(descriptorSetLayouts.begin(),
               descriptorSetLayouts.end(),
               [](const VkDescriptorSetLayoutBinding& l, const VkDescriptorSetLayoutBinding& r) { return l.binding < r.binding; });
@@ -439,6 +453,19 @@ void Shader::CreateReflection()
     if (!descriptorSetLayouts.empty()) lastDescriptorBinding = descriptorSetLayouts.back().binding;
 
     for (const auto& descriptor : descriptorSetLayouts) descriptorTypes.emplace(descriptor.binding, descriptor.descriptorType);
+
+    // Process attribute descriptions.
+	uint32_t currentOffset = 4;
+
+	for (const auto &[attributeName, attribute] : attributes) {
+		VkVertexInputAttributeDescription attributeDescription = {};
+		attributeDescription.location = static_cast<uint32_t>(attribute.location);
+		attributeDescription.binding = 0;
+		attributeDescription.format = GlTypeToVk(attribute.glType);
+		attributeDescription.offset = currentOffset;
+		attributeDescriptions.emplace_back(attributeDescription);
+		currentOffset += attribute.size;
+	}
 }
 
 void Shader::IncrementDescriptorPool(std::map<VkDescriptorType, uint32_t>& descriptorPoolCounts, VkDescriptorType type)
