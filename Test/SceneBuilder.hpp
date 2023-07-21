@@ -11,7 +11,7 @@ namespace MapleLeaf {
 class SceneBuilder : public Scene
 {
 public:
-    SceneBuilder(const std::filesystem::path path = "E:/MapleLeaf/Resources/Models/DefaultCube/DefaultCube.gltf")
+    SceneBuilder(const std::filesystem::path path = "E:/MapleLeaf/Resources/Models/Pica/classicBox-forFalcor-noShphere.gltf")
         : Scene(std::make_unique<TestCamera>())
         , path(path)
     {
