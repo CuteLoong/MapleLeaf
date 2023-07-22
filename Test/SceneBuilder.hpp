@@ -28,7 +28,7 @@ public:
             entity->AddComponent(std::move(std::make_unique<Transform>(*node.transform)));
             if (!node.meshes.empty()) {
                 for (int i = 0; i < node.meshes.size(); i++) {
-                    entity->AddComponent(std::move(builder.meshes[node.meshes[i]]));
+                    entity->AddComponent<Mesh>(builder.meshes[node.meshes[i]]->GetModel(), builder.meshes[node.meshes[i]]->GetMaterial());
                 }
             }
         }
