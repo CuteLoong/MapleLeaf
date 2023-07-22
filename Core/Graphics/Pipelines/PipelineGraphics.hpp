@@ -33,7 +33,7 @@ public:
     PipelineGraphics(Stage stage, std::vector<std::filesystem::path> shaderStages, std::vector<Shader::VertexInput> vertexInputs,
                      std::vector<Shader::Define> defines = {}, Mode mode = Mode::Polygon, Depth depth = Depth::ReadWrite,
                      VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL,
-                     VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT, VkFrontFace frontFace = VK_FRONT_FACE_CLOCKWISE, bool pushDescriptors = false);
+                     VkCullModeFlags cullMode = VK_CULL_MODE_NONE, VkFrontFace frontFace = VK_FRONT_FACE_CLOCKWISE, bool pushDescriptors = false);
     ~PipelineGraphics();
 
     /**
@@ -130,7 +130,7 @@ public:
                            std::vector<Shader::Define> defines = {}, PipelineGraphics::Mode mode = PipelineGraphics::Mode::Polygon,
                            PipelineGraphics::Depth depth = PipelineGraphics::Depth::ReadWrite,
                            VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL,
-                           VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT, VkFrontFace frontFace = VK_FRONT_FACE_CLOCKWISE,
+                           VkCullModeFlags cullMode = VK_CULL_MODE_NONE, VkFrontFace frontFace = VK_FRONT_FACE_CLOCKWISE,
                            bool pushDescriptors = false)
         : shaderStages(std::move(shaderStages))
         , vertexInputs(std::move(vertexInputs))

@@ -222,9 +222,9 @@ bool Graphics::StartRenderpass(RenderStage& renderStage)
 
     VkViewport viewport = {};
     viewport.x          = 0.0f;
-    viewport.y          = 0.0f;
+    viewport.y          = static_cast<float>(renderArea.extent.height);
     viewport.width      = static_cast<float>(renderArea.extent.width);
-    viewport.height     = static_cast<float>(renderArea.extent.height);
+    viewport.height     = -static_cast<float>(renderArea.extent.height);
     viewport.minDepth   = 0.0f;
     viewport.maxDepth   = 1.0f;
     vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
