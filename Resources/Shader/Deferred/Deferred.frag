@@ -18,10 +18,11 @@ layout(location = 0) in vec2 inUV;
 layout(location = 0) out vec4 outColour;
 
 void main() {
-	vec3 worldPosition = texture(samplerPosition, inUV).rgb;
+	vec2 flipUv = vec2(inUV.x, 1.0 - inUV.y);
+	vec3 worldPosition = texture(samplerPosition, flipUv).rgb;
 	vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
 
-	vec4 diffuse = texture(samplerDiffuse, inUV);
+	vec4 diffuse = texture(samplerDiffuse, flipUv);
 	// vec3 normal = texture(samplerNormal, inUV).rgb;
 	// vec3 material = texture(samplerMaterial, inUV).rgb;
 

@@ -37,10 +37,24 @@ static const std::vector<TextureMapping> kTextureMappings[3] = {
         {AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, Material::TextureSlot::Material},
     }};
 
-glm::mat4 AiCast(const aiMatrix4x4& raw)
+glm::mat4 AiCast(const aiMatrix4x4& aiMat)
 {
-    glm::mat4 ret;
-    memcpy(&ret[0][0], &raw.a1, sizeof(glm::mat4));
+    glm::mat4 ret{aiMat.a1,
+                  aiMat.b1,
+                  aiMat.c1,
+                  aiMat.d1,
+                  aiMat.a2,
+                  aiMat.b2,
+                  aiMat.c2,
+                  aiMat.d2,
+                  aiMat.a3,
+                  aiMat.b3,
+                  aiMat.c3,
+                  aiMat.d3,
+                  aiMat.a4,
+                  aiMat.b4,
+                  aiMat.c4,
+                  aiMat.d4};
     return ret;
 }
 
