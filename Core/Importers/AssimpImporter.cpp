@@ -220,7 +220,10 @@ void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bo
 {
     SceneNode node;
     node.name      = pCurrent->mName.C_Str();
+    if (node.name == "body_Plastic_Pink_0") 
+        printf("debug");
     node.transform = new Transform(AiCast(pCurrent->mTransformation));
+    node.transform->GetWorldMatrix();
     node.parent    = pCurrent->mParent ? data.getNodeID(pCurrent->mParent) : NodeID::Invalid();
     node.meshes.resize(pCurrent->mNumMeshes);
     if(!node.meshes.empty()) std::copy(pCurrent->mMeshes, pCurrent->mMeshes + pCurrent->mNumMeshes, node.meshes.data());
