@@ -26,7 +26,7 @@ Transform::Transform(const glm::mat4 modelMatrix)
 
 Transform::~Transform()
 {
-    if(worldTransform) delete worldTransform;
+    if (worldTransform) delete worldTransform;
 
     for (auto& child : children) child->parent = nullptr;
 
@@ -37,14 +37,16 @@ glm::mat4 Transform::GetWorldMatrix() const
 {
     auto worldTransform = GetWorldTransform();
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans           = glm::scale(trans, scale);
-    trans           = glm::rotate(trans, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    trans           = glm::rotate(trans, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    trans           = glm::rotate(trans, rotation.y, glm::vec3(0.0f, 0.0f, 1.0f));
-    trans           = glm::translate(trans, position);
+    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), worldTransform->scale);
 
-    return trans;
+    glm::mat4 rotationMatrix = glm::mat4(1.0f);
+    rotationMatrix        = glm::rotate(rotationMatrix, worldTransform->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrix        = glm::rotate(rotationMatrix, worldTransform->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrix        = glm::rotate(rotationMatrix, worldTransform->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), worldTransform->position);
+
+    return translationMatrix * rotationMatrix * scaleMatrix;
 }
 
 glm::vec3 Transform::GetPosition() const
@@ -93,7 +95,7 @@ Transform operator*(const Transform& lhs, const Transform& rhs)
         newPosition[row] = lhs.GetWorldMatrix()[row][0] * rhs.position.x + lhs.GetWorldMatrix()[row][1] * rhs.position.y +
                            lhs.GetWorldMatrix()[row][2] * rhs.position.z + lhs.GetWorldMatrix()[row][3] * 1.0f;
     }
-    return {glm::vec3(newPosition), lhs.rotation + rhs.rotation, lhs.scale + rhs.scale};
+    return {glm::vec3(newPosition), lhs.rotation + rhs.rotation, lhs.scale * rhs.scale};
 }
 
 Transform& Transform::operator*=(const Transform& rhs)
