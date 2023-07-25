@@ -18,16 +18,16 @@ public:
     class SubpassDescription : NonCopyable
     {
     public:
-        SubpassDescription(VkPipelineBindPoint bindPoint, std::vector<VkAttachmentReference> colorOutputAttachments,
-                           std::vector<VkAttachmentReference> colorInputAttachments, const std::optional<uint32_t>& depthAttachment)
-            : colorOutputAttachments(std::move(colorOutputAttachments))
-            , colorInputAttachments(std::move(colorInputAttachments))
+        SubpassDescription(VkPipelineBindPoint bindPoint, std::vector<VkAttachmentReference> colorInputAttachments,
+                           std::vector<VkAttachmentReference> colorOutputAttachments, const std::optional<uint32_t>& depthAttachment)
+            : colorInputAttachments(std::move(colorInputAttachments))
+            , colorOutputAttachments(std::move(colorOutputAttachments))
         {
             subpassDescription.pipelineBindPoint    = bindPoint;
-            subpassDescription.colorAttachmentCount = static_cast<uint32_t>(this->colorOutputAttachments.size());
-            subpassDescription.pColorAttachments    = this->colorOutputAttachments.data();
             subpassDescription.inputAttachmentCount = static_cast<uint32_t>(this->colorInputAttachments.size());
             subpassDescription.pInputAttachments    = this->colorInputAttachments.data();
+            subpassDescription.colorAttachmentCount = static_cast<uint32_t>(this->colorOutputAttachments.size());
+            subpassDescription.pColorAttachments    = this->colorOutputAttachments.data();
 
             if (depthAttachment) {
                 depthStencilAttachment.attachment          = *depthAttachment;
@@ -40,8 +40,8 @@ public:
 
     private:
         VkSubpassDescription               subpassDescription = {};
-        std::vector<VkAttachmentReference> colorOutputAttachments;
         std::vector<VkAttachmentReference> colorInputAttachments;
+        std::vector<VkAttachmentReference> colorOutputAttachments;
         VkAttachmentReference              depthStencilAttachment = {};
     };
 
