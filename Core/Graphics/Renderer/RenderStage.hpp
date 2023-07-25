@@ -57,20 +57,20 @@ private:
 class SubpassType
 {
 public:
-    SubpassType(uint32_t binding, std::vector<uint32_t> outputAttachmentBindings, std::vector<uint32_t> inputAttachmentBindings)
+    SubpassType(uint32_t binding, std::vector<uint32_t> inputAttachmentBindings, std::vector<uint32_t> outputAttachmentBindings)
         : binding(binding)
-        , outputAttachmentBindings(std::move(outputAttachmentBindings))
         , inputAttachmentBindings(std::move(inputAttachmentBindings))
+        , outputAttachmentBindings(std::move(outputAttachmentBindings))
     {}
 
     uint32_t                     GetBinding() const { return binding; }
-    const std::vector<uint32_t>& GetOutputAttachmentBindings() const { return outputAttachmentBindings; }
     const std::vector<uint32_t>& GetInputAttachmentBindings() const { return inputAttachmentBindings; }
+    const std::vector<uint32_t>& GetOutputAttachmentBindings() const { return outputAttachmentBindings; }
 
 private:
     uint32_t              binding;
-    std::vector<uint32_t> outputAttachmentBindings;
     std::vector<uint32_t> inputAttachmentBindings;
+    std::vector<uint32_t> outputAttachmentBindings;
 };
 
 class RenderArea

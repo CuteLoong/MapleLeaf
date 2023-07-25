@@ -26,7 +26,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
         switch (attachment.GetType()) {
         case Attachment::Type::Image:
-            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             attachmentDescription.format      = attachment.GetFormat();
             break;
         case Attachment::Type::Depth:
@@ -52,6 +52,20 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
         std::optional<uint32_t> depthAttachment;
 
+        for (const auto& attachmentBinding : subpassType.GetInputAttachmentBindings())
+        {
+            auto attachment = renderStage.GetAttachment(attachmentBinding);
+
+            if (!attachment) {
+                Log::Error("Failed to find a renderpass attachment bound to: ", attachmentBinding, '\n');
+                continue;
+            }
+
+            VkAttachmentReference attachmentReference = {};
+            attachmentReference.attachment            = attachment->GetBinding();
+            attachmentReference.layout                = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            subpassInputColorAttachments.emplace_back(attachmentReference);
+        }
         for (const auto& attachmentBinding : subpassType.GetOutputAttachmentBindings()) {
             auto attachment = renderStage.GetAttachment(attachmentBinding);
 
@@ -71,23 +85,8 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
             subpassOutputColorAttachments.emplace_back(attachmentReference);
         }
 
-        for (const auto& attachmentBinding : subpassType.GetInputAttachmentBindings())
-        {
-            auto attachment = renderStage.GetAttachment(attachmentBinding);
-
-            if (!attachment) {
-                Log::Error("Failed to find a renderpass attachment bound to: ", attachmentBinding, '\n');
-                continue;
-            }
-
-            VkAttachmentReference attachmentReference = {};
-            attachmentReference.attachment            = attachment->GetBinding();
-            attachmentReference.layout                = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            subpassInputColorAttachments.emplace_back(attachmentReference);
-        }
-
         // Subpass description.
-        subpasses.emplace_back(std::make_unique<SubpassDescription>(VK_PIPELINE_BIND_POINT_GRAPHICS, subpassOutputColorAttachments, subpassInputColorAttachments, depthAttachment));
+        subpasses.emplace_back(std::make_unique<SubpassDescription>(VK_PIPELINE_BIND_POINT_GRAPHICS, subpassInputColorAttachments, subpassOutputColorAttachments, depthAttachment));
 
         // Subpass dependencies.
         VkSubpassDependency subpassDependency = {};
