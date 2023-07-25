@@ -18,13 +18,16 @@ public:
     class SubpassDescription : NonCopyable
     {
     public:
-        SubpassDescription(VkPipelineBindPoint bindPoint, std::vector<VkAttachmentReference> colorAttachments,
-                           const std::optional<uint32_t>& depthAttachment)
-            : colorAttachments(std::move(colorAttachments))
+        SubpassDescription(VkPipelineBindPoint bindPoint, std::vector<VkAttachmentReference> colorOutputAttachments,
+                           std::vector<VkAttachmentReference> colorInputAttachments, const std::optional<uint32_t>& depthAttachment)
+            : colorOutputAttachments(std::move(colorOutputAttachments))
+            , colorInputAttachments(std::move(colorInputAttachments))
         {
             subpassDescription.pipelineBindPoint    = bindPoint;
-            subpassDescription.colorAttachmentCount = static_cast<uint32_t>(this->colorAttachments.size());
-            subpassDescription.pColorAttachments    = this->colorAttachments.data();
+            subpassDescription.colorAttachmentCount = static_cast<uint32_t>(this->colorOutputAttachments.size());
+            subpassDescription.pColorAttachments    = this->colorOutputAttachments.data();
+            subpassDescription.inputAttachmentCount = static_cast<uint32_t>(this->colorInputAttachments.size());
+            subpassDescription.pInputAttachments    = this->colorInputAttachments.data();
 
             if (depthAttachment) {
                 depthStencilAttachment.attachment          = *depthAttachment;
@@ -37,7 +40,8 @@ public:
 
     private:
         VkSubpassDescription               subpassDescription = {};
-        std::vector<VkAttachmentReference> colorAttachments;
+        std::vector<VkAttachmentReference> colorOutputAttachments;
+        std::vector<VkAttachmentReference> colorInputAttachments;
         VkAttachmentReference              depthStencilAttachment = {};
     };
 

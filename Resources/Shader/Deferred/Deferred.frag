@@ -8,21 +8,21 @@ layout(binding = 0) uniform UniformScene {
 	vec3 cameraPosition;
 } scene;
 
-layout(binding = 1) uniform sampler2D samplerPosition;
-layout(binding = 2) uniform sampler2D samplerDiffuse;
-layout(binding = 3) uniform sampler2D samplerNormal;
-layout(binding = 4) uniform sampler2D samplerMaterial;
+layout(input_attachment_index = 0, binding = 1) uniform subpassInput inPosition;
+layout(input_attachment_index = 1, binding = 2) uniform subpassInput inDiffuse;
+layout(input_attachment_index = 2, binding = 3) uniform subpassInput inNormal;
+layout(input_attachment_index = 3, binding = 4) uniform subpassInput inMaterial;
+
 
 layout(location = 0) in vec2 inUV;
 
 layout(location = 0) out vec4 outColour;
 
 void main() {
-	vec2 flipUv = vec2(inUV.x, 1.0 - inUV.y);
-	vec3 worldPosition = texture(samplerPosition, flipUv).rgb;
+	vec3 worldPosition = subpassLoad(inPosition).rgb;
 	vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
 
-	vec4 diffuse = texture(samplerDiffuse, flipUv);
+	vec3 diffuse = subpassLoad(inDiffuse).rgb;
 	// vec3 normal = texture(samplerNormal, inUV).rgb;
 	// vec3 material = texture(samplerMaterial, inUV).rgb;
 
@@ -36,5 +36,5 @@ void main() {
 	// vec3 R = reflect(-V, N); 
 
 	
-	outColour = vec4(diffuse.rgb, 1.0f);
+	outColour = vec4(diffuse, 1.0f);
 }
