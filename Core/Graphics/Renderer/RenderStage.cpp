@@ -10,7 +10,8 @@ RenderStage::RenderStage(std::vector<Attachment> images, std::vector<SubpassType
     : attachments(std::move(images))
     , subpasses(std::move(subpasses))
     , viewport(viewport)
-    , subpassAttachmentCount(this->subpasses.size())
+    , subpassOutputAttachmentCount(this->subpasses.size())
+    , subpassInputAttachmentCount(this->subpasses.size())
     , subpassMultisampled(this->subpasses.size())
 {
     for (const auto& image : attachments) {
@@ -20,13 +21,18 @@ RenderStage::RenderStage(std::vector<Attachment> images, std::vector<SubpassType
         case Attachment::Type::Image:
             clearValue.color = {{image.GetClearColour().r, image.GetClearColour().g, image.GetClearColour().b, image.GetClearColour().a}};
             for (const auto& subpass : this->subpasses) {
-                if (auto subpassBindings = subpass.GetAttachmentBindings();
+                if (auto subpassBindings = subpass.GetInputAttachmentBindings();
                     std::find(subpassBindings.begin(), subpassBindings.end(), image.GetBinding()) != subpassBindings.end()) {
-                    subpassAttachmentCount[subpass.GetBinding()]++;
+                    subpassInputAttachmentCount[subpass.GetBinding()]++;
+                }
+                if (auto subpassBindings = subpass.GetOutputAttachmentBindings();
+                    std::find(subpassBindings.begin(), subpassBindings.end(), image.GetBinding()) != subpassBindings.end()) {
+                    subpassOutputAttachmentCount[subpass.GetBinding()]++;
 
                     if (image.IsMultisampled()) subpassMultisampled[subpass.GetBinding()] = true;
                 }
             }
+
             break;
         case Attachment::Type::Depth:
             clearValue.depthStencil = {1.0f, 0};

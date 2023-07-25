@@ -47,11 +47,12 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
     std::vector<VkSubpassDependency>                 dependencies;
 
     for (const auto& subpassType : renderStage.GetSubpasses()) {
-        std::vector<VkAttachmentReference> subpassColorAttachments;
+        std::vector<VkAttachmentReference> subpassOutputColorAttachments;
+        std::vector<VkAttachmentReference> subpassInputColorAttachments;
 
         std::optional<uint32_t> depthAttachment;
 
-        for (const auto& attachmentBinding : subpassType.GetAttachmentBindings()) {
+        for (const auto& attachmentBinding : subpassType.GetOutputAttachmentBindings()) {
             auto attachment = renderStage.GetAttachment(attachmentBinding);
 
             if (!attachment) {
@@ -67,11 +68,26 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
             VkAttachmentReference attachmentReference = {};
             attachmentReference.attachment            = attachment->GetBinding();
             attachmentReference.layout                = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            subpassColorAttachments.emplace_back(attachmentReference);
+            subpassOutputColorAttachments.emplace_back(attachmentReference);
+        }
+
+        for (const auto& attachmentBinding : subpassType.GetInputAttachmentBindings())
+        {
+            auto attachment = renderStage.GetAttachment(attachmentBinding);
+
+            if (!attachment) {
+                Log::Error("Failed to find a renderpass attachment bound to: ", attachmentBinding, '\n');
+                continue;
+            }
+
+            VkAttachmentReference attachmentReference = {};
+            attachmentReference.attachment            = attachment->GetBinding();
+            attachmentReference.layout                = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            subpassInputColorAttachments.emplace_back(attachmentReference);
         }
 
         // Subpass description.
-        subpasses.emplace_back(std::make_unique<SubpassDescription>(VK_PIPELINE_BIND_POINT_GRAPHICS, subpassColorAttachments, depthAttachment));
+        subpasses.emplace_back(std::make_unique<SubpassDescription>(VK_PIPELINE_BIND_POINT_GRAPHICS, subpassOutputColorAttachments, subpassInputColorAttachments, depthAttachment));
 
         // Subpass dependencies.
         VkSubpassDependency subpassDependency = {};

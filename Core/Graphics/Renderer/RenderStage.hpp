@@ -57,17 +57,20 @@ private:
 class SubpassType
 {
 public:
-    SubpassType(uint32_t binding, std::vector<uint32_t> attachmentBindings)
+    SubpassType(uint32_t binding, std::vector<uint32_t> outputAttachmentBindings, std::vector<uint32_t> inputAttachmentBindings)
         : binding(binding)
-        , attachmentBindings(std::move(attachmentBindings))
+        , outputAttachmentBindings(std::move(outputAttachmentBindings))
+        , inputAttachmentBindings(std::move(inputAttachmentBindings))
     {}
 
     uint32_t                     GetBinding() const { return binding; }
-    const std::vector<uint32_t>& GetAttachmentBindings() const { return attachmentBindings; }
+    const std::vector<uint32_t>& GetOutputAttachmentBindings() const { return outputAttachmentBindings; }
+    const std::vector<uint32_t>& GetInputAttachmentBindings() const { return inputAttachmentBindings; }
 
 private:
     uint32_t              binding;
-    std::vector<uint32_t> attachmentBindings;
+    std::vector<uint32_t> outputAttachmentBindings;
+    std::vector<uint32_t> inputAttachmentBindings;
 };
 
 class RenderArea
@@ -151,7 +154,8 @@ public:
     const Framebuffers* GetFramebuffers() const { return framebuffers.get(); }
 
     const std::vector<VkClearValue>& GetClearValues() const { return clearValues; }
-    uint32_t                         GetAttachmentCount(uint32_t subpass) const { return subpassAttachmentCount[subpass]; }
+    uint32_t                         GetOutputAttachmentCount(uint32_t subpass) const { return subpassOutputAttachmentCount[subpass]; }
+    uint32_t                         GetInputAttachmentCount(uint32_t subpass) const { return subpassInputAttachmentCount[subpass]; }
     bool                             HasDepth() const { return depthAttachment.has_value(); }
     bool                             HasSwapchain() const { return swapchainAttachment.has_value(); }
     bool                             IsMultisampled(uint32_t subpass) const { return subpassMultisampled[subpass]; }
@@ -169,7 +173,8 @@ private:
     std::map<std::string, const Descriptor*> descriptors;
 
     std::vector<VkClearValue> clearValues;
-    std::vector<uint32_t>     subpassAttachmentCount;
+    std::vector<uint32_t>     subpassOutputAttachmentCount;
+    std::vector<uint32_t>     subpassInputAttachmentCount;
     std::optional<Attachment> depthAttachment;
     std::optional<Attachment> swapchainAttachment;
     std::vector<bool>         subpassMultisampled;

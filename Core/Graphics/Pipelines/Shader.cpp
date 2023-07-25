@@ -401,6 +401,11 @@ void Shader::CreateReflection()
         auto descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
 
         switch (uniform.glType) {
+        case 0: 
+            descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+            descriptorSetLayouts.emplace_back(
+                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, 1));
+            break;
         case 0x8B5E:   // GL_SAMPLER_2D
         case 0x904D:   // GL_IMAGE_2D
         case 0x8DC1:   // GL_TEXTURE_2D_ARRAY

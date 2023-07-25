@@ -21,10 +21,10 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
 
     // Updates storage buffers.
     descriptorSet.Push("UniformScene", uniformScene);
-    descriptorSet.Push("samplerPosition", Graphics::Get()->GetAttachment("position"));
-    descriptorSet.Push("samplerDiffuse", Graphics::Get()->GetAttachment("diffuse"));
-    descriptorSet.Push("samplerNormal", Graphics::Get()->GetAttachment("normal"));
-    descriptorSet.Push("samplerMaterial", Graphics::Get()->GetAttachment("material"));
+    descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
+    descriptorSet.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
+    descriptorSet.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
+    descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
 
     if (!descriptorSet.Update(pipeline)) return;
 

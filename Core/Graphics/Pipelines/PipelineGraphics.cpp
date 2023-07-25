@@ -290,7 +290,7 @@ void PipelineGraphics::CreatePipelinePolygon()
 void PipelineGraphics::CreatePipelineMrt()
 {
     auto renderStage     = Graphics::Get()->GetRenderStage(stage.first);
-    auto attachmentCount = renderStage->GetAttachmentCount(stage.second);
+    auto attachmentCount = renderStage->GetOutputAttachmentCount(stage.second);
 
     std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates;
     blendAttachmentStates.reserve(attachmentCount);
