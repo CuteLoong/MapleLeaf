@@ -23,8 +23,10 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
 
     for (const auto& light : sceneLights) {
         PointLight pointLight = {};
-        pointLight.color = light->GetColor();
-        pointLight.position = light->GetPosition();
+        pointLight.color      = light->GetColor();
+        if (auto transform = light->GetEntity()->GetComponent<Transform>()) {
+            pointLight.position = transform->GetPosition();
+        }
         pointLight.attenuation = light->GetAttenuation();
         pointLights.push_back(pointLight);
     }

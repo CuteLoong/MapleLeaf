@@ -19,8 +19,8 @@ private:
     struct PointLight
     {
         Color     color;
-        glm::vec3 position;
-        glm::vec3 attenuation;
+        alignas(16) glm::vec3 position;
+        alignas(16) glm::vec3 attenuation;
     };
 
     PipelineGraphics pipeline;
