@@ -57,5 +57,5 @@ void main() {
 		Lo += calcAttenuation(d, light.attenuation) * light.color.rgb;
 	}
 	
-	outColour = vec4(diffuse, 1.0f);
+	outColour = vec4(diffuse * Lo, 1.0f);
 }
