@@ -1,8 +1,10 @@
 #include "AssimpImporter.hpp"
 #include "Color.hpp"
 #include "DefaultMaterial.hpp"
+#include "Light.hpp"
 #include "SceneGraph.hpp"
 #include "Transform.hpp"
+
 
 namespace MapleLeaf {
 struct TextureMapping
@@ -55,6 +57,13 @@ glm::mat4 AiCast(const aiMatrix4x4& aiMat)
                   aiMat.b4,
                   aiMat.c4,
                   aiMat.d4};
+    return ret;
+}
+
+glm::vec3 AiCast(const aiVector3D& aiVec)
+{
+    glm::vec3 ret(aiVec.x, aiVec.y, aiVec.z);
+
     return ret;
 }
 
@@ -111,9 +120,14 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
 #endif
 
     CreateMeshes(data);
-    // TODO instances
 #ifdef MAPLELEAF_DEBUG
     Log::Out("Create meshes cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
+
+    CreateLights(data);
+#ifdef MAPLELEAF_DEBUG
+    Log::Out("Create lights cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
 }
@@ -220,13 +234,11 @@ void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bo
 {
     SceneNode node;
     node.name      = pCurrent->mName.C_Str();
-    if (node.name == "body_Plastic_Pink_0") 
-        printf("debug");
     node.transform = new Transform(AiCast(pCurrent->mTransformation));
     node.transform->GetWorldMatrix();
-    node.parent    = pCurrent->mParent ? data.getNodeID(pCurrent->mParent) : NodeID::Invalid();
+    node.parent = pCurrent->mParent ? data.getNodeID(pCurrent->mParent) : NodeID::Invalid();
     node.meshes.resize(pCurrent->mNumMeshes);
-    if(!node.meshes.empty()) std::copy(pCurrent->mMeshes, pCurrent->mMeshes + pCurrent->mNumMeshes, node.meshes.data());
+    if (!node.meshes.empty()) std::copy(pCurrent->mMeshes, pCurrent->mMeshes + pCurrent->mNumMeshes, node.meshes.data());
 
     data.AddAiNode(pCurrent, data.builder.AddSceneNode(std::move(node)));
     for (uint32_t i = 0; i < pCurrent->mNumChildren; i++) {
@@ -286,5 +298,54 @@ void AssimpImporter<T>::CreateMeshes(ImporterData& data)
         data.builder.AddMesh(std::move(std::make_shared<Model>(vertexBuffer, indexBuffer)), std::move(data.materialMap[pAiMesh->mMaterialIndex]));
     }
 }
+
+template<typename T>
+void AssimpImporter<T>::CreateDirLight(ImporterData& data, const aiLight* pAiLight)
+{
+    auto light = std::make_unique<Light>(LightType::Directional);
+    
+    assert(pAiLight->mColorDiffuse == pAiLight->mColorSpecular);
+    Color color = Color(pAiLight->mColorSpecular.r, pAiLight->mColorSpecular.g, pAiLight->mColorSpecular.b);
+    light->SetColor(color);
+    light->SetName(pAiLight->mName.C_Str());
+    light->SetDirection(glm::normalize(AiCast(pAiLight->mDirection)));
+    
+    data.builder.AddLight(std::move(light));
+}
+
+template<typename T>
+void AssimpImporter<T>::CreatePointLight(ImporterData& data, const aiLight* pAiLight)
+{
+    auto light = std::make_unique<Light>(LightType::Point);
+    
+    assert(pAiLight->mColorDiffuse == pAiLight->mColorSpecular);
+    Color color = Color(pAiLight->mColorSpecular.r, pAiLight->mColorSpecular.g, pAiLight->mColorSpecular.b);
+    light->SetColor(color);
+    light->SetName(pAiLight->mName.C_Str());
+    light->SetPosition(glm::normalize(AiCast(pAiLight->mPosition)));
+    
+    glm::vec3 attenuation = glm::vec3(pAiLight->mAttenuationConstant, pAiLight->mAttenuationLinear, pAiLight->mAttenuationQuadratic);
+    light->SetAttenuation(attenuation);
+
+    data.builder.AddLight(std::move(light));
+}
+
+template<typename T>
+void AssimpImporter<T>::CreateLights(ImporterData& data)
+{
+    for (uint32_t i = 0; i < data.pScene->mNumLights; i++) {
+        const aiLight* pAiLight = data.pScene->mLights[i];
+        switch (pAiLight->mType) {
+        case aiLightSource_UNDEFINED: Log::Info("The light undefined! \n"); break;
+        case aiLightSource_DIRECTIONAL: CreateDirLight(data, pAiLight); break;
+        case aiLightSource_POINT: CreatePointLight(data, pAiLight); break;
+        case aiLightSource_SPOT: break;
+        case aiLightSource_AMBIENT: break;
+        case aiLightSource_AREA: break;
+        case _aiLightSource_Force32Bit: break;
+        }
+    }
+}
+
 template class AssimpImporter<DefaultMaterial>;
 }   // namespace MapleLeaf

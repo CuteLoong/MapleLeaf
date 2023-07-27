@@ -4,6 +4,7 @@
 #include "DefaultBuilder.hpp"
 #include "DefaultMaterial.hpp"
 #include "Scene.hpp"
+#include "Scenes.hpp"
 #include "TestCamera.hpp"
 #include "Transform.hpp"
 
@@ -28,9 +29,14 @@ public:
             entity->AddComponent(std::move(std::make_unique<Transform>(*node.transform)));
             if (!node.meshes.empty()) {
                 for (int i = 0; i < node.meshes.size(); i++) {
-                    entity->AddComponent<Mesh>(builder.meshes[node.meshes[i]]->GetModel(), builder.meshes[node.meshes[i]]->GetMaterial());
+                    // for every instance, instances use the same model, but maybe use different mat
+                    entity->AddComponent<Mesh>(builder.meshes[node.meshes[i]]->GetModel(), builder.meshes[node.meshes[i]]->GetMaterial()); 
                 }
             }
+        }
+        for(auto& light : builder.lights) {
+            auto entity = Scenes::Get()->GetScene()->GetEntity(light->GetName());
+            if (entity) entity->AddComponent(std::move(light));
         }
     }
 
