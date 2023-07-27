@@ -78,5 +78,9 @@ private:
     void ParseNode(ImporterData& data, const aiNode* pCurrent, bool hasBoneAncestor);
 
     void CreateMeshes(ImporterData& data);
+
+    void CreateLights(ImporterData& data);
+    void CreateDirLight(ImporterData& data, const aiLight* pAiLight);
+    void CreatePointLight(ImporterData& data, const aiLight* pAiLight);
 };
 }   // namespace MapleLeaf

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Image2d.hpp"
+#include "Light.hpp"
 #include "Mesh.hpp"
 #include "SceneGraph.hpp"
 
@@ -15,6 +16,7 @@ public:
     Mesh* GetMesh(const uint32_t index);
 
     NodeID AddSceneNode(SceneNode&& node);
+    void   AddLight(std::unique_ptr<Light>&& light);
 
     template<typename T, typename = std::enable_if_t<std::is_convertible_v<T*, Material*>>>
     Mesh* AddMesh(std::shared_ptr<Model>&& model, std::shared_ptr<T>&& material)
@@ -45,8 +47,8 @@ public:
     }
 
 private:
-    std::vector<std::unique_ptr<Mesh>> meshes;
-    SceneGraph                         sceneGraph;
-    // TODO: Light
+    std::vector<std::unique_ptr<Mesh>>  meshes;
+    SceneGraph                          sceneGraph;
+    std::vector<std::unique_ptr<Light>> lights;
 };
 }   // namespace MapleLeaf

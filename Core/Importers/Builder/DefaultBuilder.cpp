@@ -18,6 +18,12 @@ NodeID Builder::AddSceneNode(SceneNode&& node)
     return newNodeID;
 }
 
+void Builder::AddLight(std::unique_ptr<Light>&& light)
+{
+    assert(light != nullptr);
+    lights.push_back(std::move(light));
+}
+
 Mesh* Builder::GetMesh(const uint32_t index)
 {
     if (index >= meshes.size()) {

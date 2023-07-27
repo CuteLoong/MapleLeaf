@@ -16,6 +16,13 @@ public:
     void Render(const CommandBuffer& commandBuffer) override;
 
 private:
+    struct PointLight
+    {
+        Color     color;
+        glm::vec3 position;
+        glm::vec3 attenuation;
+    };
+
     PipelineGraphics pipeline;
 
     DescriptorsHandler descriptorSet;
