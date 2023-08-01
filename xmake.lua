@@ -35,6 +35,7 @@ add_includedirs(
 "Core/Meshes", 
 "Core/Scenes", 
 "Core/Scenes/Light", 
+"Core/Scenes/Shadow", 
 "Core/Importers", 
 "Core/Importers/Builder",
 "Core/Bitmaps",
@@ -42,13 +43,15 @@ add_includedirs(
 )
 
 add_includedirs(
-"RenderPass/Deferred"
+"RenderPass/Deferred",
+"RenderPass/Shadow"
 )
 
-target("Deferred")
+target("RenderPass")
     set_kind("static")
     add_files(
-    "RenderPass/Deferred/*.cpp"
+    "RenderPass/Deferred/*.cpp",
+    "RenderPass/Shadow/*.cpp"
     )
 target_end()
 
@@ -74,6 +77,7 @@ target("Core")
     "Core/Meshes/*.cpp", 
     "Core/Scenes/*.cpp", 
     "Core/Scenes/Light/*.cpp", 
+    "Core/Scenes/Shadow/*.cpp", 
     "Core/Importers/*.cpp", 
     "Core/Importers/Builder/*.cpp",
     "Core/Bitmaps/*.cpp",
@@ -84,7 +88,7 @@ target_end()
 target("MapleLeaf")
     set_kind("binary")
     add_deps("Core")
-    add_deps("Deferred")
+    add_deps("RenderPass")
     add_includedirs("Test/")
     add_files("Test/*.cpp")
     -- add_files("./main.cpp") 
