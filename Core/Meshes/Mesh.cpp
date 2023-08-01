@@ -1,7 +1,7 @@
 #include "Mesh.hpp"
 
 #include "Entity.hpp"
-#include "glm/glm.hpp"
+#include "Scenes.hpp"
 #include <memory>
 
 namespace MapleLeaf {
@@ -59,16 +59,15 @@ void Mesh::SetMaterial(std::shared_ptr<Material>& material)
 
 bool Mesh::operator<(const Mesh& rhs) const
 {
-    // auto camera = Scenes::Get()->GetScene()->GetCamera();
+    auto camera = Scenes::Get()->GetScene()->GetCamera();
 
-    // auto transform0 = GetEntity()->GetComponent<Transform>();
-    // auto transform1 = rhs.GetEntity()->GetComponent<Transform>();
+    auto transform0 = GetEntity()->GetComponent<Transform>();
+    auto transform1 = rhs.GetEntity()->GetComponent<Transform>();
 
-    // auto thisDistance2 = (camera->GetPosition() - transform0->GetPosition()).LengthSquared();
-    // auto otherDistance2 = (camera->GetPosition() - transform1->GetPosition()).LengthSquared();
+    auto thisDistance  = glm::distance(camera->GetPosition(), transform0->GetPosition());
+    auto otherDistance = glm::distance(camera->GetPosition(), transform1->GetPosition());
 
-    // return thisDistance2 > otherDistance2;
-    return true;
+    return thisDistance > otherDistance;
 }
 
 bool Mesh::operator>(const Mesh& rhs) const

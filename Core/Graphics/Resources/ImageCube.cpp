@@ -3,12 +3,13 @@
 #include "Buffer.hpp"
 #include "Graphics.hpp"
 #include "Image.hpp"
+#include <cstddef>
 
 namespace MapleLeaf {
-std::shared_ptr<ImageCube> ImageCube::Create(const std::filesystem::path& filename, VkFilter filter, VkSamplerAddressMode addressMode,
-                                             bool anisotropic, bool mipmap)
+std::shared_ptr<ImageCube> ImageCube::Create(const std::filesystem::path& filename, std::string fileSuffix, VkFilter filter,
+                                             VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap)
 {
-    auto result = std::make_shared<ImageCube>(filename, filter, addressMode, anisotropic, mipmap, false);
+    auto result = std::make_shared<ImageCube>(filename, fileSuffix, filter, addressMode, anisotropic, mipmap, false);
     result->Load();
     return result;
 }
@@ -25,11 +26,13 @@ ImageCube::ImageCube(const glm::uvec2& extent, VkFormat format, VkImageLayout la
     ImageCube::Load();
 }
 
-ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap, bool load)
+ImageCube::ImageCube(std::filesystem::path filename, std::string fileSuffix, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic,
+                     bool mipmap, bool load)
     : Image(filter, addressMode, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_FORMAT_R8G8B8A8_UNORM, 1, 6, {0, 0, 1})
     , filename(std::move(filename))
     , anisotropic(anisotropic)
+    , fileSuffix(std::move(fileSuffix))
     , mipmap(mipmap)
 {
     if (load) {
@@ -40,7 +43,20 @@ ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerA
 void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap)
 {
     if (!filename.empty() && !loadBitmap) {
-        loadBitmap = std::make_unique<Bitmap>(filename);
+        uint8_t* offset = nullptr;
+        for (const auto& side : fileSides) {
+            Bitmap bitmapSide(filename / (side + fileSuffix));
+            auto   lengthSide = bitmapSide.GetLength();
+
+            if (!loadBitmap) {
+                loadBitmap = std::make_unique<Bitmap>(
+                    std::make_unique<uint8_t[]>(lengthSide * arrayLayers), bitmapSide.GetSize(), bitmapSide.GetBytesPerPixel());
+                offset = loadBitmap->GetData().get();
+            }
+
+            std::memcpy(offset, bitmapSide.GetData().get(), lengthSide);
+            offset += lengthSide;
+        }
         extent     = {loadBitmap->GetSize().y, loadBitmap->GetSize().y, 1};
         components = loadBitmap->GetBytesPerPixel();
     }
@@ -91,5 +107,4 @@ void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap)
         TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, layout, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
     }
 }
-
 }   // namespace MapleLeaf

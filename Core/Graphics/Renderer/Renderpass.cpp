@@ -52,8 +52,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
         std::optional<uint32_t> depthAttachment;
 
-        for (const auto& attachmentBinding : subpassType.GetInputAttachmentBindings())
-        {
+        for (const auto& attachmentBinding : subpassType.GetInputAttachmentBindings()) {
             auto attachment = renderStage.GetAttachment(attachmentBinding);
 
             if (!attachment) {
@@ -86,7 +85,8 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
         }
 
         // Subpass description.
-        subpasses.emplace_back(std::make_unique<SubpassDescription>(VK_PIPELINE_BIND_POINT_GRAPHICS, subpassInputColorAttachments, subpassOutputColorAttachments, depthAttachment));
+        subpasses.emplace_back(std::make_unique<SubpassDescription>(
+            VK_PIPELINE_BIND_POINT_GRAPHICS, subpassInputColorAttachments, subpassOutputColorAttachments, depthAttachment));
 
         // Subpass dependencies.
         VkSubpassDependency subpassDependency = {};
