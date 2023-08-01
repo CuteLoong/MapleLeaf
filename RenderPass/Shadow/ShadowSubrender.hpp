@@ -2,8 +2,6 @@
 
 #include "PipelineGraphics.hpp"
 #include "Subrender.hpp"
-#include "DescriptorHandler.hpp"
-#include "PushHandler.hpp"
 
 namespace MapleLeaf {
 class ShadowSubrender : public Subrender
@@ -15,8 +13,5 @@ public:
 
 private:
     PipelineGraphics pipeline;
-
-    DescriptorsHandler descriptorSet;
-    PushHandler pushObject;
 };
 }   // namespace MapleLeaf
