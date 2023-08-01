@@ -8,7 +8,7 @@ namespace MapleLeaf {
 class ImageCube : public Image
 {
 public:
-    static std::shared_ptr<ImageCube> Create(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR,
+    static std::shared_ptr<ImageCube> Create(const std::filesystem::path& filename, std::string fileSuffix, VkFilter filter = VK_FILTER_LINEAR,
                                              VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, bool anisotropic = true,
                                              bool mipmap = true);
 
@@ -18,7 +18,7 @@ public:
                        VkSamplerAddressMode  addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
                        VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, bool anisotropic = false, bool mipmap = false);
 
-    explicit ImageCube(std::filesystem::path filename, VkFilter filter = VK_FILTER_LINEAR,
+    explicit ImageCube(std::filesystem::path filename, std::string fileSuffix = ".png", VkFilter filter = VK_FILTER_LINEAR,
                        VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, bool anisotropic = true, bool mipmap = true,
                        bool load = true);
 
@@ -26,6 +26,10 @@ private:
     void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 
     std::filesystem::path filename;
+    std::string fileSuffix;
+
+    /// X, -X, +Y, -Y, +Z, -Z
+	std::vector<std::string> fileSides = {"Right", "Left", "Top", "Bottom", "Back", "Front"};
 
     bool     anisotropic;
     bool     mipmap;
