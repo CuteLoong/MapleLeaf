@@ -174,7 +174,7 @@ void Model::Initialize(const std::vector<T>& vertices, const std::vector<uint32_
     for (const auto& vertex : vertices) {
         glm::vec3 position(vertex.position);
         minExtents = glm::vec3(std::min(minExtents.x, position.x), std::min(minExtents.y, position.y), std::min(minExtents.z, position.z));
-        maxExtents = glm::vec3(std::max(minExtents.x, position.x), std::max(minExtents.y, position.y), std::max(minExtents.z, position.z));
+        maxExtents = glm::vec3(std::max(maxExtents.x, position.x), std::max(maxExtents.y, position.y), std::max(maxExtents.z, position.z));
     }
 
     radius = glm::length(maxExtents - minExtents) / 2.0;

@@ -67,10 +67,17 @@ public:
 
     virtual bool IsPaused() const = 0;
 
+    const glm::vec3& GetMinExtents() const { return minExtents; }
+    const glm::vec3& GetMaxExtents() const { return maxExtents; }
+    void             SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom);
+
 private:
     bool                    started = false;
     SystemHolder            systems;
     EntityHolder            entities;
     std::unique_ptr<Camera> camera;
+
+    glm::vec3 minExtents = glm::vec3(std::numeric_limits<float>::infinity());
+    glm::vec3 maxExtents = glm::vec3(-std::numeric_limits<float>::infinity());
 };
 }   // namespace MapleLeaf
