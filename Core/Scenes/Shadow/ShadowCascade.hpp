@@ -11,7 +11,7 @@ public:
 
     void Update(const Camera& camera, const glm::vec3& lightDirection);
 
-    const glm::mat4 GetLightProjectionViewMatrix() const {return lightOrthoMatrix * lightViewMatrix;}
+    const glm::mat4 GetLightProjectionViewMatrix() const { return lightOrthoMatrix * lightViewMatrix; }
 
 private:
     void UpdateLightViewMatrix();
@@ -21,6 +21,8 @@ private:
 
     glm::mat4 lightOrthoMatrix;
     glm::mat4 lightViewMatrix;
+
+    glm::vec3 minExtent;
+    glm::vec3 maxExtent;
 };
 }   // namespace MapleLeaf
-

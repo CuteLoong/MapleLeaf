@@ -5,31 +5,13 @@
 #include "MeshesSubrender.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
+#include "ShadowSubrender.hpp"
 
 
 namespace Test {
-class TestSubrender : public Subrender
-{
-public:
-    explicit TestSubrender(const Pipeline::Stage& stage)
-        : Subrender(stage)
-        , pipeline(stage, {"F:/MapleLeaf/Resources/Shader/tri1.vert", "F:/MapleLeaf/Resources/Shader/tri1.frag"}, {}, {},
-                   PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None)
-    {}
-
-    void Render(const CommandBuffer& commandBuffer) override
-    {
-        pipeline.BindPipeline(commandBuffer);
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-    }
-
-private:
-    PipelineGraphics pipeline;
-};
-
 MainRenderer::MainRenderer()
 {
-    std::vector<Attachment> renderpassAttachments0 = {{0, "shadows", Attachment::Type::Image, false, VK_FORMAT_R8_UNORM}};
+    std::vector<Attachment> renderpassAttachments0 = {{0, "shadows", Attachment::Type::Depth, false}};
 
     std::vector<SubpassType> renderpassSubpasses0 = {{0, {}, {0}}};
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments0, renderpassSubpasses0, Viewport({4096, 4096})));
@@ -50,10 +32,11 @@ MainRenderer::MainRenderer()
 
 void MainRenderer::Start()
 {
+    AddSubrender<ShadowSubrender>({0, 0});
+
     AddSubrender<MeshesSubrender>({1, 0});
 
     AddSubrender<DeferredSubrender>({1, 1});
-    // AddSubrender<TestSubrender>({1, 2});
 }
 
 void MainRenderer::Update()
