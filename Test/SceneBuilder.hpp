@@ -5,6 +5,8 @@
 #include "DefaultMaterial.hpp"
 #include "Scene.hpp"
 #include "Scenes.hpp"
+#include "ShadowRender.hpp"
+#include "ShadowSystem.hpp"
 #include "TestCamera.hpp"
 #include "Transform.hpp"
 
@@ -17,6 +19,7 @@ public:
         , path(path)
     {
         std::cout << "Create Scene!" << std::endl;
+        AddSystem<ShadowSystem>();
     }
 
     void Start() override
@@ -34,16 +37,19 @@ public:
                     this->SetExtents(builder.meshes[node.meshes[i]]->GetModel()->GetMaxExtents(),
                                      builder.meshes[node.meshes[i]]->GetModel()->GetMinExtents(),
                                      node.transform->GetWorldMatrix());
+                    entity->AddComponent<ShadowRender>();
                 }
             }
         }
         for (auto& light : builder.lights) {
+            if (auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>()) {
+                if (light->type == LightType::Directional)
+                    shadows->SetLightDirection(light->GetDirection());   // last direction light is main light, will generate shadowmap
+            }
+
             auto entity = Scenes::Get()->GetScene()->GetEntity(light->GetName());
             if (entity) entity->AddComponent(std::move(light));
         }
-
-        std::cout << "MinExtents" << this->GetMinExtents().x << " " << this->GetMinExtents().y << " " << this->GetMinExtents().z << std::endl;
-        std::cout << "MaxExtents" << this->GetMaxExtents().x << " " << this->GetMaxExtents().y << " " << this->GetMaxExtents().z << std::endl;
     }
 
     void Update() override { Scene::Update(); }
