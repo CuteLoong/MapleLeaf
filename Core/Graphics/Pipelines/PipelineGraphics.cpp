@@ -190,9 +190,9 @@ void PipelineGraphics::CreateAttributes()
     colorBlendState.blendConstants[3] = 0.0f;
 
     depthStencilState.sType          = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-    depthStencilState.front          = depthStencilState.back;
+    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencilState.back.compareOp = VK_COMPARE_OP_ALWAYS;
+    depthStencilState.front          = depthStencilState.back;
 
     switch (depth) {
     case Depth::None:

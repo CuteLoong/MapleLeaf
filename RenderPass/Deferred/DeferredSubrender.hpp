@@ -18,15 +18,22 @@ public:
 private:
     struct PointLight
     {
-        Color     color;
-        alignas(16) glm::vec3 position;
-        alignas(16) glm::vec3 attenuation;
+        Color color = Color::White;
+        alignas(16) glm::vec3 position = glm::vec3(0.0f);
+        alignas(16) glm::vec3 attenuation = glm::vec3(0.0f);
+    };
+
+    struct DirectionalLight
+    {
+        Color color = Color::White;
+        alignas(16) glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
     };
 
     PipelineGraphics pipeline;
 
     DescriptorsHandler descriptorSet;
     UniformHandler     uniformScene;
-    StorageHandler     storageLights;
+    StorageHandler     storagePointLights;
+    StorageHandler     storageDirectionalLights;
 };
 }   // namespace MapleLeaf

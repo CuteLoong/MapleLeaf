@@ -5,7 +5,6 @@
 #include "SceneGraph.hpp"
 #include "Transform.hpp"
 
-
 namespace MapleLeaf {
 struct TextureMapping
 {
