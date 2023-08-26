@@ -9,7 +9,7 @@ class Camera
 public:
     Camera()
         : nearPlane(0.1f)
-        , farPlane(1000.0f)
+        , farPlane(100.0f)
         , fieldOfView(glm::radians(60.0f))
     {}
 

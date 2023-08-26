@@ -7,12 +7,13 @@ layout(push_constant) uniform PushObject {
 } object;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec2 inUV;
-layout(location = 2) in vec3 inNormal;
-out gl_PerVertex {
-	vec4 gl_Position;
+
+out gl_PerVertex 
+{
+    vec4 gl_Position;   
 };
 
 void main() {
 	gl_Position = object.mvp * vec4(inPosition, 1.0f);
+	gl_Position.z = gl_Position.z * 0.5 + 0.5;
 }

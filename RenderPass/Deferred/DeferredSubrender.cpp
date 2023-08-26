@@ -1,6 +1,7 @@
 #include "DeferredSubrender.hpp"
 #include "Light.hpp"
 #include "Scenes.hpp"
+#include "ShadowSystem.hpp"
 
 
 namespace MapleLeaf {
@@ -16,36 +17,51 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
 
-    // To do light
-    auto                    sceneLights = Scenes::Get()->GetScene()->GetComponents<Light>();
-    uint32_t                lightCount  = sceneLights.size();
-    std::vector<PointLight> pointLights;
+    auto                          sceneLights = Scenes::Get()->GetScene()->GetComponents<Light>();
+    std::vector<PointLight>       pointLights(1, PointLight());
+    std::vector<DirectionalLight> directionalLights(1, DirectionalLight());
 
     for (const auto& light : sceneLights) {
-        PointLight pointLight = {};
-        pointLight.color      = light->GetColor();
-        if (auto transform = light->GetEntity()->GetComponent<Transform>()) {
-            pointLight.position = transform->GetPosition();
+        if (light->type == LightType::Directional) {
+            DirectionalLight directionalLight = {};
+            directionalLight.color            = light->GetColor();
+            directionalLight.direction        = light->GetDirection();
+            directionalLights.push_back(directionalLight);
         }
-        pointLight.attenuation = light->GetAttenuation();
-        pointLights.push_back(pointLight);
+        else if (light->type == LightType::Point) {
+            PointLight pointLight = {};
+            pointLight.color      = light->GetColor();
+            if (auto transform = light->GetEntity()->GetComponent<Transform>()) {
+                pointLight.position = transform->GetPosition();
+            }
+            pointLight.attenuation = light->GetAttenuation();
+            pointLights.push_back(pointLight);
+        }
     }
 
     // Update uniforms
     uniformScene.Push("view", camera->GetViewMatrix());
+    if (auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>())
+        uniformScene.Push("shadowMatrix", shadows->GetShadowCascade().GetLightProjectionViewMatrix());
     uniformScene.Push("cameraPosition", camera->GetPosition());
-    uniformScene.Push("lightsCount", lightCount);
+    uniformScene.Push("pointLightsCount", pointLights.size() - 1);
+    uniformScene.Push("directionalLightsCount", directionalLights.size() - 1);
 
     // Update Light buffer
-    storageLights.Push(pointLights.data(), sizeof(PointLight) * lightCount);
+    storagePointLights.Push(pointLights.data(), sizeof(PointLight) * pointLights.size());
+    storageDirectionalLights.Push(directionalLights.data(), sizeof(DirectionalLight) * directionalLights.size());
 
     // Updates storage buffers.
     descriptorSet.Push("UniformScene", uniformScene);
-    descriptorSet.Push("BufferLights", storageLights);
+    descriptorSet.Push("BufferPointLights", storagePointLights);
+    descriptorSet.Push("BufferDirectionalLights", storageDirectionalLights);
+
     descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
     descriptorSet.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
     descriptorSet.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
+
+    descriptorSet.Push("inShadowMap", Graphics::Get()->GetAttachment("shadows"));
 
     if (!descriptorSet.Update(pipeline)) return;
 

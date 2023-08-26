@@ -22,7 +22,7 @@ private:
     glm::mat4 lightOrthoMatrix;
     glm::mat4 lightViewMatrix;
 
-    glm::vec3 minExtent;
-    glm::vec3 maxExtent;
+    glm::vec3 minExtents;
+    glm::vec3 maxExtents;
 };
 }   // namespace MapleLeaf

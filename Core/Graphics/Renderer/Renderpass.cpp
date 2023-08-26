@@ -30,7 +30,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
             attachmentDescription.format      = attachment.GetFormat();
             break;
         case Attachment::Type::Depth:
-            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             attachmentDescription.format      = depthFormat;
             break;
         case Attachment::Type::Swapchain:

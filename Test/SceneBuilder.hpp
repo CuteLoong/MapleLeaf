@@ -41,14 +41,24 @@ public:
                 }
             }
         }
-        for (auto& light : builder.lights) {
-            if (auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>()) {
-                if (light->type == LightType::Directional)
-                    shadows->SetLightDirection(light->GetDirection());   // last direction light is main light, will generate shadowmap
-            }
 
+        auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>();
+
+        for (auto& light : builder.lights) {
             auto entity = Scenes::Get()->GetScene()->GetEntity(light->GetName());
-            if (entity) entity->AddComponent(std::move(light));
+            if (entity) 
+            {
+                auto transform = entity->GetComponent<Transform>();
+
+                glm::vec4 realDirection = transform->GetWorldMatrix() * glm::vec4(light->GetDirection(), 0.0f);
+
+                light->SetPosition(transform->GetPosition());
+                light->SetDirection(glm::vec3(realDirection));
+
+                if (shadows && (light->type == LightType::Directional)) shadows->SetLightDirection(light->GetDirection());
+
+                entity->AddComponent(std::move(light));
+            }
         }
     }
 
