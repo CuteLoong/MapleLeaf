@@ -37,7 +37,7 @@ layout(input_attachment_index = 2, binding = 5) uniform subpassInput inNormal;
 layout(input_attachment_index = 3, binding = 6) uniform subpassInput inMaterial;
 layout(binding = 7) uniform sampler2D inShadowMap;
 
-layout(location = 0) in vec2 inUV;
+// layout(location = 0) in vec2 inUV;
 
 layout(location = 0) out vec4 outColour;
 

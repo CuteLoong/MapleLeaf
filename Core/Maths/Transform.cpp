@@ -40,9 +40,9 @@ glm::mat4 Transform::GetWorldMatrix() const
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), worldTransform->scale);
 
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix        = glm::rotate(rotationMatrix, worldTransform->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrix        = glm::rotate(rotationMatrix, worldTransform->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrix        = glm::rotate(rotationMatrix, worldTransform->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), worldTransform->position);
 
