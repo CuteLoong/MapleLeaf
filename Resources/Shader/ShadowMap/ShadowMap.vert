@@ -7,6 +7,8 @@ layout(push_constant) uniform PushObject {
 } object;
 
 layout(location = 0) in vec3 inPosition;
+// layout(location = 1) in vec2 inUV;
+// layout(location = 2) in vec3 inNormal;
 
 out gl_PerVertex 
 {

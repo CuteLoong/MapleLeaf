@@ -10,7 +10,7 @@
 #include "glslang/Public/ShaderLang.h"
 #include "glslang/SPIRV/GlslangToSpv.h"
 
-#define MAPLELEAF_DEBUG
+// #define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
 class ShaderIncluder : public glslang::TShader::Includer
@@ -401,7 +401,7 @@ void Shader::CreateReflection()
         auto descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
 
         switch (uniform.glType) {
-        case 0: 
+        case 0:
             descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
             descriptorSetLayouts.emplace_back(
                 Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, 1));
@@ -433,23 +433,31 @@ void Shader::CreateReflection()
     for (const auto& [type, descriptorCount] : descriptorPoolCounts) {
         VkDescriptorPoolSize descriptorPoolSize = {};
         descriptorPoolSize.type                 = type;
-        descriptorPoolSize.descriptorCount      = descriptorCount == 0 ? 2048 : descriptorCount;
+        descriptorPoolSize.descriptorCount      = descriptorCount == 0 ? 1 : descriptorCount;
         descriptorPools.emplace_back(descriptorPoolSize);
     }
 
-    descriptorPools.resize(6);
-	descriptorPools[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptorPools[0].descriptorCount = 4096;
-	descriptorPools[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	descriptorPools[1].descriptorCount = 2048;
-	descriptorPools[2].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-	descriptorPools[2].descriptorCount = 2048;
-	descriptorPools[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-	descriptorPools[3].descriptorCount = 2048;
-	descriptorPools[4].type = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
-	descriptorPools[4].descriptorCount = 2048;
-	descriptorPools[5].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	descriptorPools[5].descriptorCount = 2048;
+    // set a default descriptor pool, without any mean
+    if (descriptorPoolCounts.empty()) {
+        VkDescriptorPoolSize descriptorPoolSize = {};
+        descriptorPoolSize.type                 = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorPoolSize.descriptorCount      = 1;
+        descriptorPools.emplace_back(descriptorPoolSize);
+    }
+
+    // descriptorPools.resize(6);
+    // descriptorPools[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    // descriptorPools[0].descriptorCount = 4096;
+    // descriptorPools[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    // descriptorPools[1].descriptorCount = 2048;
+    // descriptorPools[2].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    // descriptorPools[2].descriptorCount = 2048;
+    // descriptorPools[3].type = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+    // descriptorPools[3].descriptorCount = 2048;
+    // descriptorPools[4].type = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+    // descriptorPools[4].descriptorCount = 2048;
+    // descriptorPools[5].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    // descriptorPools[5].descriptorCount = 2048;
 
     std::sort(descriptorSetLayouts.begin(),
               descriptorSetLayouts.end(),
@@ -459,18 +467,18 @@ void Shader::CreateReflection()
 
     for (const auto& descriptor : descriptorSetLayouts) descriptorTypes.emplace(descriptor.binding, descriptor.descriptorType);
 
-    // Process attribute descriptions.
-	uint32_t currentOffset = 4;
+    // Process attribute descriptions. Only if input is none use this attrib
+    // uint32_t currentOffset = 4;
 
-	for (const auto &[attributeName, attribute] : attributes) {
-		VkVertexInputAttributeDescription attributeDescription = {};
-		attributeDescription.location = static_cast<uint32_t>(attribute.location);
-		attributeDescription.binding = 0;
-		attributeDescription.format = GlTypeToVk(attribute.glType);
-		attributeDescription.offset = currentOffset;
-		attributeDescriptions.emplace_back(attributeDescription);
-		currentOffset += attribute.size;
-	}
+    // for (const auto& [attributeName, attribute] : attributes) {
+    //     VkVertexInputAttributeDescription attributeDescription = {};
+    //     attributeDescription.location                          = static_cast<uint32_t>(attribute.location);
+    //     attributeDescription.binding                           = 0;
+    //     attributeDescription.format                            = GlTypeToVk(attribute.glType);
+    //     attributeDescription.offset                            = currentOffset;
+    //     attributeDescriptions.emplace_back(attributeDescription);
+    //     currentOffset += attribute.size;
+    // }
 }
 
 void Shader::IncrementDescriptorPool(std::map<VkDescriptorType, uint32_t>& descriptorPoolCounts, VkDescriptorType type)
