@@ -2,10 +2,12 @@
 #include "Graphics.hpp"
 #include "Log.hpp"
 #include "PhysicalDevice.hpp"
+#include "vulkan/vulkan_core.h"
 
 
 namespace MapleLeaf {
-const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
+const std::vector<const char*> LogicalDevice::DeviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
 
 LogicalDevice::LogicalDevice(const Instance& instance, const PhysicalDevice& physicalDevice)
     : instance(instance)
@@ -95,8 +97,10 @@ void LogicalDevice::CreateLogicalDevice()
         transferFamily = graphicsFamily;
     }
 
-    auto                     physicalDeviceFeatures = physicalDevice.GetFeatures();
-    VkPhysicalDeviceFeatures enabledFeatures        = {};
+    auto physicalDeviceFeatures = physicalDevice.GetFeatures();
+
+    VkPhysicalDeviceFeatures2 extensionFeatures      = {};
+    void*                     deviceCreatepNextChain = nullptr;
 
     if (physicalDeviceFeatures.sampleRateShading) enabledFeatures.sampleRateShading = VK_TRUE;
 
@@ -115,6 +119,19 @@ void LogicalDevice::CreateLogicalDevice()
     else
         Log::Warning("Selected GPU does not support sampler anisotropy!\n");
 
+    // add bindless feature
+    VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
+    indexingFeatures.sType                                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+    indexingFeatures.runtimeDescriptorArray                    = VK_TRUE;
+    indexingFeatures.descriptorBindingVariableDescriptorCount  = VK_TRUE;
+    indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    indexingFeatures.pNext                                     = nullptr;
+
+    deviceCreatepNextChain     = &indexingFeatures;
+    extensionFeatures.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    extensionFeatures.features = enabledFeatures;
+    extensionFeatures.pNext    = deviceCreatepNextChain;
+
     VkDeviceCreateInfo deviceCreateInfo   = {};
     deviceCreateInfo.sType                = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -125,7 +142,8 @@ void LogicalDevice::CreateLogicalDevice()
     }
     deviceCreateInfo.enabledExtensionCount   = static_cast<uint32_t>(DeviceExtensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
-    deviceCreateInfo.pEnabledFeatures        = &enabledFeatures;
+    deviceCreateInfo.pNext                   = &extensionFeatures;
+    // deviceCreateInfo.pEnabledFeatures        = &enabledFeatures;
     Graphics::CheckVk(vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice));
 
     volkLoadDevice(logicalDevice);
