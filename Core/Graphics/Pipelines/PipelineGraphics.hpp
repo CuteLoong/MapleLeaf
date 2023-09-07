@@ -58,23 +58,23 @@ public:
      */
     RenderArea GetRenderArea(const std::optional<uint32_t>& stage = std::nullopt) const;
 
-    const Stage&                              GetStage() const { return stage; }
-    const std::vector<std::filesystem::path>& GetShaderStages() const { return shaderStages; }
-    const std::vector<Shader::VertexInput>&   GetVertexInputs() const { return vertexInputs; }
-    const std::vector<Shader::Define>&        GetDefines() const { return defines; }
-    Mode                                      GetMode() const { return mode; }
-    Depth                                     GetDepth() const { return depth; }
-    VkPrimitiveTopology                       GetTopology() const { return topology; }
-    VkPolygonMode                             GetPolygonMode() const { return polygonMode; }
-    VkCullModeFlags                           GetCullMode() const { return cullMode; }
-    VkFrontFace                               GetFrontFace() const { return frontFace; }
-    bool                                      IsPushDescriptors() const override { return pushDescriptors; }
-    const Shader*                             GetShader() const override { return shader.get(); }
-    const VkDescriptorSetLayout&              GetDescriptorSetLayout() const override { return descriptorSetLayout; }
-    const VkDescriptorPool&                   GetDescriptorPool() const override { return descriptorPool; }
-    const VkPipeline&                         GetPipeline() const override { return pipeline; }
-    const VkPipelineLayout&                   GetPipelineLayout() const override { return pipelineLayout; }
-    const VkPipelineBindPoint&                GetPipelineBindPoint() const override { return pipelineBindPoint; }
+    const Stage&                                     GetStage() const { return stage; }
+    const std::vector<std::filesystem::path>&        GetShaderStages() const { return shaderStages; }
+    const std::vector<Shader::VertexInput>&          GetVertexInputs() const { return vertexInputs; }
+    const std::vector<Shader::Define>&               GetDefines() const { return defines; }
+    Mode                                             GetMode() const { return mode; }
+    Depth                                            GetDepth() const { return depth; }
+    VkPrimitiveTopology                              GetTopology() const { return topology; }
+    VkPolygonMode                                    GetPolygonMode() const { return polygonMode; }
+    VkCullModeFlags                                  GetCullMode() const { return cullMode; }
+    VkFrontFace                                      GetFrontFace() const { return frontFace; }
+    bool                                             IsPushDescriptors() const override { return pushDescriptors; }
+    const Shader*                                    GetShader() const override { return shader.get(); }
+    const std::map<uint32_t, VkDescriptorSetLayout>& GetDescriptorSetLayouts() const override { return descriptorSetLayouts; }
+    const VkDescriptorPool&                          GetDescriptorPool() const override { return descriptorPool; }
+    const VkPipeline&                                GetPipeline() const override { return pipeline; }
+    const VkPipelineLayout&                          GetPipelineLayout() const override { return pipelineLayout; }
+    const VkPipelineBindPoint&                       GetPipelineBindPoint() const override { return pipelineBindPoint; }
 
 private:
     Stage                              stage;
@@ -95,8 +95,8 @@ private:
     std::vector<VkShaderModule>                  modules;
     std::vector<VkPipelineShaderStageCreateInfo> stages;
 
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorPool      descriptorPool      = VK_NULL_HANDLE;
+    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetLayouts;
+    VkDescriptorPool                          descriptorPool = VK_NULL_HANDLE;
 
     VkPipeline          pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout    pipelineLayout = VK_NULL_HANDLE;

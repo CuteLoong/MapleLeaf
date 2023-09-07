@@ -3,6 +3,7 @@
 #include "DeferredSubrender.hpp"
 #include "Graphics.hpp"
 #include "MeshesSubrender.hpp"
+#include "IndirectDrawSubrender.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
 #include "ShadowSubrender.hpp"
@@ -16,7 +17,7 @@ MainRenderer::MainRenderer()
     std::vector<SubpassType> renderpassSubpasses0 = {{0, {}, {0}}};
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments0, renderpassSubpasses0, Viewport({4096, 4096})));
 
-    // attachment 一定不能跨index,必须要是连续的,不然会导致framebuffer读取view时索引越界,且renderpass的attachment索引也会对不上
+    // // attachment 一定不能跨index,必须要是连续的,不然会导致framebuffer读取view时索引越界,且renderpass的attachment索引也会对不上
     std::vector<Attachment> renderpassAttachments{{0, "depth", Attachment::Type::Depth, false},
                                                   {1, "swapchain", Attachment::Type::Swapchain, false},
                                                   {2, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
@@ -32,6 +33,7 @@ MainRenderer::MainRenderer()
 
 void MainRenderer::Start()
 {
+    // AddSubrender<IndirectDrawSubrender>({0, 0});
     AddSubrender<ShadowSubrender>({0, 0});
 
     AddSubrender<MeshesSubrender>({1, 0});
