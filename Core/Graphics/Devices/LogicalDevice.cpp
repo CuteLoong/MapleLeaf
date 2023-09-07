@@ -125,6 +125,8 @@ void LogicalDevice::CreateLogicalDevice()
     indexingFeatures.runtimeDescriptorArray                    = VK_TRUE;
     indexingFeatures.descriptorBindingVariableDescriptorCount  = VK_TRUE;
     indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    indexingFeatures.descriptorBindingUpdateUnusedWhilePending = VK_TRUE;
+    indexingFeatures.descriptorBindingPartiallyBound           = VK_TRUE;
     indexingFeatures.pNext                                     = nullptr;
 
     deviceCreatepNextChain     = &indexingFeatures;

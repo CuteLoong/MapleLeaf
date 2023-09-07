@@ -58,7 +58,7 @@ bool DescriptorsHandler::Update(const Pipeline& pipeline)
             auto writeDescriptorSet   = descriptor.writeDescriptor.GetWriteDescriptorSet();
             writeDescriptorSet.dstSet = VK_NULL_HANDLE;
 
-            if (!pushDescriptors) writeDescriptorSet.dstSet = descriptorSet->GetDescriptorSet();
+            if (!pushDescriptors) writeDescriptorSet.dstSet = descriptorSet->GetDescriptorSet(descriptor.set);
 
             writeDescriptorSets.emplace_back(writeDescriptorSet);
         }

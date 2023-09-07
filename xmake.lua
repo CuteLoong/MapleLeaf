@@ -44,14 +44,16 @@ add_includedirs(
 
 add_includedirs(
 "RenderPass/Deferred",
-"RenderPass/Shadow"
+"RenderPass/Shadow",
+"RenderPass/IndirectDraw"
 )
 
 target("RenderPass")
     set_kind("static")
     add_files(
     "RenderPass/Deferred/*.cpp",
-    "RenderPass/Shadow/*.cpp"
+    "RenderPass/Shadow/*.cpp",
+    "RenderPass/IndirectDraw/*.cpp"
     )
 target_end()
 

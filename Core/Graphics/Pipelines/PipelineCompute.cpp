@@ -33,7 +33,8 @@ PipelineCompute::~PipelineCompute()
 
     vkDestroyShaderModule(*logicalDevice, shaderModule, nullptr);
 
-    vkDestroyDescriptorSetLayout(*logicalDevice, descriptorSetLayout, nullptr);
+    for (auto& [setIndex, descriptorSetLayout] : descriptorSetLayouts)
+        vkDestroyDescriptorSetLayout(*logicalDevice, descriptorSetLayout, nullptr);
     vkDestroyDescriptorPool(*logicalDevice, descriptorPool, nullptr);
     vkDestroyPipeline(*logicalDevice, pipeline, nullptr);
     vkDestroyPipelineLayout(*logicalDevice, pipelineLayout, nullptr);
@@ -70,13 +71,34 @@ void PipelineCompute::CreateDescriptorLayout()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
 
-    auto                            descriptorSetLayouts          = shader->GetDescriptorSetLayouts();
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-    descriptorSetLayoutCreateInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descriptorSetLayoutCreateInfo.flags                           = pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR : 0;
-    descriptorSetLayoutCreateInfo.bindingCount                    = static_cast<uint32_t>(descriptorSetLayouts.size());
-    descriptorSetLayoutCreateInfo.pBindings                       = descriptorSetLayouts.data();
-    Graphics::CheckVk(vkCreateDescriptorSetLayout(*logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+    auto& descriptorSetLayoutBindings = shader->GetDescriptorSetLayouts();
+    for (const auto& [setIndex, descriptorSetLayoutBinding] : descriptorSetLayoutBindings) {
+        descriptorSetLayouts[setIndex] = VK_NULL_HANDLE;
+
+        VkDescriptorBindingFlagsEXT flags;
+        if (descriptorSetLayoutBinding.size() != 1) {
+            flags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT |
+                    VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT_EXT;
+        }
+        else {
+            flags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT_EXT;
+        }
+        VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlags{};
+        bindingFlags.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+        bindingFlags.bindingCount  = 1;
+        bindingFlags.pBindingFlags = &flags;
+
+        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+        descriptorSetLayoutCreateInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptorSetLayoutCreateInfo.flags =
+            pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR | VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT
+                            : VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
+        descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBinding.size());
+        descriptorSetLayoutCreateInfo.pBindings    = descriptorSetLayoutBinding.data();
+        descriptorSetLayoutCreateInfo.pNext        = &bindingFlags;
+
+        Graphics::CheckVk(vkCreateDescriptorSetLayout(*logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[setIndex]));
+    }
 }
 
 void PipelineCompute::CreateDescriptorPool()
@@ -100,10 +122,13 @@ void PipelineCompute::CreatePipelineLayout()
 
     auto pushConstantRanges = shader->GetPushConstantRanges();
 
+    std::vector<VkDescriptorSetLayout> descriptorSetLayoutsData;
+    for (const auto& [setIndex, descriptorSetLayout] : descriptorSetLayouts) descriptorSetLayoutsData.push_back(descriptorSetLayout);
+
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount             = 1;
-    pipelineLayoutCreateInfo.pSetLayouts                = &descriptorSetLayout;
+    pipelineLayoutCreateInfo.setLayoutCount             = descriptorSetLayoutsData.size();
+    pipelineLayoutCreateInfo.pSetLayouts                = descriptorSetLayoutsData.data();
     pipelineLayoutCreateInfo.pushConstantRangeCount     = static_cast<uint32_t>(pushConstantRanges.size());
     pipelineLayoutCreateInfo.pPushConstantRanges        = pushConstantRanges.data();
     Graphics::CheckVk(vkCreatePipelineLayout(*logicalDevice, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));

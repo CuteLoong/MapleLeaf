@@ -29,8 +29,8 @@ private:
     VkShaderModule                  shaderModule          = VK_NULL_HANDLE;
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo = {};
 
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorPool      descriptorPool      = VK_NULL_HANDLE;
+    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetLayouts;
+    VkDescriptorPool                          descriptorPool = VK_NULL_HANDLE;
 
     VkPipeline          pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout    pipelineLayout = VK_NULL_HANDLE;

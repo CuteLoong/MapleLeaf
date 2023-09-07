@@ -38,9 +38,11 @@ public:
 
         if (!to_address(descriptor)) return;
 
-        auto location = shader->GetDescriptorLocation(descriptorName);
+        auto setLocation = shader->GetDescriptorLocation(descriptorName);
+        auto setIndex    = setLocation.first;
+        auto location    = setLocation.second;
 
-        if (!location) {
+        if (!setIndex || !location) {
 #ifdef MAPLELEAF_DEBUG
             if (shader->ReportedNotFound(descriptorName, true))
                 Log::Error("Could not find descriptor in shader ", shader->GetName(), " of name ", std::quoted(descriptorName), '\n');
@@ -48,7 +50,7 @@ public:
             return;
         }
 
-        auto descriptorType = shader->GetDescriptorType(location.value());
+        auto descriptorType = shader->GetDescriptorType(setIndex.value(), location.value());
 
         if (!descriptorType) {
 #ifdef MAPLELEAF_DEBUG
@@ -65,7 +67,8 @@ public:
         }
 
         auto writeDescriptor = to_address(descriptor)->GetWriteDescriptor(location.value(), descriptorType.value(), offsetSize);
-        descriptors.emplace(descriptorName, DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, location.value()));
+        descriptors.emplace(descriptorName,
+                            DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, setIndex.value(), location.value()));
         changed = true;
     }
 
@@ -78,9 +81,12 @@ public:
             descriptors.erase(it);
         }
 
-        auto location = shader->GetDescriptorLocation(descriptorName);
+        auto setLocation = shader->GetDescriptorLocation(descriptorName);
+        auto setIndex    = setLocation.first;
+        auto location    = setLocation.second;
 
-        descriptors.emplace(descriptorName, DescriptorValue{to_address(descriptor), std::move(writeDescriptorSet), std::nullopt, location.value()});
+        descriptors.emplace(descriptorName,
+                            DescriptorValue{to_address(descriptor), std::move(writeDescriptorSet), std::nullopt, setIndex.value(), location.value()});
         changed = true;
     }
 
@@ -101,11 +107,14 @@ private:
         WriteDescriptorSet        writeDescriptor;
         std::optional<OffsetSize> offsetSize;
         uint32_t                  location;
+        uint32_t                  set;
 
-        DescriptorValue(const Descriptor* descriptor, WriteDescriptorSet&& writeDescriptor, std::optional<OffsetSize> offsetSize, uint32_t location)
+        DescriptorValue(const Descriptor* descriptor, WriteDescriptorSet&& writeDescriptor, std::optional<OffsetSize> offsetSize, uint32_t set,
+                        uint32_t location)
             : descriptor(descriptor)
             , writeDescriptor(std::move(writeDescriptor))
             , offsetSize(offsetSize)
+            , set(set)
             , location(location)
         {}
     };
