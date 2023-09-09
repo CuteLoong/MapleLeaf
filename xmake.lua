@@ -39,7 +39,8 @@ add_includedirs(
 "Core/Importers", 
 "Core/Importers/Builder",
 "Core/Bitmaps",
-"Core/Inputs"
+"Core/Inputs",
+"Core/GPUScene"
 )
 
 add_includedirs(
@@ -83,7 +84,8 @@ target("Core")
     "Core/Importers/*.cpp", 
     "Core/Importers/Builder/*.cpp",
     "Core/Bitmaps/*.cpp",
-    "Core/Inputs/*.cpp"
+    "Core/Inputs/*.cpp",
+    "Core/GPUScene/*.cpp"
     )
 target_end()
 

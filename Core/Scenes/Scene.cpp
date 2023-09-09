@@ -3,6 +3,7 @@
 namespace MapleLeaf {
 Scene::Scene(std::unique_ptr<Camera>&& camera)
     : camera(std::move(camera))
+    , gpuScene(std::make_unique<GPUScene>())
 {}
 
 void Scene::Update()
@@ -13,6 +14,7 @@ void Scene::Update()
 
     entities.Update();
     camera->Update();
+    // gpuScene->Update();
 }
 
 void Scene::SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom)

@@ -4,11 +4,11 @@
 #include "Pipeline.hpp"
 
 namespace MapleLeaf {
-class DescriptorSet
+class DescriptorSets
 {
 public:
-    explicit DescriptorSet(const Pipeline& pipeline);
-    ~DescriptorSet();
+    explicit DescriptorSets(const Pipeline& pipeline);
+    ~DescriptorSets();
 
     static void Update(const std::vector<VkWriteDescriptorSet>& descriptorWrites);
     void        BindDescriptor(const CommandBuffer& commandBuffer) const;

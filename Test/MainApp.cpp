@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
 namespace Test {
 MainApp::MainApp()
-    : App("Test Triangle1", {1, 0, 0})
+    : App("MapleLeaf", {1, 0, 0})
 {
     // Registers file search paths.
     Log::Out("Working Directory: ", std::filesystem::current_path(), '\n');
@@ -33,7 +33,7 @@ MainApp::~MainApp() {}
 
 void MainApp::Start()
 {
-    Devices::Get()->GetWindow()->SetTitle("Test Title");
+    Devices::Get()->GetWindow()->SetTitle("MapleLeaf");
     Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
 
     std::unique_ptr<SceneBuilder> scene = std::make_unique<SceneBuilder>();

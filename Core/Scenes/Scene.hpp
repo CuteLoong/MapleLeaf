@@ -2,6 +2,7 @@
 
 #include "Camera.hpp"
 #include "EntityHolder.hpp"
+#include "GPUScene.hpp"
 #include "SystemHolder.hpp"
 
 namespace MapleLeaf {
@@ -76,6 +77,8 @@ private:
     SystemHolder            systems;
     EntityHolder            entities;
     std::unique_ptr<Camera> camera;
+
+    std::unique_ptr<GPUScene> gpuScene;
 
     glm::vec3 minExtents = glm::vec3(std::numeric_limits<float>::infinity());
     glm::vec3 maxExtents = glm::vec3(-std::numeric_limits<float>::infinity());
