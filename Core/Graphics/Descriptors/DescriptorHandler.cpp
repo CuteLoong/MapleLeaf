@@ -7,7 +7,7 @@ namespace MapleLeaf {
 DescriptorsHandler::DescriptorsHandler(const Pipeline& pipeline)
     : shader(pipeline.GetShader())
     , pushDescriptors(pipeline.IsPushDescriptors())
-    , descriptorSet(std::make_unique<DescriptorSet>(pipeline))
+    , descriptorSets(std::make_unique<DescriptorSets>(pipeline))
     , changed(true)
 {}
 
@@ -43,7 +43,7 @@ bool DescriptorsHandler::Update(const Pipeline& pipeline)
         writeDescriptorSets.clear();
 
         if (!pushDescriptors) {
-            descriptorSet = std::make_unique<DescriptorSet>(pipeline);
+            descriptorSets = std::make_unique<DescriptorSets>(pipeline);
         }
 
         changed = false;
@@ -54,16 +54,25 @@ bool DescriptorsHandler::Update(const Pipeline& pipeline)
         writeDescriptorSets.clear();
         writeDescriptorSets.reserve(descriptors.size());
 
+        // this descriptor meaning maybe have multiple descriptor, e.g this descriptor is a descriptor array
         for (const auto& [descriptorName, descriptor] : descriptors) {
-            auto writeDescriptorSet   = descriptor.writeDescriptor.GetWriteDescriptorSet();
-            writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+            uint32_t dstArrayElement = 0;
+            for (const auto& descriptorElem : descriptor) {
+                auto writeDescriptorSet   = descriptorElem.writeDescriptor.GetWriteDescriptorSet();
+                writeDescriptorSet.dstSet = VK_NULL_HANDLE;
 
-            if (!pushDescriptors) writeDescriptorSet.dstSet = descriptorSet->GetDescriptorSet(descriptor.set);
+                // TODO. only update a certein of writeDescriptorSet
+                if (!pushDescriptors) {
+                    writeDescriptorSet.dstSet          = descriptorSets->GetDescriptorSet(descriptorElem.set);
+                    writeDescriptorSet.dstArrayElement = dstArrayElement;
+                }
 
-            writeDescriptorSets.emplace_back(writeDescriptorSet);
+                writeDescriptorSets.emplace_back(writeDescriptorSet);
+                dstArrayElement++;
+            }
         }
 
-        if (!pushDescriptors) descriptorSet->Update(writeDescriptorSets);
+        if (!pushDescriptors) descriptorSets->Update(writeDescriptorSets);
 
         changed = false;
     }
@@ -84,7 +93,7 @@ void DescriptorsHandler::BindDescriptor(const CommandBuffer& commandBuffer, cons
                                              writeDescriptorSets.data());
     }
     else {
-        descriptorSet->BindDescriptor(commandBuffer);
+        descriptorSets->BindDescriptor(commandBuffer);
     }
 }
 }   // namespace MapleLeaf

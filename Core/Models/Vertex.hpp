@@ -30,7 +30,7 @@ public:
     bool operator!=(const Vertex2D& rhs) const { return !operator==(rhs); }
 
     glm::vec2 position;
-    glm::vec2 uv;
+    alignas(8) glm::vec2 uv;
 };
 
 class Vertex3D
@@ -58,8 +58,8 @@ public:
     bool operator!=(const Vertex3D& rhs) const { return !operator==(rhs); }
 
     glm::vec3 position;
-    glm::vec2 uv;
-    glm::vec3 normal;
+    alignas(8) glm::vec2 uv;
+    alignas(16) glm::vec3 normal;
 };
 }   // namespace MapleLeaf
 

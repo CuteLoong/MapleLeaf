@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Descriptor.hpp"
-#include "DescriptorSet.hpp"
+#include "DescriptorSets.hpp"
 #include "PushHandler.hpp"
 #include "Shader.hpp"
 #include "StorageHandler.hpp"
@@ -30,10 +30,20 @@ public:
     {
         if (!shader) return;
 
-        if (auto it = descriptors.find(descriptorName); it != descriptors.end()) {
-            if (it->second.descriptor == to_address(descriptor) && it->second.offsetSize == offsetSize) return;
+        if (auto it1 = descriptors.find(descriptorName); it1 != descriptors.end()) {
+            if (auto it2 = std::find_if(it1->second.begin(),
+                                        it1->second.end(),
+                                        [&](const DescriptorValue& element) { return element.descriptor == to_address(descriptor); });
+                it2 != it1->second.end()) {
+                if (it2->offsetSize == offsetSize)
+                    return;
+                else
+                    it1->second.erase(it2);
+            }
 
-            descriptors.erase(it);
+            // if (it->second.descriptor == to_address(descriptor) && it->second.offsetSize == offsetSize) return;
+
+            // descriptors.erase(it);
         }
 
         if (!to_address(descriptor)) return;
@@ -67,8 +77,8 @@ public:
         }
 
         auto writeDescriptor = to_address(descriptor)->GetWriteDescriptor(location.value(), descriptorType.value(), offsetSize);
-        descriptors.emplace(descriptorName,
-                            DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, setIndex.value(), location.value()));
+        descriptors[descriptorName].emplace_back(
+            DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, setIndex.value(), location.value()));
         changed = true;
     }
 
@@ -77,16 +87,22 @@ public:
     {
         if (!shader) return;
 
-        if (auto it = descriptors.find(descriptorName); it != descriptors.end()) {
-            descriptors.erase(it);
+        if (auto it1 = descriptors.find(descriptorName); it1 != descriptors.end()) {
+            if (auto it2 = std::find_if(it1->second.begin(),
+                                        it1->second.end(),
+                                        [&](const DescriptorValue& element) { return element.descriptor == to_address(descriptor); });
+                it2 != it1->second.end()) {
+                it1->second.erase(it2);
+            }
+            // descriptors.erase(it);
         }
 
         auto setLocation = shader->GetDescriptorLocation(descriptorName);
         auto setIndex    = setLocation.first;
         auto location    = setLocation.second;
 
-        descriptors.emplace(descriptorName,
-                            DescriptorValue{to_address(descriptor), std::move(writeDescriptorSet), std::nullopt, setIndex.value(), location.value()});
+        descriptors[descriptorName].emplace_back(
+            DescriptorValue{to_address(descriptor), std::move(writeDescriptorSet), std::nullopt, setIndex.value(), location.value()});
         changed = true;
     }
 
@@ -97,7 +113,7 @@ public:
     bool Update(const Pipeline& pipeline);
 
     void                 BindDescriptor(const CommandBuffer& commandBuffer, const Pipeline& pipeline);
-    const DescriptorSet* GetDescriptorSet() const { return descriptorSet.get(); }
+    const DescriptorSets* GetDescriptorSet() const { return descriptorSets.get(); }
 
 private:
     class DescriptorValue
@@ -121,10 +137,10 @@ private:
 
     const Shader*                  shader          = nullptr;
     bool                           pushDescriptors = false;
-    std::unique_ptr<DescriptorSet> descriptorSet;
+    std::unique_ptr<DescriptorSets> descriptorSets;
 
-    std::map<std::string, DescriptorValue> descriptors;
-    std::vector<VkWriteDescriptorSet>      writeDescriptorSets;
-    bool                                   changed = false;
+    std::map<std::string, std::vector<DescriptorValue>> descriptors;
+    std::vector<VkWriteDescriptorSet>                   writeDescriptorSets;
+    bool                                                changed = false;
 };
 }   // namespace MapleLeaf

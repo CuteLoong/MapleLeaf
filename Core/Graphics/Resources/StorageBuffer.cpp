@@ -31,7 +31,7 @@ WriteDescriptorSet StorageBuffer::GetWriteDescriptor(uint32_t binding, VkDescrip
     descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrite.dstSet               = VK_NULL_HANDLE;   // Will be set in the descriptor handler.
     descriptorWrite.dstBinding           = binding;
-    descriptorWrite.dstArrayElement      = 0;
+    descriptorWrite.dstArrayElement      = 0;                // Will be set in the descriptor handler.
     descriptorWrite.descriptorCount      = 1;
     descriptorWrite.descriptorType       = descriptorType;
 

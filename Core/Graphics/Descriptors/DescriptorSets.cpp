@@ -1,8 +1,8 @@
-#include "DescriptorSet.hpp"
+#include "DescriptorSets.hpp"
 #include "Graphics.hpp"
 
 namespace MapleLeaf {
-DescriptorSet::DescriptorSet(const Pipeline& pipeline)
+DescriptorSets::DescriptorSets(const Pipeline& pipeline)
     : pipelineLayout(pipeline.GetPipelineLayout())
     , pipelineBindPoint(pipeline.GetPipelineBindPoint())
     , descriptorPool(pipeline.GetDescriptorPool())
@@ -23,21 +23,21 @@ DescriptorSet::DescriptorSet(const Pipeline& pipeline)
     }
 }
 
-DescriptorSet::~DescriptorSet()
+DescriptorSets::~DescriptorSets()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
 
     for (auto& [setIndex, descriptorSet] : descriptorSets) Graphics::CheckVk(vkFreeDescriptorSets(*logicalDevice, descriptorPool, 1, &descriptorSet));
 }
 
-void DescriptorSet::Update(const std::vector<VkWriteDescriptorSet>& descriptorWrites)
+void DescriptorSets::Update(const std::vector<VkWriteDescriptorSet>& descriptorWrites)
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
 
     vkUpdateDescriptorSets(*logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 
-void DescriptorSet::BindDescriptor(const CommandBuffer& commandBuffer) const
+void DescriptorSets::BindDescriptor(const CommandBuffer& commandBuffer) const
 {
     std::vector<VkDescriptorSet> descriptorSetsData;
     for (const auto& [setIndex, descriptorSet] : descriptorSets) descriptorSetsData.push_back(descriptorSet);
