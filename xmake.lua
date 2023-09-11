@@ -3,7 +3,7 @@ set_version("1.0.0", {build = "%Y%m%d%H%M"})
 set_languages("c++17")
 set_arch("x64")
 
-add_rules("mode.debug", "mode.release")
+add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode/"})
 
 if is_plat("windows") then 

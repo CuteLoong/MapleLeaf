@@ -1,7 +1,7 @@
 #include "Transform.hpp"
 #include "Entity.hpp"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/gtx/matrix_decompose.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace MapleLeaf {
 Transform::Transform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
@@ -20,7 +20,14 @@ Transform::Transform(const glm::mat4 modelMatrix)
     glm::decompose(modelMatrix, scale, quaternion, translation, skew, perspective);
 
     position    = translation;
-    rotation    = glm::eulerAngles(quaternion);
+
+
+    rotation.x    = atan2(2.0f * (quaternion.y * quaternion.z + quaternion.w * quaternion.x),
+                       quaternion.w * quaternion.w - quaternion.x * quaternion.x - quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+    rotation.y = asin(-2.0f * (quaternion.x * quaternion.z - quaternion.w * quaternion.y));
+    rotation.z = atan2(2.0f * (quaternion.x * quaternion.y + quaternion.w * quaternion.z),
+                      quaternion.w * quaternion.w + quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z);
+    //rotation    = glm::eulerAngles(quaternion);
     this->scale = scale;
 }
 
@@ -40,9 +47,10 @@ glm::mat4 Transform::GetWorldMatrix() const
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), worldTransform->scale);
 
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+
 
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), worldTransform->position);
 
