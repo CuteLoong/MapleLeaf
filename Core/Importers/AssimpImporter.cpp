@@ -232,8 +232,12 @@ template<typename T>
 void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bool hasBoneAncestor)
 {
     SceneNode node;
-    node.name      = pCurrent->mName.C_Str();
-    node.transform = new Transform(AiCast(pCurrent->mTransformation));
+    node.name = pCurrent->mName.C_Str();
+    if (node.name == "PointLight") 
+        printf("hello");
+    aiVector3D position, rotaion, scale;
+    pCurrent->mTransformation.Decompose(scale, rotaion, position);
+    node.transform = new Transform(AiCast(position), AiCast(rotaion), AiCast(scale));
     node.transform->GetWorldMatrix();
     node.parent = pCurrent->mParent ? data.getNodeID(pCurrent->mParent) : NodeID::Invalid();
     node.meshes.resize(pCurrent->mNumMeshes);
@@ -302,13 +306,13 @@ template<typename T>
 void AssimpImporter<T>::CreateDirLight(ImporterData& data, const aiLight* pAiLight)
 {
     auto light = std::make_unique<Light>(LightType::Directional);
-    
+
     assert(pAiLight->mColorDiffuse == pAiLight->mColorSpecular);
     Color color = Color(pAiLight->mColorSpecular.r, pAiLight->mColorSpecular.g, pAiLight->mColorSpecular.b);
     light->SetColor(color);
     light->SetName(pAiLight->mName.C_Str());
     light->SetDirection(glm::normalize(AiCast(pAiLight->mDirection)));
-    
+
     data.builder.AddLight(std::move(light));
 }
 
@@ -316,13 +320,13 @@ template<typename T>
 void AssimpImporter<T>::CreatePointLight(ImporterData& data, const aiLight* pAiLight)
 {
     auto light = std::make_unique<Light>(LightType::Point);
-    
+
     assert(pAiLight->mColorDiffuse == pAiLight->mColorSpecular);
     Color color = Color(pAiLight->mColorSpecular.r, pAiLight->mColorSpecular.g, pAiLight->mColorSpecular.b);
     light->SetColor(color);
     light->SetName(pAiLight->mName.C_Str());
     light->SetPosition(glm::normalize(AiCast(pAiLight->mPosition)));
-    
+
     glm::vec3 attenuation = glm::vec3(pAiLight->mAttenuationConstant, pAiLight->mAttenuationLinear, pAiLight->mAttenuationQuadratic);
     light->SetAttenuation(attenuation);
 
