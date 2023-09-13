@@ -19,7 +19,8 @@ public:
 
     virtual const Shader*                                    GetShader() const               = 0;
     virtual bool                                             IsPushDescriptors() const       = 0;
-    virtual const std::map<uint32_t, VkDescriptorSetLayout>& GetDescriptorSetLayouts() const = 0;
+    virtual const std::map<uint32_t, VkDescriptorSetLayout>& GetBindlessDescriptorSetLayouts() const = 0;
+    virtual const std::map<uint32_t, VkDescriptorSetLayout>& GetNormalDescriptorSetLayouts() const = 0;
     virtual const VkDescriptorPool&                          GetDescriptorPool() const       = 0;
     virtual const VkPipeline&                                GetPipeline() const             = 0;
     virtual const VkPipelineLayout&                          GetPipelineLayout() const       = 0;

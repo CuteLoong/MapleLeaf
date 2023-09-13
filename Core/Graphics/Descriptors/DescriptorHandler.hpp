@@ -2,6 +2,7 @@
 
 #include "Descriptor.hpp"
 #include "DescriptorSets.hpp"
+#include "IndirectHandler.hpp"
 #include "PushHandler.hpp"
 #include "Shader.hpp"
 #include "StorageHandler.hpp"
@@ -108,11 +109,12 @@ public:
 
     void Push(const std::string& descriptorName, UniformHandler& uniformHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
     void Push(const std::string& descriptorName, StorageHandler& storageHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
+    void Push(const std::string& descriptorName, IndirectHandler& indirectHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
     void Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
 
     bool Update(const Pipeline& pipeline);
 
-    void                 BindDescriptor(const CommandBuffer& commandBuffer, const Pipeline& pipeline);
+    void                  BindDescriptor(const CommandBuffer& commandBuffer, const Pipeline& pipeline);
     const DescriptorSets* GetDescriptorSet() const { return descriptorSets.get(); }
 
 private:
@@ -135,8 +137,8 @@ private:
         {}
     };
 
-    const Shader*                  shader          = nullptr;
-    bool                           pushDescriptors = false;
+    const Shader*                   shader          = nullptr;
+    bool                            pushDescriptors = false;
     std::unique_ptr<DescriptorSets> descriptorSets;
 
     std::map<std::string, std::vector<DescriptorValue>> descriptors;

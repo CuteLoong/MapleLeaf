@@ -70,7 +70,8 @@ public:
     VkFrontFace                                      GetFrontFace() const { return frontFace; }
     bool                                             IsPushDescriptors() const override { return pushDescriptors; }
     const Shader*                                    GetShader() const override { return shader.get(); }
-    const std::map<uint32_t, VkDescriptorSetLayout>& GetDescriptorSetLayouts() const override { return descriptorSetLayouts; }
+    const std::map<uint32_t, VkDescriptorSetLayout>& GetBindlessDescriptorSetLayouts() const override { return descriptorSetBindlessLayouts; }
+    const std::map<uint32_t, VkDescriptorSetLayout>& GetNormalDescriptorSetLayouts() const override { return descriptorSetNormalLayouts; }
     const VkDescriptorPool&                          GetDescriptorPool() const override { return descriptorPool; }
     const VkPipeline&                                GetPipeline() const override { return pipeline; }
     const VkPipelineLayout&                          GetPipelineLayout() const override { return pipelineLayout; }
@@ -95,7 +96,8 @@ private:
     std::vector<VkShaderModule>                  modules;
     std::vector<VkPipelineShaderStageCreateInfo> stages;
 
-    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetLayouts;
+    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetBindlessLayouts;
+    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetNormalLayouts;
     VkDescriptorPool                          descriptorPool = VK_NULL_HANDLE;
 
     VkPipeline          pipeline       = VK_NULL_HANDLE;
@@ -115,6 +117,8 @@ private:
 
     void CreateShaderProgram();
     void CreateDescriptorLayout();
+    void CreateBindlessDescriptorLayout(uint32_t setIndex, const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
+    void CreateNormalDescriptorLayout(uint32_t setIndex, const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
     void CreateDescriptorPool();
     void CreatePipelineLayout();
     void CreateAttributes();

@@ -72,6 +72,8 @@ public:
     const glm::vec3& GetMaxExtents() const { return maxExtents; }
     void             SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom);
 
+    GPUScene* GetGpuScene() { return gpuScene.get(); }
+
 private:
     bool                    started = false;
     SystemHolder            systems;

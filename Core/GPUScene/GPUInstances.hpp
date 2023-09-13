@@ -1,22 +1,25 @@
 #pragma once
 #include "Color.hpp"
-#include "glm/glm.hpp"
-#include <vector>
+#include "Image2d.hpp"
+#include "Material.hpp"
+#include "Mesh.hpp"
+#include "Model.hpp"
+#include <unordered_map>
 
 namespace MapleLeaf {
 class GPUInstances
 {
+    friend class GPUScene;
+
 public:
-    GPUInstances() = default;
+    // first is index of model/material, second is the model/material used count.
+    using IndexCount = std::pair<uint32_t, uint32_t>;
 
-    void Update();
-
-private:
     struct GPUInstanceData
     {
         glm::mat4 model;
         glm::vec3 AABBLocalMin;
-        uint32_t  instanceID;
+        uint32_t  modelID;
         glm::vec3 AABBLocalMax;
         uint32_t  materialID;
     };
@@ -31,7 +34,19 @@ private:
         uint32_t materialTex;
     };
 
-    std::vector<GPUMaterialData> materialDatas;
-    std::vector<GPUInstanceData> instanceDatas;
+    GPUInstances() = default;
+
+    void Start();
+    void Update();
+
+private:
+    std::vector<GPUMaterialData>               materialDatas;
+    std::unordered_map<Mesh*, GPUInstanceData> instanceDatas;
+
+    std::unordered_map<std::shared_ptr<Model>, IndexCount>    models;
+    std::unordered_map<std::shared_ptr<Material>, IndexCount> materials;
+    std::unordered_map<std::shared_ptr<Image2d>, IndexCount>  images;   // include baseColorMap normalMap, materialMap(metalic, roughness)
+
+    std::vector<Mesh*> updatedMesh;
 };
 }   // namespace MapleLeaf

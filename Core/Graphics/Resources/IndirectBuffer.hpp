@@ -4,10 +4,10 @@
 #include "Descriptor.hpp"
 
 namespace MapleLeaf {
-class UniformBuffer : public Descriptor, public Buffer
+class IndirectBuffer : public Descriptor, public Buffer
 {
 public:
-    explicit UniformBuffer(VkDeviceSize size, const void* data = nullptr);
+    explicit IndirectBuffer(VkDeviceSize size, const void* data = nullptr);
 
     void Update(const void* newData);
 

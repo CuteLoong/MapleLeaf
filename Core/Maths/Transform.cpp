@@ -8,7 +8,9 @@ Transform::Transform(const glm::vec3& position, const glm::vec3& rotation, const
     : position(position)
     , rotation(rotation)
     , scale(scale)
-{}
+{
+    updateStatus = UpdateStatus::Transformation;
+}
 
 Transform::Transform(const glm::mat4 modelMatrix)
 {
@@ -29,6 +31,8 @@ Transform::Transform(const glm::mat4 modelMatrix)
                       quaternion.w * quaternion.w + quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z);
     //rotation    = glm::eulerAngles(quaternion);
     this->scale = scale;
+
+    updateStatus = UpdateStatus::Transformation;
 }
 
 Transform::~Transform()
@@ -38,6 +42,11 @@ Transform::~Transform()
     for (auto& child : children) child->parent = nullptr;
 
     if (parent) parent->RemoveChild(this);
+}
+
+void Transform::Update()
+{
+    updateStatus = UpdateStatus::None;
 }
 
 glm::mat4 Transform::GetWorldMatrix() const

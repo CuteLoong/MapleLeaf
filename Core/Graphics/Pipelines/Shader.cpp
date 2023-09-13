@@ -9,6 +9,7 @@
 
 #include "glslang/Public/ShaderLang.h"
 #include "glslang/SPIRV/GlslangToSpv.h"
+#include <regex>
 
 // #define MAPLELEAF_DEBUG
 
@@ -378,22 +379,37 @@ VkShaderModule Shader::CreateShaderModule(const std::filesystem::path& moduleNam
 void Shader::CreateReflection()
 {
     std::map<VkDescriptorType, uint32_t> descriptorPoolCounts;
+    auto                                 logicalDevice               = Graphics::Get()->GetLogicalDevice();
+    uint32_t                             bindlessMaxDescriptorsCount = logicalDevice->GetBindlessMaxDescriptorsCount();
 
     // Process to descriptors.
     for (const auto& [uniformBlockName, uniformBlock] : uniformBlocks) {
-        auto    descriptorType     = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-        int32_t descriptorSetIndex = uniformBlock.set;
+        auto     descriptorType     = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+        int32_t  descriptorSetIndex = uniformBlock.set;
+        uint32_t descriptorCount    = 1;
+
+        if (uniformBlock.IsBindless()) {
+            descriptorCount = bindlessMaxDescriptorsCount;
+            if (descriptorSetInfos.count(descriptorSetIndex) != 0) Log::Error("This descriptor is bindless, but have many bindings!");
+            descriptorSetInfos.emplace(descriptorSetIndex, DescriptorSetInfo(true, 1));
+        }
+        else {
+            if (descriptorSetInfos.count(descriptorSetIndex) == 0)
+                descriptorSetInfos.emplace(descriptorSetIndex, DescriptorSetInfo(false, 1));
+            else
+                descriptorSetInfos[descriptorSetIndex].bindingCount++;
+        }
 
         switch (uniformBlock.type) {
         case UniformBlock::Type::Uniform:
             descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                UniformBuffer::GetDescriptorSetLayout(static_cast<uint32_t>(uniformBlock.binding), descriptorType, uniformBlock.stageFlags, 1));
+            descriptorSetLayouts[descriptorSetIndex].emplace_back(UniformBuffer::GetDescriptorSetLayout(
+                static_cast<uint32_t>(uniformBlock.binding), descriptorType, uniformBlock.stageFlags, descriptorCount));
             break;
         case UniformBlock::Type::Storage:
             descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                StorageBuffer::GetDescriptorSetLayout(static_cast<uint32_t>(uniformBlock.binding), descriptorType, uniformBlock.stageFlags, 1));
+            descriptorSetLayouts[descriptorSetIndex].emplace_back(StorageBuffer::GetDescriptorSetLayout(
+                static_cast<uint32_t>(uniformBlock.binding), descriptorType, uniformBlock.stageFlags, descriptorCount));
             break;
         case UniformBlock::Type::Push: break;
         default: break;
@@ -405,14 +421,27 @@ void Shader::CreateReflection()
     }
 
     for (const auto& [uniformName, uniform] : uniforms) {
-        auto    descriptorType     = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-        int32_t descriptorSetIndex = uniform.set;
+        auto     descriptorType     = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+        int32_t  descriptorSetIndex = uniform.set;
+        uint32_t descriptorCount    = 1;
+
+        if (uniform.IsBindless()) {
+            descriptorCount = bindlessMaxDescriptorsCount;
+            if (descriptorSetInfos.count(descriptorSetIndex) != 0) Log::Error("This descriptor is bindless, but have many bindings!");
+            descriptorSetInfos.emplace(descriptorSetIndex, DescriptorSetInfo(true, 1));
+        }
+        else {
+            if (descriptorSetInfos.count(descriptorSetIndex) == 0)
+                descriptorSetInfos.emplace(descriptorSetIndex, DescriptorSetInfo(false, 1));
+            else
+                descriptorSetInfos[descriptorSetIndex].bindingCount++;
+        }
 
         switch (uniform.glType) {
         case 0:
             descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
             descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, 1));
+                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
             break;
         case 0x8B5E:   // GL_SAMPLER_2D
         case 0x904D:   // GL_IMAGE_2D
@@ -421,14 +450,14 @@ void Shader::CreateReflection()
         case 0x9055:   // GL_IMAGE_2D_MULTISAMPLE
             descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, 1));
+                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
             break;
         case 0x8B60:   // GL_SAMPLER_CUBE
         case 0x9050:   // GL_IMAGE_CUBE
         case 0x9054:   // GL_IMAGE_CUBE_MAP_ARRAY
             descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                ImageCube::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, 1));
+                ImageCube::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
             break;
         default: break;
         }
@@ -441,7 +470,7 @@ void Shader::CreateReflection()
     for (const auto& [type, descriptorCount] : descriptorPoolCounts) {
         VkDescriptorPoolSize descriptorPoolSize = {};
         descriptorPoolSize.type                 = type;
-        descriptorPoolSize.descriptorCount      = descriptorCount == 0 ? 1 : descriptorCount;
+        descriptorPoolSize.descriptorCount      = bindlessMaxDescriptorsCount;
         descriptorPools.emplace_back(descriptorPoolSize);
     }
 
@@ -449,7 +478,7 @@ void Shader::CreateReflection()
     if (descriptorPoolCounts.empty()) {
         VkDescriptorPoolSize descriptorPoolSize = {};
         descriptorPoolSize.type                 = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorPoolSize.descriptorCount      = 1;
+        descriptorPoolSize.descriptorCount      = bindlessMaxDescriptorsCount;
         descriptorPools.emplace_back(descriptorPoolSize);
     }
 
@@ -505,8 +534,17 @@ void Shader::LoadUniformBlock(const glslang::TProgram& program, VkShaderStageFla
     auto  reflection = program.getUniformBlock(i);
     auto& qualifier  = reflection.getType()->getQualifier();
 
+    bool        bindless = false;
+    std::string name     = reflection.name;
+    std::regex  pattern("\\[[^\\]]*\\]");
+
+    if (std::regex_search(name, pattern)) {
+        name     = std::regex_replace(name, pattern, "");
+        bindless = true;
+    }
+
     for (auto& [uniformBlockName, uniformBlock] : uniformBlocks) {
-        if (uniformBlockName == reflection.name) {
+        if (uniformBlockName == name) {
             uniformBlock.stageFlags |= stageFlag;
             return;
         }
@@ -517,7 +555,7 @@ void Shader::LoadUniformBlock(const glslang::TProgram& program, VkShaderStageFla
     if (reflection.getType()->getQualifier().storage == glslang::EvqBuffer) type = UniformBlock::Type::Storage;
     if (reflection.getType()->getQualifier().layoutPushConstant) type = UniformBlock::Type::Push;
 
-    uniformBlocks.emplace(reflection.name, UniformBlock(qualifier.layoutSet, reflection.getBinding(), reflection.size, stageFlag, type));
+    uniformBlocks.emplace(name, UniformBlock(qualifier.layoutSet, reflection.getBinding(), reflection.size, stageFlag, type, bindless));
 
     if (descriptorLocations.find(qualifier.layoutSet) == descriptorLocations.end())
         descriptorLocations[qualifier.layoutSet] = std::map<std::string, uint32_t>();
@@ -528,18 +566,28 @@ void Shader::LoadUniform(const glslang::TProgram& program, VkShaderStageFlags st
     auto  reflection = program.getUniform(i);
     auto& qualifier  = reflection.getType()->getQualifier();
 
+    bool        bindless = false;
+    std::string name     = reflection.name;
+    std::regex  pattern("\\[[^\\]]*\\]");
+
+    if (std::regex_search(name, pattern)) {
+        name     = std::regex_replace(name, pattern, "");
+        bindless = true;
+    }
+
     if (reflection.getBinding() == -1) {
-        auto splitName = String::Split(reflection.name, '.');
+        auto splitName = String::Split(name, '.');
 
         if (splitName.size() > 1) {
             for (auto& [uniformBlockName, uniformBlock] : uniformBlocks) {
                 if (uniformBlockName == splitName.at(0)) {
-                    uniformBlock.uniforms.emplace(String::ReplaceFirst(reflection.name, splitName.at(0) + ".", ""),
+                    uniformBlock.uniforms.emplace(String::ReplaceFirst(name, splitName.at(0) + ".", ""),
                                                   Uniform(qualifier.layoutSet,
                                                           reflection.getBinding(),
                                                           reflection.offset,
                                                           ComputeSize(reflection.getType()),
                                                           reflection.glDefineType,
+                                                          false,
                                                           false,
                                                           false,
                                                           stageFlag));
@@ -550,13 +598,13 @@ void Shader::LoadUniform(const glslang::TProgram& program, VkShaderStageFlags st
     }
 
     for (auto& [uniformName, uniform] : uniforms) {
-        if (uniformName == reflection.name) {
+        if (uniformName == name) {
             uniform.stageFlags |= stageFlag;
             return;
         }
     }
 
-    uniforms.emplace(reflection.name,
+    uniforms.emplace(name,
                      Uniform(qualifier.layoutSet,
                              reflection.getBinding(),
                              reflection.offset,
@@ -564,6 +612,7 @@ void Shader::LoadUniform(const glslang::TProgram& program, VkShaderStageFlags st
                              reflection.glDefineType,
                              qualifier.readonly,
                              qualifier.writeonly,
+                             bindless,
                              stageFlag));
 
     if (descriptorLocations.find(qualifier.layoutSet) == descriptorLocations.end())
