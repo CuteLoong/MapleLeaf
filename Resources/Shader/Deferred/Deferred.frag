@@ -3,7 +3,7 @@
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_GOOGLE_include_directive : require
 
-layout(binding = 0) uniform UniformScene {
+layout(set=0, binding = 0) uniform UniformScene {
 	mat4 view;
 	mat4 shadowMatrix;
 	vec3 cameraPosition;
@@ -23,19 +23,29 @@ struct DirectionalLight {
 	vec3 direction;
 };
 
-layout(binding = 1) buffer BufferPointLights {
+layout(set=0, binding = 1) buffer BufferPointLights {
 	PointLight lights[];
 } bufferPointLights;
 
-layout(binding = 2) buffer BufferDirectionalLights {
+layout(set=0, binding = 2) buffer BufferDirectionalLights {
 	DirectionalLight lights[];
 } bufferDirectionalLights;
 
-layout(input_attachment_index = 0, binding = 3) uniform subpassInput inPosition;
-layout(input_attachment_index = 1, binding = 4) uniform subpassInput inDiffuse;
-layout(input_attachment_index = 2, binding = 5) uniform subpassInput inNormal;
-layout(input_attachment_index = 3, binding = 6) uniform subpassInput inMaterial;
-layout(binding = 7) uniform sampler2D inShadowMap;
+layout(set=0, input_attachment_index = 0, binding = 3) uniform subpassInput inPosition;
+layout(set=0, input_attachment_index = 1, binding = 4) uniform subpassInput inDiffuse;
+layout(set=0, input_attachment_index = 2, binding = 5) uniform subpassInput inNormal;
+layout(set=0, input_attachment_index = 3, binding = 6) uniform subpassInput inMaterial;
+layout(set=0, binding = 7) uniform sampler2D inShadowMap;
+
+struct Model {
+	vec3 position;
+	vec2 uv;
+    vec3 normal;
+};
+
+layout(set=1, binding = 0) buffer VerticesBuffers {Model data[];} verticesArray[];
+// layout(set=2, binding = 0) buffer IndicesBuffers {uint data[];} indicesArray[];
+// layout(set=3, binding = 0) uniform sampler2D images[];
 
 // layout(location = 0) in vec2 inUV;
 
@@ -44,6 +54,9 @@ layout(location = 0) out vec4 outColour;
 #include "Lighting.glsl"
 
 void main() {
+	Model t = verticesArray[50].data[100];
+    // uint t2 = indicesArray[0].data[0];
+
 	vec3 worldPosition = subpassLoad(inPosition).rgb;
 	vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
 	vec4 shadowCoords = scene.shadowMatrix * vec4(worldPosition, 1.0f);
@@ -77,5 +90,7 @@ void main() {
 
 	float shadowValue = shadowFactor(shadowCoords);
 	
-	outColour = vec4(diffuse * Lo * shadowValue, 1.0f) ;
+	// outColour = vec4(diffuse * Lo * shadowValue, 1.0f) ;
+	outColour = vec4(t.position, 1.0f) ;
+
 }

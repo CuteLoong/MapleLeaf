@@ -9,9 +9,11 @@ DescriptorSets::DescriptorSets(const Pipeline& pipeline)
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
 
-    auto layouts = pipeline.GetDescriptorSetLayouts();
+    auto     normalLayouts   = pipeline.GetNormalDescriptorSetLayouts();
+    auto     bindlessLayouts = pipeline.GetBindlessDescriptorSetLayouts();
+    uint32_t NumDescriptors  = logicalDevice->GetBindlessMaxDescriptorsCount();
 
-    for (const auto& [setIndex, layout] : layouts) {
+    for (const auto& [setIndex, layout] : normalLayouts) {
         descriptorSets[setIndex] = VK_NULL_HANDLE;
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
@@ -19,6 +21,23 @@ DescriptorSets::DescriptorSets(const Pipeline& pipeline)
         descriptorSetAllocateInfo.descriptorPool              = descriptorPool;
         descriptorSetAllocateInfo.descriptorSetCount          = 1;
         descriptorSetAllocateInfo.pSetLayouts                 = &layout;
+        Graphics::CheckVk(vkAllocateDescriptorSets(*logicalDevice, &descriptorSetAllocateInfo, &descriptorSets[setIndex]));
+    }
+
+    for (const auto& [setIndex, layout] : bindlessLayouts) {
+        descriptorSets[setIndex] = VK_NULL_HANDLE;
+
+        VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableInfo{};
+        variableInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
+        variableInfo.descriptorSetCount = 1;
+        variableInfo.pDescriptorCounts  = &NumDescriptors;
+
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+        descriptorSetAllocateInfo.sType                       = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.descriptorPool              = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount          = 1;
+        descriptorSetAllocateInfo.pSetLayouts                 = &layout;
+        descriptorSetAllocateInfo.pNext                       = &variableInfo;
         Graphics::CheckVk(vkAllocateDescriptorSets(*logicalDevice, &descriptorSetAllocateInfo, &descriptorSets[setIndex]));
     }
 }
@@ -42,6 +61,8 @@ void DescriptorSets::BindDescriptor(const CommandBuffer& commandBuffer) const
     std::vector<VkDescriptorSet> descriptorSetsData;
     for (const auto& [setIndex, descriptorSet] : descriptorSets) descriptorSetsData.push_back(descriptorSet);
 
-    if(!descriptorSetsData.empty()) vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, pipelineLayout, 0, descriptorSetsData.size(), descriptorSetsData.data(), 0, nullptr);
+    if (!descriptorSetsData.empty())
+        vkCmdBindDescriptorSets(
+            commandBuffer, pipelineBindPoint, pipelineLayout, 0, descriptorSetsData.size(), descriptorSetsData.data(), 0, nullptr);
 }
 }   // namespace MapleLeaf

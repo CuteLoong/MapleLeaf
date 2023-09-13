@@ -27,6 +27,14 @@ void DescriptorsHandler::Push(const std::string& descriptorName, StorageHandler&
     }
 }
 
+void DescriptorsHandler::Push(const std::string& descriptorName, IndirectHandler& indirectHandler, const std::optional<OffsetSize>& offsetSize)
+{
+    if (shader) {
+        indirectHandler.Update(shader->GetUniformBlock(descriptorName));
+        Push(descriptorName, indirectHandler.GetStorageBuffer(), offsetSize);
+    }
+}
+
 void DescriptorsHandler::Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<OffsetSize>& offsetSize)
 {
     if (shader) {

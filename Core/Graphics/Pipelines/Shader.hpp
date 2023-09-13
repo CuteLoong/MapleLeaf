@@ -47,7 +47,7 @@ public:
 
     public:
         explicit Uniform(uint32_t set = -1, int32_t binding = -1, int32_t offset = -1, int32_t size = -1, int32_t glType = -1, bool readOnly = false,
-                         bool writeOnly = false, VkShaderStageFlags stageFlags = 0)
+                         bool writeOnly = false, bool bindless = false, VkShaderStageFlags stageFlags = 0)
             : set(set)
             , binding(binding)
             , offset(offset)
@@ -55,6 +55,7 @@ public:
             , glType(glType)
             , readOnly(readOnly)
             , writeOnly(writeOnly)
+            , bindless(bindless)
             , stageFlags(stageFlags)
         {}
 
@@ -65,6 +66,7 @@ public:
         int32_t            GetGlType() const { return glType; }
         bool               IsReadOnly() const { return readOnly; }
         bool               IsWriteOnly() const { return writeOnly; }
+        bool               IsBindless() const { return bindless; }
         VkShaderStageFlags GetStageFlags() const { return stageFlags; }
 
         bool operator==(const Uniform& rhs) const
@@ -83,6 +85,7 @@ public:
         int32_t            glType;
         bool               readOnly;
         bool               writeOnly;
+        bool               bindless;
         VkShaderStageFlags stageFlags;
     };
 
@@ -99,12 +102,13 @@ public:
             Push
         };
         explicit UniformBlock(uint32_t set = -1, int32_t binding = -1, int32_t size = -1, VkShaderStageFlags stageFlags = 0,
-                              Type type = Type::Uniform)
+                              Type type = Type::Uniform, bool bindless = false)
             : set(set)
             , binding(binding)
             , size(size)
             , stageFlags(stageFlags)
             , type(type)
+            , bindless(bindless)
         {}
 
         uint32_t                              GetSet() const { return set; }
@@ -112,6 +116,7 @@ public:
         int32_t                               GetSize() const { return size; }
         VkShaderStageFlags                    GetStageFlags() const { return stageFlags; }
         Type                                  GetType() const { return type; }
+        bool                                  IsBindless() const { return bindless; }
         const std::map<std::string, Uniform>& GetUniforms() const { return uniforms; }
 
         std::optional<Uniform> GetUniform(const std::string& name) const
@@ -138,6 +143,7 @@ public:
         int32_t                        size;
         VkShaderStageFlags             stageFlags;
         Type                           type;
+        bool                           bindless;
         std::map<std::string, Uniform> uniforms;
     };
 
@@ -200,6 +206,17 @@ public:
     //     int32_t            glType;
     // };
 
+    struct DescriptorSetInfo
+    {
+        bool     isBindless;
+        uint32_t bindingCount;
+
+        DescriptorSetInfo(bool isBindless = false, uint32_t bindingCount = 0)
+            : isBindless(isBindless)
+            , bindingCount(bindingCount)
+        {}
+    };
+
     Shader();
 
     bool                                                        ReportedNotFound(const std::string& name, bool reportIfFound) const;
@@ -225,6 +242,7 @@ public:
     const std::vector<VkDescriptorPoolSize>&                             GetDescriptorPools() const { return descriptorPools; }
     const std::map<uint32_t, uint32_t>&                                  GetLastDescriptorBinding() const { return lastDescriptorBinding; }
     const std::map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>>& GetDescriptorSetLayouts() const { return descriptorSetLayouts; }
+    const std::map<uint32_t, DescriptorSetInfo>&                         GetDescriptorSetInfos() const { return descriptorSetInfos; }
 
     // const std::vector<VkVertexInputAttributeDescription>&               GetAttributeDescriptions() const { return attributeDescriptions; }
     // const std::map<std::string, Constant>&                GetConstants() const { return constants; };
@@ -246,6 +264,7 @@ private:
     std::map<uint32_t, std::map<uint32_t, VkDescriptorType>>      descriptorTypes;
     std::map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayouts;
     std::map<uint32_t, uint32_t>                                  lastDescriptorBinding;
+    std::map<uint32_t, DescriptorSetInfo>                         descriptorSetInfos;
     // std::vector<VkVertexInputAttributeDescription>         attributeDescriptions;
 
     mutable std::vector<std::string> notFoundNames;

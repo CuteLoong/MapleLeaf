@@ -28,6 +28,7 @@ public:
     uint32_t                        GetPresentFamily() const { return presentFamily.value(); }
     uint32_t                        GetComputeFamily() const { return computeFamily.value(); }
     uint32_t                        GetTransferFamily() const { return transferFamily.value(); }
+    uint32_t                        GetBindlessMaxDescriptorsCount() const { return bindlessMaxDescriptorsCount; }
 
     static const std::vector<const char*> DeviceExtensions;
 
@@ -48,6 +49,8 @@ private:
     VkQueue presentQueue  = VK_NULL_HANDLE;
     VkQueue computeQueue  = VK_NULL_HANDLE;
     VkQueue transferQueue = VK_NULL_HANDLE;
+
+    uint32_t bindlessMaxDescriptorsCount = 0;
 
     void CreateQueueIndices();
     void CreateLogicalDevice();

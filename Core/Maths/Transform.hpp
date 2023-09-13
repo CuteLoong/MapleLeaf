@@ -3,16 +3,23 @@
 #include "Component.hpp"
 #include "glm/glm.hpp"
 
-
 namespace MapleLeaf {
 class Transform : public Component::Registrar<Transform>
 {
     inline static const bool Registered = Register("transform");
 
 public:
+    enum class UpdateStatus
+    {
+        None,
+        Transformation
+    };
+
     Transform(const glm::vec3& position = glm::vec3(0.0f), const glm::vec3& rotation = glm::vec3(0.0f), const glm::vec3& scale = glm::vec3(1.0f));
     Transform(const glm::mat4 modelMatrix);
     ~Transform();
+
+    void Update() override;
 
     glm::mat4 GetWorldMatrix() const;
     glm::vec3 GetPosition() const;
@@ -34,6 +41,8 @@ public:
 
     const std::vector<Transform*>& GetChildren() const { return children; }
 
+    UpdateStatus GetUpdateStatus() const { return updateStatus; }
+
     bool operator==(const Transform& rhs) const;
     bool operator!=(const Transform& rhs) const;
 
@@ -46,8 +55,8 @@ public:
 private:
     const Transform* GetWorldTransform() const;
 
-    void AddChild(Transform *child);
-	void RemoveChild(Transform *child);
+    void AddChild(Transform* child);
+    void RemoveChild(Transform* child);
 
     glm::vec3 position;
     glm::vec3 rotation;
@@ -56,5 +65,7 @@ private:
     Transform*              parent = nullptr;
     std::vector<Transform*> children;
     mutable Transform*      worldTransform = nullptr;
+
+    UpdateStatus updateStatus;
 };
 }   // namespace MapleLeaf

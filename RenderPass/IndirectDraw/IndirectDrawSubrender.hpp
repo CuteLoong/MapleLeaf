@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DescriptorHandler.hpp"
 #include "PipelineGraphics.hpp"
 #include "Subrender.hpp"
 #include "UniformHandler.hpp"
@@ -14,5 +15,7 @@ public:
 
 private:
     PipelineGraphics pipeline;
+
+    // DescriptorsHandler descriptorSet;
 };
 }   // namespace MapleLeaf

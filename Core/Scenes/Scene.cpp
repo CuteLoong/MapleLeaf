@@ -8,13 +8,20 @@ Scene::Scene(std::unique_ptr<Camera>&& camera)
 
 void Scene::Update()
 {
+    if (!gpuScene) return;
+
+    if (!gpuScene->started) {
+        gpuScene->Start();
+        gpuScene->started = true;
+    }
+
     systems.ForEach([](auto typeId, auto system) {
         if (system->IsEnabled()) system->Update();
     });
 
     entities.Update();
     camera->Update();
-    // gpuScene->Update();
+    gpuScene->Update();
 }
 
 void Scene::SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom)

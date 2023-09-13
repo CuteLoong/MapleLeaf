@@ -98,6 +98,7 @@ void LogicalDevice::CreateLogicalDevice()
     }
 
     auto physicalDeviceFeatures = physicalDevice.GetFeatures();
+    bindlessMaxDescriptorsCount = physicalDevice.GetProperties().limits.maxDescriptorSetStorageBuffers / 3.0f;
 
     VkPhysicalDeviceFeatures2 extensionFeatures      = {};
     void*                     deviceCreatepNextChain = nullptr;
@@ -121,13 +122,15 @@ void LogicalDevice::CreateLogicalDevice()
 
     // add bindless feature
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
-    indexingFeatures.sType                                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
-    indexingFeatures.runtimeDescriptorArray                    = VK_TRUE;
-    indexingFeatures.descriptorBindingVariableDescriptorCount  = VK_TRUE;
-    indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-    indexingFeatures.descriptorBindingUpdateUnusedWhilePending = VK_TRUE;
-    indexingFeatures.descriptorBindingPartiallyBound           = VK_TRUE;
-    indexingFeatures.pNext                                     = nullptr;
+    indexingFeatures.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+    indexingFeatures.runtimeDescriptorArray                        = VK_TRUE;
+    indexingFeatures.descriptorBindingVariableDescriptorCount      = VK_TRUE;
+    indexingFeatures.shaderSampledImageArrayNonUniformIndexing     = VK_TRUE;
+    indexingFeatures.descriptorBindingUpdateUnusedWhilePending     = VK_TRUE;
+    indexingFeatures.descriptorBindingPartiallyBound               = VK_TRUE;
+    indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.pNext                                         = nullptr;
 
     deviceCreatepNextChain     = &indexingFeatures;
     extensionFeatures.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;

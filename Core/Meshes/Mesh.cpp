@@ -8,7 +8,9 @@ namespace MapleLeaf {
 Mesh::Mesh(std::shared_ptr<Model> model, std::shared_ptr<Material> material)
     : model(model)
     , material(material)
-{}
+{
+    updateStatus = UpdateStatus::MeshAlter;
+}
 
 void Mesh::Start()
 {
@@ -17,6 +19,8 @@ void Mesh::Start()
 
 void Mesh::Update()
 {
+    updateStatus = UpdateStatus::None;
+
     if (material) {
         auto transform = GetEntity()->GetComponent<Transform>();
         material->PushUniforms(uniformObject, transform);

@@ -2,7 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout(binding = 1) uniform UniformObject {
+layout(set = 0, binding = 1) uniform UniformObject {
 	mat4 transform;
 
 	vec4 baseDiffuse;
@@ -13,13 +13,13 @@ layout(binding = 1) uniform UniformObject {
 } object;
 
 #if DIFFUSE_MAPPING
-layout(binding = 3) uniform sampler2D samplerDiffuse;
+layout(set = 0, binding = 3) uniform sampler2D samplerDiffuse;
 #endif
 #if MATERIAL_MAPPING
-layout(binding = 4) uniform sampler2D samplerMaterial;
+layout(set = 0, binding = 4) uniform sampler2D samplerMaterial;
 #endif
 #if NORMAL_MAPPING
-layout(binding = 5) uniform sampler2D samplerNormal;
+layout(set = 0, binding = 5) uniform sampler2D samplerNormal;
 #endif
 
 layout(location = 0) in vec3 inPosition;
