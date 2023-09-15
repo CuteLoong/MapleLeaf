@@ -24,22 +24,25 @@ public:
      * @tparam T
      * @param descriptorName
      * @param descriptor is a pointer to uniformBuffer or storageBuffer
+     * @param descriptorArrayIndex descriptor's index
      * @param offsetSize
      */
     template<typename T>
-    void Push(const std::string& descriptorName, const T& descriptor, const std::optional<OffsetSize>& offsetSize = std::nullopt)
+    void Push(const std::string& descriptorName, const T& descriptor, const std::optional<uint32_t> descriptorArrayIndex = std::nullopt,
+              const std::optional<OffsetSize>& offsetSize = std::nullopt)
     {
         if (!shader) return;
 
-        if (auto it1 = descriptors.find(descriptorName); it1 != descriptors.end()) {
-            if (auto it2 = std::find_if(it1->second.begin(),
-                                        it1->second.end(),
-                                        [&](const DescriptorValue& element) { return element.descriptor == to_address(descriptor); });
-                it2 != it1->second.end()) {
-                if (it2->offsetSize == offsetSize)
+        if (auto it = descriptors.find(descriptorName); it != descriptors.end()) {
+            if (descriptorArrayIndex && descriptorArrayIndex.value() < it->second.size()) {
+                if (it->second[descriptorArrayIndex.value()].descriptor == to_address(descriptor) &&
+                    it->second[descriptorArrayIndex.value()].offsetSize == offsetSize)
                     return;
-                else
-                    it1->second.erase(it2);
+                it->second.erase(it->second.begin() + descriptorArrayIndex.value());
+            }
+            else if (!descriptorArrayIndex) {
+                if (it->second[0].descriptor == to_address(descriptor) && it->second[0].offsetSize == offsetSize) return;
+                it->second.clear();
             }
 
             // if (it->second.descriptor == to_address(descriptor) && it->second.offsetSize == offsetSize) return;
@@ -78,22 +81,33 @@ public:
         }
 
         auto writeDescriptor = to_address(descriptor)->GetWriteDescriptor(location.value(), descriptorType.value(), offsetSize);
-        descriptors[descriptorName].emplace_back(
-            DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, setIndex.value(), location.value()));
+
+        if (descriptorArrayIndex && descriptors[descriptorName].size() > descriptorArrayIndex.value()) {
+            descriptors[descriptorName][descriptorArrayIndex.value()] =
+                DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, setIndex.value(), location.value());
+        }
+        else {
+            descriptors[descriptorName].emplace_back(
+                DescriptorValue(to_address(descriptor), std::move(writeDescriptor), offsetSize, setIndex.value(), location.value()));
+        }
+
         changed = true;
     }
 
     template<typename T>
-    void Push(const std::string& descriptorName, const T& descriptor, WriteDescriptorSet writeDescriptorSet)
+    void Push(const std::string& descriptorName, const T& descriptor, WriteDescriptorSet writeDescriptorSet,
+              const std::optional<uint32_t> descriptorArrayIndex = std::nullopt)
     {
         if (!shader) return;
 
-        if (auto it1 = descriptors.find(descriptorName); it1 != descriptors.end()) {
-            if (auto it2 = std::find_if(it1->second.begin(),
-                                        it1->second.end(),
-                                        [&](const DescriptorValue& element) { return element.descriptor == to_address(descriptor); });
-                it2 != it1->second.end()) {
-                it1->second.erase(it2);
+        if (auto it = descriptors.find(descriptorName); it != descriptors.end()) {
+            if (descriptorArrayIndex) {
+                if (it->second[descriptorArrayIndex.value()].descriptor == to_address(descriptor)) return;
+                it->second.erase(it->second.begin() + descriptorArrayIndex.value());
+            }
+            else {
+                if (it->second[0].descriptor == to_address(descriptor)) return;
+                it->second.clear();
             }
             // descriptors.erase(it);
         }
@@ -107,10 +121,14 @@ public:
         changed = true;
     }
 
-    void Push(const std::string& descriptorName, UniformHandler& uniformHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
-    void Push(const std::string& descriptorName, StorageHandler& storageHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
-    void Push(const std::string& descriptorName, IndirectHandler& indirectHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
-    void Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<OffsetSize>& offsetSize = std::nullopt);
+    void Push(const std::string& descriptorName, UniformHandler& uniformHandler, const std::optional<uint32_t> descriptorArrayIndex = std::nullopt,
+              const std::optional<OffsetSize>& offsetSize = std::nullopt);
+    void Push(const std::string& descriptorName, StorageHandler& storageHandler, const std::optional<uint32_t> descriptorArrayIndex = std::nullopt,
+              const std::optional<OffsetSize>& offsetSize = std::nullopt);
+    void Push(const std::string& descriptorName, IndirectHandler& indirectHandler, const std::optional<uint32_t> descriptorArrayIndex = std::nullopt,
+              const std::optional<OffsetSize>& offsetSize = std::nullopt);
+    void Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<uint32_t> descriptorArrayIndex = std::nullopt,
+              const std::optional<OffsetSize>& offsetSize = std::nullopt);
 
     bool Update(const Pipeline& pipeline);
 

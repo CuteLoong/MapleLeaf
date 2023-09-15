@@ -6,6 +6,11 @@
 #include "Transform.hpp"
 
 namespace MapleLeaf {
+
+GPUInstances::GPUInstances(std::shared_ptr<GPUUpdateInfos> updateInfos)
+    : updateInfos(updateInfos)
+{}
+
 void GPUInstances::Start()
 {
     auto meshes = Scenes::Get()->GetScene()->GetComponents<Mesh>();
@@ -29,7 +34,10 @@ void GPUInstances::Start()
         instanceData.materialID   = exsitMatIndex == -1 ? materialDatas.size() : exsitMatIndex;
 
         instanceDatas.emplace(mesh, instanceData);
-        if (exsitModelIndex == -1) models.emplace(model, std::make_pair(models.size(), 0));
+        if (exsitModelIndex == -1) {
+            models.emplace(model, std::make_pair(models.size(), 0));
+            updateInfos->AddUpdateModels(model);
+        }
 
         if (exsitMatIndex == -1) {
             if (const DefaultMaterial* defaultMaterial = dynamic_cast<const DefaultMaterial*>(material.get())) {
@@ -69,7 +77,6 @@ void GPUInstances::Start()
 void GPUInstances::Update()
 {
     auto meshes = Scenes::Get()->GetScene()->GetComponents<Mesh>();
-    updatedMesh.clear();
 
     for (const auto& mesh : meshes) {
         const auto& transform = mesh->GetEntity()->GetComponent<Transform>();
@@ -82,8 +89,7 @@ void GPUInstances::Update()
         if (transform->GetUpdateStatus() == Transform::UpdateStatus::Transformation && mesh->GetUpdateStatus() == Mesh::UpdateStatus::None) {
             instanceDatas[mesh].model = transform->GetWorldMatrix();
         }
-
-        updatedMesh.push_back(mesh);
+        updateInfos->AddUpdateMeshDatas(mesh);
     }
 }
 }   // namespace MapleLeaf

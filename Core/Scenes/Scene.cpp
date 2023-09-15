@@ -14,6 +14,9 @@ void Scene::Update()
         gpuScene->Start();
         gpuScene->started = true;
     }
+    else {
+        gpuScene->Update();
+    }
 
     systems.ForEach([](auto typeId, auto system) {
         if (system->IsEnabled()) system->Update();
@@ -21,7 +24,6 @@ void Scene::Update()
 
     entities.Update();
     camera->Update();
-    gpuScene->Update();
 }
 
 void Scene::SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom)

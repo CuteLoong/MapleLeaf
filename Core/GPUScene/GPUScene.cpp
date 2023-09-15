@@ -5,8 +5,10 @@
 
 namespace MapleLeaf {
 GPUScene::GPUScene()
-    : gpuInstances(std::make_unique<GPUInstances>())
-{}
+    : updateInfos(std::make_shared<GPUUpdateInfos>())
+{
+    gpuInstances = std::make_unique<GPUInstances>(updateInfos);
+}
 
 void GPUScene::Start()
 {
@@ -41,34 +43,38 @@ void GPUScene::Update()
 #ifdef MAPLELEAF_DEBUG
     auto debugStart = Time::Now();
 #endif
-    // for (const auto& model : gpuInstances->models) {
-    //     uint32_t modelIndex = model.second.first;
+    const auto& updatedModels    = updateInfos->GetUpdatedModels();
+    bool        clearModelUpdate = true;
 
-    //     verticesHandlers[modelIndex].Push(const_cast<Vertex3D*>(model.first->GetVertices().data()),
-    //                                       sizeof(Vertex3D) * model.first->GetVertices().size());
-    //     indicesHandlers[modelIndex].Push(const_cast<uint32_t*>(model.first->GetIndices().data()),
-    //                                      sizeof(uint32_t) * model.first->GetIndices().size());
-    // }
+    for (const auto& model : updatedModels) {
+        uint32_t modelIndex = gpuInstances->models[model].first;
+        verticesHandlers[modelIndex].Push(const_cast<Vertex3D*>(model->GetVertices().data()), sizeof(Vertex3D) * model->GetVertices().size());
+        indicesHandlers[modelIndex].Push(const_cast<uint32_t*>(model->GetIndices().data()), sizeof(uint32_t) * model->GetIndices().size());
+
+        // can resolve update problem, but need reconstruction TODO.
+        clearModelUpdate &= (verticesHandlers[modelIndex].GetStorageBuffer() != nullptr);
+        clearModelUpdate &= (indicesHandlers[modelIndex].GetStorageBuffer() != nullptr);
+    }
+
+    if (clearModelUpdate) updateInfos->ClearModelUpdates();
+
 
 #ifdef MAPLELEAF_DEBUG
     Log::Out("Push Models costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
-    for (const auto& mesh : gpuInstances->updatedMesh) {}
+    // for (const auto& mesh : gpuInstances->updatedMeshDatas) {}
 }
 
 void GPUScene::PushDescriptors(DescriptorsHandler& descriptorSet)
 {
-    for (StorageHandler& vertices : verticesHandlers) {
-        descriptorSet.Push("VerticesBuffers", vertices);
+    for (int i = 0; i < verticesHandlers.size(); i++) {
+        descriptorSet.Push("VerticesBuffers", verticesHandlers[i], i);
+        descriptorSet.Push("IndicesBuffers", indicesHandlers[i], i);
     }
 
-    for (StorageHandler& indices : indicesHandlers) {
-        descriptorSet.Push("IndicesBuffers", indices);
-    }
-
-    for (const auto& image : images) {
-        descriptorSet.Push("ImageSamplers", image);
+    for (int i = 0; i < images.size(); i++) {
+        descriptorSet.Push("ImageSamplers", images[i], i);
     }
 
     descriptorSet.Push("InstanceDatas", instanceDataHandler);

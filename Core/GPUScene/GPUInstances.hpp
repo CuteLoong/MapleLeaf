@@ -1,10 +1,11 @@
 #pragma once
+
 #include "Color.hpp"
+#include "GPUUpdateInfos.hpp"
 #include "Image2d.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "Model.hpp"
-#include <unordered_map>
 
 namespace MapleLeaf {
 class GPUInstances
@@ -34,7 +35,7 @@ public:
         uint32_t materialTex;
     };
 
-    GPUInstances() = default;
+    explicit GPUInstances(std::shared_ptr<GPUUpdateInfos> updateInfos);
 
     void Start();
     void Update();
@@ -47,6 +48,6 @@ private:
     std::unordered_map<std::shared_ptr<Material>, IndexCount> materials;
     std::unordered_map<std::shared_ptr<Image2d>, IndexCount>  images;   // include baseColorMap normalMap, materialMap(metalic, roughness)
 
-    std::vector<Mesh*> updatedMesh;
+    std::shared_ptr<GPUUpdateInfos> updateInfos;
 };
 }   // namespace MapleLeaf
