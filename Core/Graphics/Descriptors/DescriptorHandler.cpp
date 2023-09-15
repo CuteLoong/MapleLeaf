@@ -11,31 +11,31 @@ DescriptorsHandler::DescriptorsHandler(const Pipeline& pipeline)
     , changed(true)
 {}
 
-void DescriptorsHandler::Push(const std::string& descriptorName, UniformHandler& uniformHandler, const std::optional<OffsetSize>& offsetSize)
+void DescriptorsHandler::Push(const std::string& descriptorName, UniformHandler& uniformHandler, const std::optional<uint32_t> descriptorArrayIndex, const std::optional<OffsetSize>& offsetSize)
 {
     if (shader) {
         uniformHandler.Update(shader->GetUniformBlock(descriptorName));
-        Push(descriptorName, uniformHandler.GetUniformBuffer(), offsetSize);
+        Push(descriptorName, uniformHandler.GetUniformBuffer(), descriptorArrayIndex, offsetSize);
     }
 }
 
-void DescriptorsHandler::Push(const std::string& descriptorName, StorageHandler& storageHandler, const std::optional<OffsetSize>& offsetSize)
+void DescriptorsHandler::Push(const std::string& descriptorName, StorageHandler& storageHandler, const std::optional<uint32_t> descriptorArrayIndex, const std::optional<OffsetSize>& offsetSize)
 {
     if (shader) {
         storageHandler.Update(shader->GetUniformBlock(descriptorName));
-        Push(descriptorName, storageHandler.GetStorageBuffer(), offsetSize);
+        Push(descriptorName, storageHandler.GetStorageBuffer(), descriptorArrayIndex, offsetSize);
     }
 }
 
-void DescriptorsHandler::Push(const std::string& descriptorName, IndirectHandler& indirectHandler, const std::optional<OffsetSize>& offsetSize)
+void DescriptorsHandler::Push(const std::string& descriptorName, IndirectHandler& indirectHandler, const std::optional<uint32_t> descriptorArrayIndex, const std::optional<OffsetSize>& offsetSize)
 {
     if (shader) {
         indirectHandler.Update(shader->GetUniformBlock(descriptorName));
-        Push(descriptorName, indirectHandler.GetStorageBuffer(), offsetSize);
+        Push(descriptorName, indirectHandler.GetStorageBuffer(), descriptorArrayIndex, offsetSize);
     }
 }
 
-void DescriptorsHandler::Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<OffsetSize>& offsetSize)
+void DescriptorsHandler::Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<uint32_t> descriptorArrayIndex, const std::optional<OffsetSize>& offsetSize)
 {
     if (shader) {
         pushHandler.Update(shader->GetUniformBlock(descriptorName));

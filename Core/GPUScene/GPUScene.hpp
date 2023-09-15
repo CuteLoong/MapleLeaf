@@ -4,7 +4,7 @@
 #include "GPUInstances.hpp"
 #include "StorageHandler.hpp"
 #include "UniformHandler.hpp"
-
+#include "GPUUpdateInfos.hpp"
 
 namespace MapleLeaf {
 class GPUScene
@@ -30,5 +30,7 @@ private:
     std::vector<VkDrawIndirectCommand> drawCommands;
 
     bool started = false;
+
+    std::shared_ptr<GPUUpdateInfos> updateInfos;
 };
 }   // namespace MapleLeaf
