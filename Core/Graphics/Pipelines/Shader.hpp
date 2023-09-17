@@ -247,6 +247,8 @@ public:
     // const std::vector<VkVertexInputAttributeDescription>&               GetAttributeDescriptions() const { return attributeDescriptions; }
     // const std::map<std::string, Constant>&                GetConstants() const { return constants; };
 
+    static const std::vector<const char*> BindelssLayouts;
+
 private:
     std::vector<std::filesystem::path>  stages;
     std::map<std::string, Uniform>      uniforms;

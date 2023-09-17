@@ -16,9 +16,6 @@ DeferredSubrender::DeferredSubrender(const Pipeline::Stage& pipelineStage)
 void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
-    auto gpuScene = Scenes::Get()->GetScene()->GetGpuScene();
-
-    gpuScene->PushDescriptors(descriptorSet);
 
     auto                          sceneLights = Scenes::Get()->GetScene()->GetComponents<Light>();
     std::vector<PointLight>       pointLights(1, PointLight());

@@ -8,30 +8,26 @@ IndirectHandler::IndirectHandler(bool multipipeline)
 
 IndirectHandler::IndirectHandler(const Shader::UniformBlock& uniformBlock, bool multipipeline)
     : multipipeline(multipipeline)
-    , uniformBlock(uniformBlock)
-    , size(static_cast<uint32_t>(this->uniformBlock->GetSize()))
-    , storageBuffer(std::make_unique<IndirectBuffer>(static_cast<VkDeviceSize>(size)))
+    , size(static_cast<uint32_t>(0))
+    , indirectBuffer(std::make_unique<IndirectBuffer>(static_cast<VkDeviceSize>(size)))
     , handlerStatus(Buffer::Status::Changed)
 {}
 
 bool IndirectHandler::Update(const std::optional<Shader::UniformBlock>& uniformBlock)
 {
-    if (handlerStatus == Buffer::Status::Reset || multipipeline && !this->uniformBlock || !multipipeline && this->uniformBlock != uniformBlock) {
-        if (size == 0 && !this->uniformBlock ||
-            this->uniformBlock && this->uniformBlock != uniformBlock && static_cast<uint32_t>(this->uniformBlock->GetSize()) == size) {
+    if (handlerStatus == Buffer::Status::Reset) {
+        if (size == 0) {
             size = static_cast<uint32_t>(uniformBlock->GetSize());
         }
-
-        this->uniformBlock = uniformBlock;
-        bind               = false;
-        storageBuffer      = std::make_unique<IndirectBuffer>(static_cast<VkDeviceSize>(size));
-        handlerStatus      = Buffer::Status::Changed;
+        bind           = false;
+        indirectBuffer = std::make_unique<IndirectBuffer>(static_cast<VkDeviceSize>(size));
+        handlerStatus  = Buffer::Status::Changed;
         return false;
     }
 
     if (handlerStatus != Buffer::Status::Normal) {
         if (bind) {
-            storageBuffer->UnmapMemory();
+            indirectBuffer->UnmapMemory();
             bind = false;
         }
 

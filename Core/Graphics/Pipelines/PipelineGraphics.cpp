@@ -107,8 +107,6 @@ void PipelineGraphics::CreateShaderProgram()
 
 void PipelineGraphics::CreateDescriptorLayout()
 {
-
-
     const auto& descriptorSetLayoutBindings = shader->GetDescriptorSetLayouts();
     const auto& descriptorSetInfos          = shader->GetDescriptorSetInfos();
 

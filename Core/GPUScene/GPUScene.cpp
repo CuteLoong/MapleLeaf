@@ -1,82 +1,183 @@
 #include "GPUScene.hpp"
-#include "Vertex.hpp"
+#include "Scenes.hpp"
 
 // #define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
-GPUScene::GPUScene()
-    : updateInfos(std::make_shared<GPUUpdateInfos>())
+GPUScene::GPUScene() {}
+
+GPUScene::~GPUScene()
 {
-    gpuInstances = std::make_unique<GPUInstances>(updateInfos);
+    // Static class variables must be freed manually
+    GPUMaterial::materialArray.clear();
+    GPUMaterial::images.clear();
+    GPUInstance::indicesArray.clear();
+    GPUInstance::verticesArray.clear();
+    GPUInstance::modelOffset.clear();
 }
 
 void GPUScene::Start()
 {
-    gpuInstances->Start();
+    auto meshes = Scenes::Get()->GetScene()->GetComponents<Mesh>();
 
-    // create model storage infomation
-    verticesHandlers.resize(gpuInstances->models.size());
-    indicesHandlers.resize(gpuInstances->models.size());
-    for (const auto& model : gpuInstances->models) {
-        uint32_t modelIndex = model.second.first;
+    for (const auto& mesh : meshes) {
+        const auto& material = mesh->GetMaterial();
+        if (GPUMaterial::GetMaterialID(material)) continue;
 
-        verticesHandlers[modelIndex].Push(const_cast<Vertex3D*>(model.first->GetVertices().data()),
-                                          sizeof(Vertex3D) * model.first->GetVertices().size());
-        indicesHandlers[modelIndex].Push(const_cast<uint32_t*>(model.first->GetIndices().data()),
-                                         sizeof(uint32_t) * model.first->GetIndices().size());
+        materials.push_back(GPUMaterial(material));
     }
 
-    std::vector<GPUInstances::GPUInstanceData> instanceDataVector;
-    for (auto& [mesh, instanceData] : gpuInstances->instanceDatas) instanceDataVector.push_back(instanceData);
-    instanceDataHandler.Push(instanceDataVector.data(), sizeof(GPUInstances::GPUInstanceData) * instanceDataVector.size());
-
-    // image directly push to descriptor
-    for (const auto& [image, indexCount] : gpuInstances->images) {
-        images.push_back(image);
+    for (const auto& mesh : meshes) {
+        const auto& material = mesh->GetMaterial();
+        instances.push_back(GPUInstance(mesh, instances.size(), GPUMaterial::GetMaterialID(material).value()));
     }
+
+    for (auto& instance : instances) {
+        instancesData.push_back(InstanceData(instance.modelMatrix,
+                                             instance.AABBLocalMin,
+                                             instance.indexCount,
+                                             instance.AABBLocalMax,
+                                             instance.indexOffset,
+                                             instance.vertexCount,
+                                             instance.vertexOffset,
+                                             instance.instanceID,
+                                             instance.materialID));
+    }
+
+    for (auto& material : materials) {
+        materialsData.push_back(
+            MaterialData(material.baseColor, material.metalic, material.roughness, material.baseColorTex, material.normalTex, material.materialTex));
+    }
+
+
+    SetIndices(GPUInstance::indicesArray);
+    SetVertices(GPUInstance::verticesArray);
 }
 
 void GPUScene::Update()
 {
-    gpuInstances->Update();
-
 #ifdef MAPLELEAF_DEBUG
     auto debugStart = Time::Now();
 #endif
-    const auto& updatedModels    = updateInfos->GetUpdatedModels();
-    bool        clearModelUpdate = true;
+    // TODO UpdateMaterial
 
-    for (const auto& model : updatedModels) {
-        uint32_t modelIndex = gpuInstances->models[model].first;
-        verticesHandlers[modelIndex].Push(const_cast<Vertex3D*>(model->GetVertices().data()), sizeof(Vertex3D) * model->GetVertices().size());
-        indicesHandlers[modelIndex].Push(const_cast<uint32_t*>(model->GetIndices().data()), sizeof(uint32_t) * model->GetIndices().size());
+    bool UpdateGPUScene = false;
+    drawCommands.clear();
+    for (auto& instance : instances) {
+        instance.Update();
+        UpdateGPUScene |= (instance.GetInstanceStatus() == GPUInstance::Status::Changed);
 
-        // can resolve update problem, but need reconstruction TODO.
-        clearModelUpdate &= (verticesHandlers[modelIndex].GetStorageBuffer() != nullptr);
-        clearModelUpdate &= (indicesHandlers[modelIndex].GetStorageBuffer() != nullptr);
+        VkDrawIndexedIndirectCommand indirectCmd = {};
+        indirectCmd.firstIndex                   = instance.indexOffset;
+        indirectCmd.firstInstance                = instance.instanceID;
+        indirectCmd.indexCount                   = instance.indexCount;
+        indirectCmd.instanceCount                = 1;
+        indirectCmd.vertexOffset                 = instance.vertexOffset;
+
+        drawCommands.push_back(indirectCmd);
     }
 
-    if (clearModelUpdate) updateInfos->ClearModelUpdates();
-
+    if (UpdateGPUScene) {
+        SetIndices(GPUInstance::indicesArray);
+        SetVertices(GPUInstance::verticesArray);
+    }
 
 #ifdef MAPLELEAF_DEBUG
-    Log::Out("Push Models costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    Log::Out("Update Vertices costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
-    // for (const auto& mesh : gpuInstances->updatedMeshDatas) {}
 }
 
-void GPUScene::PushDescriptors(DescriptorsHandler& descriptorSet)
+bool GPUScene::cmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniformScene, PipelineGraphics& pipeline)
 {
-    for (int i = 0; i < verticesHandlers.size(); i++) {
-        descriptorSet.Push("VerticesBuffers", verticesHandlers[i], i);
-        descriptorSet.Push("IndicesBuffers", indicesHandlers[i], i);
+    pipeline.BindPipeline(commandBuffer);
+
+    drawCommandBufferHandler.Push(drawCommands.data(), sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size());
+    instancesHandler.Push(instancesData.data(), sizeof(InstanceData) * instancesData.size());
+    materialsHandler.Push(materialsData.data(), sizeof(MaterialData) * materialsData.size());
+
+    descriptorSet.Push("UniformScene", uniformScene);
+    descriptorSet.Push("DrawCommandBuffer", drawCommandBufferHandler);
+    descriptorSet.Push("InstanceDatas", instancesHandler);
+    descriptorSet.Push("MaterialDatas", materialsHandler);
+
+    for (int i = 0; i < GPUMaterial::images.size(); i++) {
+        descriptorSet.Push("ImageSamplers", GPUMaterial::images[i], i);
     }
 
-    for (int i = 0; i < images.size(); i++) {
-        descriptorSet.Push("ImageSamplers", images[i], i);
+    if (!descriptorSet.Update(pipeline)) return false;
+
+    descriptorSet.BindDescriptor(commandBuffer, pipeline);
+
+    if (vertexBuffer && indexBuffer) {
+        VkBuffer     vertexBuffers[1] = {vertexBuffer->GetBuffer()};
+        VkDeviceSize offsets[1]       = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexedIndirect(
+            commandBuffer, drawCommandBufferHandler.GetIndirectBuffer()->GetBuffer(), 0, drawCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
+    }
+    else {
+        return false;
     }
 
-    descriptorSet.Push("InstanceDatas", instanceDataHandler);
+    return true;
+    // drawCommandBufferHandler.Push(drawCommands.data(), sizeof(VkDrawIndirectCommand) * drawCommands.size());
+    // uint32_t drawCount = drawCommands.size();
+
+    // drawCountHandler.Push(&drawCount, sizeof(uint32_t));
+    // descriptorSet.Push("UniformScene", uniformScene);
+    // descriptorSet.Push("DrawCommandBuffer", drawCommandBufferHandler);
+    // descriptorSet.Push("DrawCount", drawCountHandler);
+
+    // if (!descriptorSet.Update(pipeline)) return false;
+
+    // descriptorSet.BindDescriptor(commandBuffer, pipeline);
+}
+
+void GPUScene::SetVertices(const std::vector<Vertex3D>& vertices)
+{
+    vertexBuffer = nullptr;
+
+    if (vertices.empty()) return;
+
+    Buffer vertexStaging(sizeof(Vertex3D) * vertices.size(),
+                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         vertices.data());
+    vertexBuffer = std::make_unique<Buffer>(vertexStaging.GetSize(),
+                                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    CommandBuffer commandBuffer;
+
+    VkBufferCopy copyRegion = {};
+    copyRegion.size         = vertexStaging.GetSize();
+    vkCmdCopyBuffer(commandBuffer, vertexStaging.GetBuffer(), vertexBuffer->GetBuffer(), 1, &copyRegion);
+
+    commandBuffer.SubmitIdle();
+}
+
+void GPUScene::SetIndices(const std::vector<uint32_t>& indices)
+{
+    indexBuffer = nullptr;
+
+    if (indices.empty()) return;
+
+    Buffer indexStaging(sizeof(uint32_t) * indices.size(),
+                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        indices.data());
+    indexBuffer = std::make_unique<Buffer>(indexStaging.GetSize(),
+                                           VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    CommandBuffer commandBuffer;
+
+    VkBufferCopy copyRegion = {};
+    copyRegion.size         = indexStaging.GetSize();
+    vkCmdCopyBuffer(commandBuffer, indexStaging.GetBuffer(), indexBuffer->GetBuffer(), 1, &copyRegion);
+
+    commandBuffer.SubmitIdle();
 }
 }   // namespace MapleLeaf

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "DescriptorHandler.hpp"
-#include "GPUInstances.hpp"
+#include "GPUInstance.hpp"
+#include "GPUMaterial.hpp"
+#include "IndirectHandler.hpp"
 #include "StorageHandler.hpp"
-#include "UniformHandler.hpp"
-#include "GPUUpdateInfos.hpp"
 
 namespace MapleLeaf {
 class GPUScene
@@ -14,23 +14,79 @@ class GPUScene
 public:
     GPUScene();
 
+    ~GPUScene();
+
     void Start();
     void Update();
 
-    void PushDescriptors(DescriptorsHandler& descriptorSet);
+    void SetVertices(const std::vector<Vertex3D>& vertices);
+    void SetIndices(const std::vector<uint32_t>& indices);
+
+    bool cmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniformScene, PipelineGraphics& pipeline);
+
+    const StorageHandler&  GetInstanceDatasHandler() const { return instancesHandler; }
+    const IndirectHandler& GetIndirectHandler() const { return drawCommandBufferHandler; }
 
 private:
-    std::unique_ptr<GPUInstances> gpuInstances;
+    struct InstanceData
+    {
+        glm::mat4 modelMatrix;
+        glm::vec3 AABBLocalMin;
+        uint32_t  indexCount;
+        glm::vec3 AABBLocalMax;
+        uint32_t  indexOffset;
+        uint32_t  vertexCount;
+        uint32_t  vertexOffset;
+        uint32_t  instanceID;
+        uint32_t  materialID;
 
-    StorageHandler                        instanceDataHandler;
-    std::vector<StorageHandler>           verticesHandlers;
-    std::vector<StorageHandler>           indicesHandlers;
-    std::vector<std::shared_ptr<Image2d>> images;
+        InstanceData(glm::mat4 modelMatrix, glm::vec3 AABBLocalMin, uint32_t indexCount, glm::vec3 AABBLocalMax, uint32_t indexOffset,
+                     uint32_t vertexCount, uint32_t vertexOffset, uint32_t instanceID, uint32_t materialID)
+            : modelMatrix(modelMatrix)
+            , AABBLocalMin(AABBLocalMin)
+            , indexCount(indexCount)
+            , AABBLocalMax(AABBLocalMax)
+            , indexOffset(indexOffset)
+            , vertexCount(vertexCount)
+            , vertexOffset(vertexOffset)
+            , instanceID(instanceID)
+            , materialID(materialID)
+        {}
+    };
 
-    std::vector<VkDrawIndirectCommand> drawCommands;
+    struct MaterialData
+    {
+        Color    baseColor;
+        float    metalic;
+        float    roughness;
+        uint32_t baseColorTex;
+        uint32_t normalTex;
+        uint32_t materialTex;
+
+        MaterialData(Color baseColor, float metalic, float roughness, uint32_t baseColorTex, uint32_t normalTex, uint32_t materialTex)
+            : baseColor(baseColor)
+            , metalic(metalic)
+            , roughness(roughness)
+            , baseColorTex(baseColorTex)
+            , normalTex(normalTex)
+            , materialTex(materialTex)
+        {}
+    };
 
     bool started = false;
 
-    std::shared_ptr<GPUUpdateInfos> updateInfos;
+    std::vector<GPUInstance> instances;
+    std::vector<GPUMaterial> materials;
+
+    std::unique_ptr<Buffer>   vertexBuffer;
+    std::unique_ptr<Buffer>   indexBuffer;
+    std::vector<InstanceData> instancesData;
+    std::vector<MaterialData> materialsData;
+
+    StorageHandler                            instancesHandler;
+    StorageHandler                            materialsHandler;
+    std::vector<VkDrawIndexedIndirectCommand> drawCommands;
+    IndirectHandler                           drawCommandBufferHandler;
+    DescriptorsHandler                        descriptorSet;
 };
 }   // namespace MapleLeaf

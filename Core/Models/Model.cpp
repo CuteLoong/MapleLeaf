@@ -12,6 +12,9 @@ void Model::Initialize(const std::vector<Vertex3D>& vertices, const std::vector<
     this->vertices.assign(vertices.begin(), vertices.end());
     this->indices.assign(indices.begin(), indices.end());
 
+    vertexCount = static_cast<uint32_t>(vertices.size());
+    indexCount  = static_cast<uint32_t>(indices.size());
+
     status = Status::CPU_BINDING;
 
     minExtents = glm::vec3(std::numeric_limits<float>::infinity());

@@ -31,7 +31,7 @@ void DescriptorsHandler::Push(const std::string& descriptorName, IndirectHandler
 {
     if (shader) {
         indirectHandler.Update(shader->GetUniformBlock(descriptorName));
-        Push(descriptorName, indirectHandler.GetStorageBuffer(), descriptorArrayIndex, offsetSize);
+        Push(descriptorName, indirectHandler.GetIndirectBuffer(), descriptorArrayIndex, offsetSize);
     }
 }
 

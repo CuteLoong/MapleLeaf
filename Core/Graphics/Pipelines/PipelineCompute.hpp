@@ -19,6 +19,8 @@ private:
     void CreateDescriptorPool();
     void CreatePipelineLayout();
     void CreatePipelineCompute();
+    void CreateBindlessDescriptorLayout(uint32_t setIndex, const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
+    void CreateNormalDescriptorLayout(uint32_t setIndex, const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings);
 
     std::filesystem::path       shaderStage;
     std::vector<Shader::Define> defines;
@@ -29,11 +31,14 @@ private:
     VkShaderModule                  shaderModule          = VK_NULL_HANDLE;
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo = {};
 
-    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetLayouts;
+    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetBindlessLayouts;
+    std::map<uint32_t, VkDescriptorSetLayout> descriptorSetNormalLayouts;
     VkDescriptorPool                          descriptorPool = VK_NULL_HANDLE;
 
     VkPipeline          pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout    pipelineLayout = VK_NULL_HANDLE;
     VkPipelineBindPoint pipelineBindPoint;
+
+    
 };
 }   // namespace MapleLeaf

@@ -19,10 +19,10 @@ public:
             return;
         }
 
-        if (!uniformBlock || !storageBuffer) return;
+        if (!indirectBuffer) return;
 
         if (!bind) {
-            storageBuffer->MapMemory(&this->data);
+            indirectBuffer->MapMemory(&this->data);
             bind = true;
         }
 
@@ -36,10 +36,10 @@ public:
     template<typename T>
     void Push(const T& object, std::size_t offset, std::size_t size)
     {
-        if (!uniformBlock || !storageBuffer) return;
+        if (!indirectBuffer) return;
 
         if (!bind) {
-            storageBuffer->MapMemory(&this->data);
+            indirectBuffer->MapMemory(&this->data);
             bind = true;
         }
 
@@ -50,31 +50,17 @@ public:
         }
     }
 
-    template<typename T>
-    void Push(const std::string& uniformName, const T& object, std::size_t size = 0)
-    {
-        if (!uniformBlock) return;
-
-        auto uniform = uniformBlock->GetUniform(uniformName);
-        if (!uniform) return;
-
-        auto realSize = size;
-        if (realSize == 0) realSize = std::min(sizeof(object), static_cast<std::size_t>(uniform->GetSize()));
-
-        Push(object, static_cast<std::size_t>(uniform->GetOffset()), realSize);
-    }
-
     bool Update(const std::optional<Shader::UniformBlock>& uniformBlock);
 
-    const IndirectBuffer* GetStorageBuffer() const { return storageBuffer.get(); }
+    const IndirectBuffer* GetIndirectBuffer() const { return indirectBuffer.get(); }
 
 private:
     bool                                multipipeline;
-    std::optional<Shader::UniformBlock> uniformBlock;
+    // std::optional<Shader::UniformBlock> uniformBlock;
     uint32_t                            size = 0;
     void*                               data = nullptr;
     bool                                bind = false;
-    std::unique_ptr<IndirectBuffer>     storageBuffer;
+    std::unique_ptr<IndirectBuffer>     indirectBuffer;
     Buffer::Status                      handlerStatus;
 };
 }   // namespace MapleLeaf
