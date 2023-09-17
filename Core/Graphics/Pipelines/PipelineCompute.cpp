@@ -33,11 +33,13 @@ PipelineCompute::~PipelineCompute()
 
     vkDestroyShaderModule(*logicalDevice, shaderModule, nullptr);
 
-    for (auto& [setIndex, descriptorSetLayout] : descriptorSetLayouts)
-        vkDestroyDescriptorSetLayout(*logicalDevice, descriptorSetLayout, nullptr);
     vkDestroyDescriptorPool(*logicalDevice, descriptorPool, nullptr);
     vkDestroyPipeline(*logicalDevice, pipeline, nullptr);
     vkDestroyPipelineLayout(*logicalDevice, pipelineLayout, nullptr);
+    for (auto& [setIndex, descriptorSetLayout] : descriptorSetNormalLayouts)
+        vkDestroyDescriptorSetLayout(*logicalDevice, descriptorSetLayout, nullptr);
+    for (auto& [setIndex, descriptorSetLayout] : descriptorSetBindlessLayouts)
+        vkDestroyDescriptorSetLayout(*logicalDevice, descriptorSetLayout, nullptr);
 }
 
 void PipelineCompute::CmdRender(const CommandBuffer& commandBuffer, const glm::uvec2& extent) const
@@ -69,36 +71,69 @@ void PipelineCompute::CreateShaderProgram()
 
 void PipelineCompute::CreateDescriptorLayout()
 {
+    const auto& descriptorSetLayoutBindings = shader->GetDescriptorSetLayouts();
+    const auto& descriptorSetInfos          = shader->GetDescriptorSetInfos();
+
+    for (const auto& [setIndex, LayoutBindingsForSet] : descriptorSetLayoutBindings) {
+        const auto& descriptorSetInfo = descriptorSetInfos.at(setIndex);
+
+        if (descriptorSetInfo.isBindless)
+            CreateBindlessDescriptorLayout(setIndex, LayoutBindingsForSet);
+        else
+            CreateNormalDescriptorLayout(setIndex, LayoutBindingsForSet);
+    }
+}
+
+void PipelineCompute::CreateBindlessDescriptorLayout(uint32_t setIndex, const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
+{
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
 
-    auto& descriptorSetLayoutBindings = shader->GetDescriptorSetLayouts();
-    for (const auto& [setIndex, descriptorSetLayoutBinding] : descriptorSetLayoutBindings) {
-        descriptorSetLayouts[setIndex] = VK_NULL_HANDLE;
+    if (descriptorSetBindlessLayouts.count(setIndex) == 0)
+        descriptorSetBindlessLayouts[setIndex] = VK_NULL_HANDLE;
+    else
+        Log::Error("This Bindless descriptorSetLayout have exist, Muliple create setLayout!");
 
-        VkDescriptorBindingFlagsEXT flags;
-        if (descriptorSetLayoutBinding.size() != 1) {
-            flags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT |
-                    VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT_EXT;
-        }
-        else {
-            flags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT_EXT;
-        }
-        VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlags{};
-        bindingFlags.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
-        bindingFlags.bindingCount  = 1;
-        bindingFlags.pBindingFlags = &flags;
+    uint32_t bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size());
 
-        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-        descriptorSetLayoutCreateInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutCreateInfo.flags =
-            pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR | VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT
-                            : VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
-        descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBinding.size());
-        descriptorSetLayoutCreateInfo.pBindings    = descriptorSetLayoutBinding.data();
-        descriptorSetLayoutCreateInfo.pNext        = &bindingFlags;
+    VkDescriptorBindingFlagsEXT flag = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT |
+                                       VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT_EXT;
+    std::vector<VkDescriptorBindingFlagsEXT> flags(bindingCount, flag);
 
-        Graphics::CheckVk(vkCreateDescriptorSetLayout(*logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[setIndex]));
-    }
+    VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlags{};
+    bindingFlags.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+    bindingFlags.bindingCount  = bindingCount;
+    bindingFlags.pBindingFlags = flags.data();
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+    descriptorSetLayoutCreateInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descriptorSetLayoutCreateInfo.flags =
+        pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR | VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT
+                        : VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
+    descriptorSetLayoutCreateInfo.bindingCount = bindingCount;
+    descriptorSetLayoutCreateInfo.pBindings    = descriptorSetLayoutBindings.data();
+    descriptorSetLayoutCreateInfo.pNext        = &bindingFlags;
+
+    Graphics::CheckVk(vkCreateDescriptorSetLayout(*logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetBindlessLayouts[setIndex]));
+}
+
+void PipelineCompute::CreateNormalDescriptorLayout(uint32_t setIndex, const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBindings)
+{
+    auto logicalDevice = Graphics::Get()->GetLogicalDevice();
+
+    if (descriptorSetNormalLayouts.count(setIndex) == 0)
+        descriptorSetNormalLayouts[setIndex] = VK_NULL_HANDLE;
+    else
+        Log::Error("This Normal descriptorSetLayout have exist, Muliple create setLayout!");
+
+    uint32_t bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size());
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+    descriptorSetLayoutCreateInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descriptorSetLayoutCreateInfo.flags                           = pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR : 0;
+    descriptorSetLayoutCreateInfo.bindingCount                    = bindingCount;
+    descriptorSetLayoutCreateInfo.pBindings                       = descriptorSetLayoutBindings.data();
+
+    Graphics::CheckVk(vkCreateDescriptorSetLayout(*logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetNormalLayouts[setIndex]));
 }
 
 void PipelineCompute::CreateDescriptorPool()
@@ -123,7 +158,8 @@ void PipelineCompute::CreatePipelineLayout()
     auto pushConstantRanges = shader->GetPushConstantRanges();
 
     std::vector<VkDescriptorSetLayout> descriptorSetLayoutsData;
-    for (const auto& [setIndex, descriptorSetLayout] : descriptorSetLayouts) descriptorSetLayoutsData.push_back(descriptorSetLayout);
+    for (const auto& [setIndex, descriptorSetLayout] : descriptorSetNormalLayouts) descriptorSetLayoutsData.push_back(descriptorSetLayout);
+    for (const auto& [setIndex, descriptorSetLayout] : descriptorSetBindlessLayouts) descriptorSetLayoutsData.push_back(descriptorSetLayout);
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

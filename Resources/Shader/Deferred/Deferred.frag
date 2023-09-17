@@ -37,16 +37,6 @@ layout(set=0, input_attachment_index = 2, binding = 5) uniform subpassInput inNo
 layout(set=0, input_attachment_index = 3, binding = 6) uniform subpassInput inMaterial;
 layout(set=0, binding = 7) uniform sampler2D inShadowMap;
 
-struct Model {
-	vec3 position;
-	vec2 uv;
-    vec3 normal;
-};
-
-layout(set=1, binding = 0) buffer VerticesBuffers {Model data[];} verticesArray[];
-// layout(set=2, binding = 0) buffer IndicesBuffers {uint data[];} indicesArray[];
-// layout(set=3, binding = 0) uniform sampler2D images[];
-
 // layout(location = 0) in vec2 inUV;
 
 layout(location = 0) out vec4 outColour;
@@ -54,9 +44,6 @@ layout(location = 0) out vec4 outColour;
 #include "Lighting.glsl"
 
 void main() {
-	Model t = verticesArray[50].data[100];
-    // uint t2 = indicesArray[0].data[0];
-
 	vec3 worldPosition = subpassLoad(inPosition).rgb;
 	vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
 	vec4 shadowCoords = scene.shadowMatrix * vec4(worldPosition, 1.0f);
@@ -90,7 +77,5 @@ void main() {
 
 	float shadowValue = shadowFactor(shadowCoords);
 	
-	// outColour = vec4(diffuse * Lo * shadowValue, 1.0f) ;
-	outColour = vec4(t.position, 1.0f) ;
-
+	outColour = vec4(diffuse * Lo * shadowValue, 1.0f) ;
 }

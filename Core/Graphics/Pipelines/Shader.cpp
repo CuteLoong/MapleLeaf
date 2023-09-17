@@ -14,6 +14,10 @@
 // #define MAPLELEAF_DEBUG
 
 namespace MapleLeaf {
+const std::vector<const char*> Shader::BindelssLayouts = {
+    "ImageSamplers"
+};
+
 class ShaderIncluder : public glslang::TShader::Includer
 {
 public:
@@ -310,11 +314,11 @@ VkShaderModule Shader::CreateShaderModule(const std::filesystem::path& moduleNam
     shader.setStringsWithLengthsAndNames(&shaderSource, nullptr, &shaderNameCstr, 1);
     shader.setPreamble(preamble.c_str());
 
-    auto defaultVersion = glslang::EShTargetVulkan_1_1;
-    shader.setEnvInput(glslang::EShSourceGlsl, language, glslang::EShClientVulkan, 450);
+    auto defaultVersion = glslang::EShTargetVulkan_1_3;
+    shader.setEnvInput(glslang::EShSourceGlsl, language, glslang::EShClientVulkan, 460);
     shader.setEnvClient(glslang::EShClientVulkan, defaultVersion);
     shader.setEnvTarget(glslang::EShTargetSpv,
-                        volkGetInstanceVersion() >= VK_API_VERSION_1_1 ? glslang::EShTargetSpv_1_3 : glslang::EShTargetSpv_1_0);
+                        volkGetInstanceVersion() >= VK_API_VERSION_1_3 ? glslang::EShTargetSpv_1_6 : glslang::EShTargetSpv_1_3);
 
     ShaderIncluder includer;
 
@@ -536,12 +540,11 @@ void Shader::LoadUniformBlock(const glslang::TProgram& program, VkShaderStageFla
 
     bool        bindless = false;
     std::string name     = reflection.name;
-    std::regex  pattern("\\[[^\\]]*\\]");
 
-    if (std::regex_search(name, pattern)) {
-        name     = std::regex_replace(name, pattern, "");
+    if (const auto& it =
+            std::find_if(BindelssLayouts.begin(), BindelssLayouts.end(), [name](const char* str) { return std::strcmp(str, name.c_str()) == 0; });
+        it != BindelssLayouts.end())
         bindless = true;
-    }
 
     for (auto& [uniformBlockName, uniformBlock] : uniformBlocks) {
         if (uniformBlockName == name) {
@@ -568,31 +571,29 @@ void Shader::LoadUniform(const glslang::TProgram& program, VkShaderStageFlags st
 
     bool        bindless = false;
     std::string name     = reflection.name;
-    std::regex  pattern("\\[[^\\]]*\\]");
 
-    if (std::regex_search(name, pattern)) {
-        name     = std::regex_replace(name, pattern, "");
+    if (const auto& it =
+            std::find_if(BindelssLayouts.begin(), BindelssLayouts.end(), [name](const char* str) { return std::strcmp(str, name.c_str()) == 0; });
+        it != BindelssLayouts.end())
         bindless = true;
-    }
 
     if (reflection.getBinding() == -1) {
         auto splitName = String::Split(name, '.');
 
         if (splitName.size() > 1) {
-            for (auto& [uniformBlockName, uniformBlock] : uniformBlocks) {
-                if (uniformBlockName == splitName.at(0)) {
-                    uniformBlock.uniforms.emplace(String::ReplaceFirst(name, splitName.at(0) + ".", ""),
-                                                  Uniform(qualifier.layoutSet,
-                                                          reflection.getBinding(),
-                                                          reflection.offset,
-                                                          ComputeSize(reflection.getType()),
-                                                          reflection.glDefineType,
-                                                          false,
-                                                          false,
-                                                          false,
-                                                          stageFlag));
-                    return;
-                }
+            const std::string& splitNameFirst = splitName.at(0);
+            if (const auto& it = uniformBlocks.find(splitName.at(0)); it != uniformBlocks.end()) {
+                it->second.uniforms.emplace(String::ReplaceFirst(name, splitName.at(0) + ".", ""),
+                                            Uniform(qualifier.layoutSet,
+                                                    reflection.getBinding(),
+                                                    reflection.offset,
+                                                    ComputeSize(reflection.getType()),
+                                                    reflection.glDefineType,
+                                                    false,
+                                                    false,
+                                                    false,
+                                                    stageFlag));
+                return;
             }
         }
     }

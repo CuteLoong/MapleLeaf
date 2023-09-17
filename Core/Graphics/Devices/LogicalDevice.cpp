@@ -4,10 +4,11 @@
 #include "PhysicalDevice.hpp"
 #include "vulkan/vulkan_core.h"
 
-
 namespace MapleLeaf {
 const std::vector<const char*> LogicalDevice::DeviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+    VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
 
 LogicalDevice::LogicalDevice(const Instance& instance, const PhysicalDevice& physicalDevice)
     : instance(instance)
@@ -104,6 +105,7 @@ void LogicalDevice::CreateLogicalDevice()
     void*                     deviceCreatepNextChain = nullptr;
 
     if (physicalDeviceFeatures.sampleRateShading) enabledFeatures.sampleRateShading = VK_TRUE;
+    if (physicalDeviceFeatures.multiDrawIndirect) enabledFeatures.multiDrawIndirect = VK_TRUE;
 
     if (physicalDeviceFeatures.geometryShader)
         enabledFeatures.geometryShader = VK_TRUE;
@@ -130,6 +132,7 @@ void LogicalDevice::CreateLogicalDevice()
     indexingFeatures.descriptorBindingPartiallyBound               = VK_TRUE;
     indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
     indexingFeatures.pNext                                         = nullptr;
 
     deviceCreatepNextChain     = &indexingFeatures;

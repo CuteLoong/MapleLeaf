@@ -46,6 +46,8 @@ DescriptorSets::~DescriptorSets()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
 
+    Graphics::CheckVk(vkDeviceWaitIdle(*logicalDevice));
+
     for (auto& [setIndex, descriptorSet] : descriptorSets) Graphics::CheckVk(vkFreeDescriptorSets(*logicalDevice, descriptorPool, 1, &descriptorSet));
 }
 

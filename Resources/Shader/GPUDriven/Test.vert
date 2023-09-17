@@ -1,6 +1,7 @@
-#version 450
+#version 460
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_nonuniform_qualifier : enable
 
 layout(set = 0, binding = 0) uniform UniformScene
 {
@@ -9,38 +10,62 @@ layout(set = 0, binding = 0) uniform UniformScene
     vec3 cameraPos;
 } scene;
 
-layout(set = 0, binding = 1) uniform UniformObject
-{
-    mat4 transform;
-
-    vec4  baseDiffuse;
-    float metallic;
-    float roughness;
-    float ignoreFog;
-    float ignoreLighting;
-} object;
-
-// struct Model {
-// 	vec3 position;
-// 	vec2 uv;
-//     vec3 normal;
+// struct IndirectCommand {
+//     uint indexCount;
+//     uint instanceCount;
+//     uint firstIndex;
+//     int  vertexOffset;
+//     uint firstInstance;
 // };
 
-// layout(set=1, binding = 0) buffer VerticesBuffers {Model data[]} verticesArray;
-// layout(set=2, binding = 0) buffer IndicesBuffers {uint data[]} indicesArray;
-// layout(set=3, binding = 0) uniform sampler2D images[];
+// layout(set = 0, binding = 1) buffer DrawCommandBuffer 
+// {
+//     IndirectCommand commands[];
+// } drawCommandBuffer;
 
+struct GPUInstanceData
+{
+    mat4 modelMatrix;
+    vec3 AABBLocalMin;
+    uint indexCount;
+    vec3 AABBLocalMax;
+    uint indexOffset;
+    uint vertexCount;
+    uint vertexOffset;
+    uint instanceID;
+    uint materialID;
+};
+
+layout(set = 0, binding = 1) buffer InstanceDatas
+{
+    GPUInstanceData instanceData[];
+} instanceDatas;
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec2 inUV;
+layout(location = 2) in vec3 inNormal;
+
+layout(location = 0) out vec3 outPosition;
+layout(location = 1) out vec2 outUV;
+layout(location = 2) out vec3 outNormal;
+layout(location = 3) out flat uint outMaterialId;
 
 void main()
 {
-    Model t = verticesArray[0][0];
-    // uint t2 = indicesArray[0][0];
+    uint instanceIndex = gl_InstanceIndex;
+    GPUInstanceData instanceData = instanceDatas.instanceData[nonuniformEXT(instanceIndex)];
+    uint materialId = instanceData.materialID;
 
-    vec4 position = vec4(0.0f);
-	vec4 normal = vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    vec4 position = vec4(inPosition, 1.0f);
+    vec4 normal = vec4(inNormal, 0.0f);
 
-    vec4 worldPosition = object.transform * position;
-    mat3 normalMatrix = transpose(inverse(mat3(object.transform)));
+    vec4 worldPosition = instanceData.modelMatrix * position;
+    mat3 normalMatrix = transpose(inverse(mat3(instanceData.modelMatrix)));
 
     gl_Position = scene.projection * scene.view * worldPosition;
+
+    outPosition = worldPosition.xyz;
+    outUV = inUV;
+	outNormal = normalMatrix * normalize(normal.xyz);
+    outMaterialId = materialId;
 }
