@@ -21,13 +21,13 @@ GPUMaterial::GPUMaterial(const std::shared_ptr<Material>& material)
         baseColor    = defaultMaterial->GetBaseDiffuse();
         roughness    = defaultMaterial->GetRoughness();
         metalic      = defaultMaterial->GetMetallic();
-        baseColorTex = 349525;
-        normalTex    = 349525;
-        materialTex  = 349525;
+        baseColorTex = -1;
+        normalTex    = -1;
+        materialTex  = -1;
 
         if (const auto& diffuseImage = defaultMaterial->GetImageDiffuse()) {
             if (const auto& it = std::find(images.begin(), images.end(), diffuseImage); it != images.end()) {
-                baseColorTex = static_cast<uint32_t>(std::distance(images.begin(), it));
+                baseColorTex = static_cast<int32_t>(std::distance(images.begin(), it));
             }
             else {
                 baseColorTex = images.size();
@@ -37,7 +37,7 @@ GPUMaterial::GPUMaterial(const std::shared_ptr<Material>& material)
 
         if (const auto& normalImage = defaultMaterial->GetImageNormal()) {
             if (const auto& it = std::find(images.begin(), images.end(), normalImage); it != images.end()) {
-                normalTex = static_cast<uint32_t>(std::distance(images.begin(), it));
+                normalTex = static_cast<int32_t>(std::distance(images.begin(), it));
             }
             else {
                 normalTex = images.size();
@@ -47,7 +47,7 @@ GPUMaterial::GPUMaterial(const std::shared_ptr<Material>& material)
 
         if (const auto& materialImage = defaultMaterial->GetImageNormal()) {
             if (const auto& it = std::find(images.begin(), images.end(), materialImage); it != images.end()) {
-                materialTex = static_cast<uint32_t>(std::distance(images.begin(), it));
+                materialTex = static_cast<int32_t>(std::distance(images.begin(), it));
             }
             else {
                 materialTex = images.size();

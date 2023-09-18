@@ -19,9 +19,9 @@ private:
     Color    baseColor;
     float    metalic;
     float    roughness;
-    uint32_t baseColorTex;
-    uint32_t normalTex;
-    uint32_t materialTex;
+    int32_t baseColorTex;
+    int32_t normalTex;
+    int32_t materialTex;
 
     static std::vector<std::shared_ptr<Material>> materialArray;
     static std::vector<std::shared_ptr<Image2d>>  images;

@@ -56,14 +56,17 @@ private:
 
     struct MaterialData
     {
-        Color    baseColor;
-        float    metalic;
-        float    roughness;
-        uint32_t baseColorTex;
-        uint32_t normalTex;
-        uint32_t materialTex;
+        Color   baseColor;
+        float   metalic;
+        float   roughness;
+        int32_t baseColorTex;
+        int32_t normalTex;
+        int32_t materialTex;
+        int32_t padding1;
+        int32_t padding2;
+        int32_t padding3;
 
-        MaterialData(Color baseColor, float metalic, float roughness, uint32_t baseColorTex, uint32_t normalTex, uint32_t materialTex)
+        MaterialData(Color baseColor, float metalic, float roughness, int32_t baseColorTex, int32_t normalTex, int32_t materialTex)
             : baseColor(baseColor)
             , metalic(metalic)
             , roughness(roughness)
