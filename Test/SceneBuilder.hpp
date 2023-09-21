@@ -18,7 +18,6 @@ public:
         : Scene(std::make_unique<TestCamera>())
         , path(path)
     {
-        std::cout << "Create Scene!" << std::endl;
         AddSystem<ShadowSystem>();
     }
 

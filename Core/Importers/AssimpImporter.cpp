@@ -5,6 +5,8 @@
 #include "SceneGraph.hpp"
 #include "Transform.hpp"
 
+#include "config.h"
+
 namespace MapleLeaf {
 struct TextureMapping
 {
@@ -69,7 +71,7 @@ glm::vec3 AiCast(const aiVector3D& aiVec)
 template<typename T>
 void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& builder)
 {
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SCENE_DEBUG
     auto debugStart = Time::Now();
 #endif
 
@@ -107,25 +109,25 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
     if (path.extension() == ".gltf" || path.extension() == ".glb") importMode = ImportMode::GLTF2;
 
     CreateAllMaterials(data, searchPath, importMode);
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SCENE_DEBUG
     Log::Out("Create materials cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
 
     CreateSceneGraph(data);
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SCENE_DEBUG
     Log::Out("Create scene graph cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
 
     CreateMeshes(data);
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SCENE_DEBUG
     Log::Out("Create meshes cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
 
     CreateLights(data);
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SCENE_DEBUG
     Log::Out("Create lights cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
@@ -233,8 +235,6 @@ void AssimpImporter<T>::ParseNode(ImporterData& data, const aiNode* pCurrent, bo
 {
     SceneNode node;
     node.name = pCurrent->mName.C_Str();
-    if (node.name == "PointLight") 
-        printf("hello");
     aiVector3D position, rotaion, scale;
     pCurrent->mTransformation.Decompose(scale, rotaion, position);
     node.transform = new Transform(AiCast(position), AiCast(rotaion), AiCast(scale));

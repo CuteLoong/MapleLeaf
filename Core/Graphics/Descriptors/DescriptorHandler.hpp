@@ -10,6 +10,7 @@
 #include "Utils.hpp"
 #include <memory>
 
+#include "config.h"
 
 namespace MapleLeaf {
 class DescriptorsHandler
@@ -57,7 +58,7 @@ public:
         auto location    = setLocation.second;
 
         if (!setIndex || !location) {
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_DESCRIPTOR_DEBUG
             if (shader->ReportedNotFound(descriptorName, true))
                 Log::Error("Could not find descriptor in shader ", shader->GetName(), " of name ", std::quoted(descriptorName), '\n');
 #endif
@@ -67,7 +68,7 @@ public:
         auto descriptorType = shader->GetDescriptorType(setIndex.value(), location.value());
 
         if (!descriptorType) {
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_DESCRIPTOR_DEBUG
             if (shader->ReportedNotFound(descriptorName, true))
                 Log::Error("Could not find descriptor in shader ",
                            shader->GetName(),

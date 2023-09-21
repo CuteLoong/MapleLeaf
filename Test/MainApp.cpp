@@ -8,6 +8,8 @@
 #include "SceneBuilder.hpp"
 #include "Scenes.hpp"
 
+#include "config.h"
+
 int main(int argc, char** argv)
 {
     using namespace Test;
@@ -24,7 +26,7 @@ int main(int argc, char** argv)
 
 namespace Test {
 MainApp::MainApp()
-    : App("MapleLeaf", {1, 0, 0})
+    : App("MapleLeaf", {CONFIG_VERSION_MAJOR, CONFIG_VERSION_MINOR, CONFIG_VERSION_ALTER})
 {
     // Registers file search paths.
     Log::Out("Working Directory: ", std::filesystem::current_path(), '\n');

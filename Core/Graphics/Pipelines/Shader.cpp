@@ -11,7 +11,7 @@
 #include "glslang/SPIRV/GlslangToSpv.h"
 #include <regex>
 
-// #define MAPLELEAF_DEBUG
+#include "config.h"
 
 namespace MapleLeaf {
 const std::vector<const char*> Shader::BindelssLayouts = {
@@ -304,7 +304,7 @@ VkShaderModule Shader::CreateShaderModule(const std::filesystem::path& moduleNam
     auto              resources = GetResources();
 
     auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgDefault);
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SHADER_DEBUG
     messages = static_cast<EShMessages>(messages | EShMsgDebugInfo);
 #endif
 
@@ -356,7 +356,7 @@ VkShaderModule Shader::CreateShaderModule(const std::filesystem::path& moduleNam
 
     glslang::SpvOptions spvOptions;
 
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_SHADER_DEBUG
     spvOptions.generateDebugInfo = true;
     spvOptions.disableOptimizer  = true;
     spvOptions.optimizeSize      = false;

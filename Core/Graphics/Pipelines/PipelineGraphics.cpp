@@ -3,6 +3,7 @@
 #include "Files.hpp"
 #include "Graphics.hpp"
 
+#include "config.h"
 
 namespace MapleLeaf {
 const std::vector<VkDynamicState> DYNAMIC_STATES = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_LINE_WIDTH};
@@ -25,7 +26,7 @@ PipelineGraphics::PipelineGraphics(Stage stage, std::vector<std::filesystem::pat
     , dynamicStates(DYNAMIC_STATES)
     , pipelineBindPoint(VK_PIPELINE_BIND_POINT_GRAPHICS)
 {
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_PIPELINE_DEBUG
     auto debugStart = Time::Now();
 #endif
 
@@ -42,7 +43,7 @@ PipelineGraphics::PipelineGraphics(Stage stage, std::vector<std::filesystem::pat
     default: throw std::runtime_error("Unknown pipeline mode");
     }
 
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_PIPELINE_DEBUG
     Log::Out("Pipeline Graphics ", this->shaderStages.back(), " loaded in ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
 #endif
 }
