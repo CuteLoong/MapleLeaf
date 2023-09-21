@@ -2,7 +2,6 @@
 #include "Graphics.hpp"
 #include "Log.hpp"
 #include "PhysicalDevice.hpp"
-#include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
 const std::vector<const char*> LogicalDevice::DeviceExtensions = {

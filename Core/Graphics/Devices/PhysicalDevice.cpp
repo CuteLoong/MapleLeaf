@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <map>
 
-// #define MAPLELEAF_DEBUG
+#include "config.h"
 
 namespace MapleLeaf {
 static const std::vector<VkSampleCountFlagBits> STAGE_FLAG_BITS = {
@@ -26,7 +26,7 @@ PhysicalDevice::PhysicalDevice(const Instance& instance)
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
     msaaSamples = GetMaxUsableSampleCount();
 
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_DEVICE_DEBUG
     Log::Out("Selected Physical Device: ", properties.deviceID, " ", std::quoted(properties.deviceName), '\n');
 #endif
 }
@@ -72,7 +72,7 @@ uint32_t PhysicalDevice::ScorePhysicalDevice(const VkPhysicalDevice& device)
     vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
     vkGetPhysicalDeviceFeatures(device, &physicalDeviceFeatures);
 
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_DEVICE_DEBUG
     LogVulkanDevice(physicalDeviceProperties, extensionProperties);
 #endif
 

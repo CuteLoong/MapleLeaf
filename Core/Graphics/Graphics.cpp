@@ -9,6 +9,8 @@
 #include "glslang/Public/ShaderLang.h"
 #include <memory>
 
+#include "config.h"
+
 namespace MapleLeaf {
 Graphics::Graphics()
     : instance(std::make_unique<Instance>())
@@ -131,7 +133,7 @@ void Graphics::RecreateSwapchain()
 {
     vkDeviceWaitIdle(*logicalDevice);
     VkExtent2D displayExtent = {Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y};
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_GRAPHIC_DEBUG
     if (swapchain) {
         Log::Out("Recreating swapchain old (",
                  swapchain->GetExtent().width,

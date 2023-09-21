@@ -1,7 +1,7 @@
 #include "GPUScene.hpp"
 #include "Scenes.hpp"
 
-// #define MAPLELEAF_DEBUG
+#include "config.h"
 
 namespace MapleLeaf {
 GPUScene::GPUScene() {}
@@ -56,7 +56,7 @@ void GPUScene::Start()
 
 void GPUScene::Update()
 {
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_GPUSCENE_DEBUG
     auto debugStart = Time::Now();
 #endif
     // TODO UpdateMaterial
@@ -82,7 +82,7 @@ void GPUScene::Update()
         SetVertices(GPUInstance::verticesArray);
     }
 
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_GPUSCENE_DEBUG
     Log::Out("Update Vertices costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif

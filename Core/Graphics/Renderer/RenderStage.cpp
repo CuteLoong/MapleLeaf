@@ -3,7 +3,7 @@
 #include "Graphics.hpp"
 #include "Log.hpp"
 
-#define MAPLELEAF_DEBUG
+#include "config.h"
 
 namespace MapleLeaf {
 RenderStage::RenderStage(std::vector<Attachment> images, std::vector<SubpassType> subpasses, const Viewport& viewport)
@@ -68,7 +68,7 @@ void RenderStage::Update()
 
 void RenderStage::Rebuild(const Swapchain& swapchain)
 {
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_RENDERSTAGE_DEBUG
     auto debugStart = Time::Now();
 #endif
     Update();
@@ -99,7 +99,7 @@ void RenderStage::Rebuild(const Swapchain& swapchain)
             where = descriptors.insert(where, {image.GetName(), framebuffers->GetAttachment(image.GetBinding())});
     }
 
-#ifdef MAPLELEAF_DEBUG
+#ifdef MAPLELEAF_RENDERSTAGE_DEBUG
     Log::Out("Render Stage created in ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
 #endif
 }

@@ -12,6 +12,24 @@ elseif is_plat("linux") then
     set_toolchains("clang")
 end
 
+add_includedirs("Config/")
+set_configvar("CONFIG_VERSION_MAJOR", 1)
+set_configvar("CONFIG_VERSION_MINOR", 0)
+set_configvar("CONFIG_VERSION_ALTER", 0)
+set_configvar("MAPLELEAF_SCENE_DEBUG", false)
+set_configvar("MAPLELEAF_SHADER_DEBUG", false)
+set_configvar("MAPLELEAF_DEVICE_DEBUG", false)
+set_configvar("MAPLELEAF_GRAPHIC_DEBUG", false)
+set_configvar("MAPLELEAF_GPUSCENE_DEBUG", false)
+set_configvar("MAPLELEAF_PIPELINE_DEBUG", false)
+set_configvar("MAPLELEAF_VALIDATION_DEBUG", true)
+set_configvar("MAPLELEAF_DESCRIPTOR_DEBUG", false)
+set_configvar("MAPLELEAF_RENDERSTAGE_DEBUG", false)
+set_configvar("STEREORENDERING", false)
+
+set_configdir("Config") 
+add_configfiles("./config.h.in")
+
 add_requires("volk", "glm", "glfw", "spirv-tools", "glslang", "assimp", "stb", "boost")
 add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp", "stb", "boost")
 add_includedirs(
@@ -95,5 +113,6 @@ target("MapleLeaf")
     add_deps("RenderPass")
     add_includedirs("Test/")
     add_files("Test/*.cpp")
-    -- add_files("./main.cpp") 
+
+    
 target_end()
