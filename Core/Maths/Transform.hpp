@@ -39,6 +39,8 @@ public:
     void       SetParent(Transform* parent);
     void       SetParent(Entity* parent);
 
+    const Transform* GetWorldTransform() const;
+
     const std::vector<Transform*>& GetChildren() const { return children; }
 
     UpdateStatus GetUpdateStatus() const { return updateStatus; }
@@ -53,7 +55,7 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const Transform& transform);
 
 private:
-    const Transform* GetWorldTransform() const;
+    
 
     void AddChild(Transform* child);
     void RemoveChild(Transform* child);

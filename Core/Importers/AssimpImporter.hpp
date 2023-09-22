@@ -44,7 +44,16 @@ public:
             , builder(builder)
         {}
 
-        NodeID getNodeID(const aiNode* pNode) { return mAiToNodeID[pNode]; }
+        NodeID getNodeID(const aiNode* pNode) const { return mAiToNodeID.at(pNode); }
+        NodeID getNodeID(const std::string name, uint32_t index) const
+        {
+            try {
+                return getNodeID(mAiNodes.at(name)[index]);
+            }
+            catch (const std::exception&) {
+                return NodeID::Invalid();
+            }
+        }
 
         void AddAiNode(const aiNode* pNode, NodeID nodeID)
         {
@@ -80,6 +89,7 @@ private:
     void CreateMeshes(ImporterData& data);
 
     void CreateLights(ImporterData& data);
+    void CreateCameras(ImporterData& data, ImportMode importMode);
     void CreateDirLight(ImporterData& data, const aiLight* pAiLight);
     void CreatePointLight(ImporterData& data, const aiLight* pAiLight);
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Camera.hpp"
 #include "Image2d.hpp"
 #include "Light.hpp"
 #include "Mesh.hpp"
@@ -17,6 +18,7 @@ public:
 
     NodeID AddSceneNode(SceneNode&& node);
     void   AddLight(std::unique_ptr<Light>&& light);
+    void   AddCamera(std::unique_ptr<Camera>&& camera);
 
     template<typename T, typename = std::enable_if_t<std::is_convertible_v<T*, Material*>>>
     Mesh* AddMesh(std::shared_ptr<Model>&& model, std::shared_ptr<T>&& material)
@@ -47,8 +49,9 @@ public:
     }
 
 private:
-    std::vector<std::unique_ptr<Mesh>>  meshes;
-    SceneGraph                          sceneGraph;
-    std::vector<std::unique_ptr<Light>> lights;
+    std::vector<std::unique_ptr<Mesh>>   meshes;
+    std::vector<std::unique_ptr<Light>>  lights;
+    std::vector<std::unique_ptr<Camera>> cameras;
+    SceneGraph                           sceneGraph;
 };
 }   // namespace MapleLeaf

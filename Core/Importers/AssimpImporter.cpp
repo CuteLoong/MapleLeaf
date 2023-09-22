@@ -1,6 +1,7 @@
 #include "AssimpImporter.hpp"
 #include "Color.hpp"
 #include "DefaultMaterial.hpp"
+#include "Devices.hpp"
 #include "Light.hpp"
 #include "SceneGraph.hpp"
 #include "Transform.hpp"
@@ -123,6 +124,12 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
     CreateMeshes(data);
 #ifdef MAPLELEAF_SCENE_DEBUG
     Log::Out("Create meshes cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
+
+    CreateCameras(data, importMode);
+#ifdef MAPLELEAF_SCENE_DEBUG
+    Log::Out("Create cameras cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
 
@@ -347,6 +354,28 @@ void AssimpImporter<T>::CreateLights(ImporterData& data)
         case aiLightSource_AREA: break;
         case _aiLightSource_Force32Bit: break;
         }
+    }
+}
+
+template<typename T>
+void AssimpImporter<T>::CreateCameras(ImporterData& data, ImportMode importMode)
+{
+    for (uint32_t i = 0; i < data.pScene->mNumCameras; i++) {
+        const aiCamera* pAiCamera = data.pScene->mCameras[i];
+        auto            camera    = std::make_unique<Camera>();
+
+        camera->SetName(pAiCamera->mName.C_Str());
+        camera->SetPosition(AiCast(pAiCamera->mPosition));
+        camera->SetUpVector(AiCast(pAiCamera->mUp));
+
+        float aspectRatio = pAiCamera->mAspect != 0.f ? pAiCamera->mAspect : Devices::Get()->GetWindow()->GetAspectRatio();
+        float fieldOfView = importMode == ImportMode::GLTF2 ? pAiCamera->mHorizontalFOV * (1.0 / aspectRatio) : 30.0f;
+        camera->SetFieldOfView(fieldOfView);
+        camera->SetAspectRatio(aspectRatio);
+        camera->SetNearPlane(pAiCamera->mClipPlaneNear);
+        camera->SetFarPlane(pAiCamera->mClipPlaneFar);
+
+        data.builder.AddCamera(std::move(camera));
     }
 }
 

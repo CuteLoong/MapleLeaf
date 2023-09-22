@@ -1,13 +1,13 @@
 #pragma once
 
 #include "AssimpImporter.hpp"
+#include "Camera.hpp"
 #include "DefaultBuilder.hpp"
 #include "DefaultMaterial.hpp"
 #include "Scene.hpp"
 #include "Scenes.hpp"
 #include "ShadowRender.hpp"
 #include "ShadowSystem.hpp"
-#include "TestCamera.hpp"
 #include "Transform.hpp"
 
 namespace MapleLeaf {
@@ -15,7 +15,7 @@ class SceneBuilder : public Scene
 {
 public:
     SceneBuilder(const std::filesystem::path path = "F:/MapleLeaf/Resources/Models/Pica/Pica.gltf")
-        : Scene(std::make_unique<TestCamera>())
+        : Scene()
         , path(path)
     {
         AddSystem<ShadowSystem>();
@@ -41,12 +41,20 @@ public:
             }
         }
 
+        if (builder.cameras.empty()) Log::Error("No camera can't rendering!");
+
+        for (auto& camera : builder.cameras) {
+            auto entity = Scenes::Get()->GetScene()->GetEntity(camera->GetName());
+            entity->AddComponent(std::move(camera));
+        }
+
+        SetCamera(Scenes::Get()->GetScene()->GetComponent<Camera>());
+
         auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>();
 
         for (auto& light : builder.lights) {
             auto entity = Scenes::Get()->GetScene()->GetEntity(light->GetName());
-            if (entity) 
-            {
+            if (entity) {
                 auto transform = entity->GetComponent<Transform>();
 
                 glm::vec4 realDirection = transform->GetWorldMatrix() * glm::vec4(light->GetDirection(), 0.0f);
