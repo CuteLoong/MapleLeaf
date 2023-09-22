@@ -1,9 +1,8 @@
 #include "Scene.hpp"
 
 namespace MapleLeaf {
-Scene::Scene(std::unique_ptr<Camera>&& camera)
-    : camera(std::move(camera))
-    , gpuScene(std::make_unique<GPUScene>())
+Scene::Scene()
+    : gpuScene(std::make_unique<GPUScene>())
 {}
 
 void Scene::Update()

@@ -11,7 +11,7 @@ class Scene
     friend class Scenes;
 
 public:
-    explicit Scene(std::unique_ptr<Camera>&& camera);
+    Scene();
     virtual ~Scene() = default;
 
     virtual void Start() = 0;
@@ -63,8 +63,8 @@ public:
 
     void ClearEntities() { entities.Clear(); }
 
-    Camera* GetCamera() const { return camera.get(); }
-    void    SetCamera(Camera* camera) { this->camera.reset(camera); }
+    Camera* GetCamera() const { return camera; }
+    void    SetCamera(Camera* camera) { this->camera= camera; }
 
     virtual bool IsPaused() const = 0;
 
@@ -75,10 +75,10 @@ public:
     GPUScene* GetGpuScene() { return gpuScene.get(); }
 
 private:
-    bool                    started = false;
-    SystemHolder            systems;
-    EntityHolder            entities;
-    std::unique_ptr<Camera> camera;
+    bool         started = false;
+    SystemHolder systems;
+    EntityHolder entities;
+    Camera*      camera;
 
     std::unique_ptr<GPUScene> gpuScene;
 

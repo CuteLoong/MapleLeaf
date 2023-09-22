@@ -24,6 +24,12 @@ void Builder::AddLight(std::unique_ptr<Light>&& light)
     lights.push_back(std::move(light));
 }
 
+void Builder::AddCamera(std::unique_ptr<Camera>&& camera)
+{
+    assert(camera != nullptr);
+    cameras.push_back(std::move(camera));
+}
+
 Mesh* Builder::GetMesh(const uint32_t index)
 {
     if (index >= meshes.size()) {

@@ -656,11 +656,202 @@
 				623,
 				624,
 				625,
-				626
+				626,
+				627,
+				628,
+				629,
+				630,
+				631,
+				632,
+				633,
+				634,
+				635,
+				636,
+				637,
+				638,
+				639,
+				640,
+				641,
+				642,
+				643,
+				644,
+				645,
+				646,
+				647,
+				648,
+				649,
+				650,
+				651,
+				652,
+				653,
+				654,
+				655,
+				656,
+				657,
+				658,
+				659,
+				660,
+				661,
+				662,
+				663,
+				664,
+				665,
+				666,
+				667,
+				668,
+				669,
+				670,
+				671,
+				672,
+				673,
+				674,
+				675,
+				676,
+				677,
+				678,
+				679,
+				680,
+				681,
+				682,
+				683,
+				684,
+				685,
+				686,
+				687,
+				688,
+				689,
+				690,
+				691,
+				692,
+				693,
+				694,
+				695,
+				696,
+				697,
+				698,
+				699,
+				700,
+				701,
+				702,
+				703,
+				704,
+				705,
+				706,
+				707,
+				708,
+				709,
+				710,
+				711,
+				712,
+				713,
+				714,
+				715,
+				716,
+				717,
+				718,
+				719,
+				720,
+				721,
+				722,
+				723,
+				724,
+				725,
+				726,
+				727,
+				728,
+				729,
+				730,
+				731,
+				732,
+				733,
+				734,
+				735,
+				736,
+				737,
+				738,
+				739,
+				740,
+				741,
+				742,
+				743,
+				744,
+				745,
+				746,
+				747,
+				748,
+				749,
+				750,
+				751,
+				752,
+				753,
+				754,
+				755,
+				756,
+				757,
+				758,
+				759,
+				760,
+				761,
+				762,
+				763,
+				764,
+				765,
+				766,
+				767,
+				768,
+				769,
+				770,
+				771,
+				772,
+				773,
+				774,
+				775,
+				776,
+				777,
+				778,
+				779,
+				780,
+				781,
+				782,
+				783,
+				784,
+				785,
+				786,
+				787,
+				788,
+				789,
+				790,
+				791,
+				792,
+				793,
+				794,
+				795,
+				796,
+				797,
+				798,
+				799,
+				800,
+				801,
+				802,
+				803,
+				804,
+				805
 			]
 		}
 	],
 	"nodes":[
+		{
+			"name":"RootNode"
+		},
+		{
+			"name":"Diorama"
+		},
+		{
+			"name":"Bin2"
+		},
+		{
+			"name":"pCylinder96.001"
+		},
 		{
 			"mesh":0,
 			"name":"pCylinder96_Plastic_Grey_Dark_0.001",
@@ -669,6 +860,9 @@
 				1.0296162366867065,
 				-19.655622482299805
 			]
+		},
+		{
+			"name":"pCylinder97.001"
 		},
 		{
 			"mesh":1,
@@ -680,6 +874,9 @@
 			]
 		},
 		{
+			"name":"Box24"
+		},
+		{
 			"mesh":2,
 			"name":"Box24_Plastic_Brown_Satin_0.001",
 			"translation":[
@@ -687,6 +884,9 @@
 				6.226189613342285,
 				-14.254451751708984
 			]
+		},
+		{
+			"name":"Box25"
 		},
 		{
 			"mesh":3,
@@ -2608,6 +2808,9 @@
 			]
 		},
 		{
+			"name":"Box_022"
+		},
+		{
 			"mesh":100,
 			"name":"Box_022_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2615,6 +2818,9 @@
 				3.6857917308807373,
 				-13.467975616455078
 			]
+		},
+		{
+			"name":"Box_023"
 		},
 		{
 			"mesh":101,
@@ -2626,6 +2832,9 @@
 			]
 		},
 		{
+			"name":"Box_024"
+		},
+		{
 			"mesh":102,
 			"name":"Box_024_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2633,6 +2842,9 @@
 				3.6857917308807373,
 				-5.2391037940979
 			]
+		},
+		{
+			"name":"Box_025"
 		},
 		{
 			"mesh":103,
@@ -2653,6 +2865,9 @@
 			]
 		},
 		{
+			"name":"Box_026"
+		},
+		{
 			"mesh":105,
 			"name":"Box_026_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2662,6 +2877,9 @@
 			]
 		},
 		{
+			"name":"Box_027"
+		},
+		{
 			"mesh":106,
 			"name":"Box_027_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2669,6 +2887,9 @@
 				7.184963703155518,
 				-13.522870063781738
 			]
+		},
+		{
+			"name":"Box_028"
 		},
 		{
 			"mesh":107,
@@ -2689,6 +2910,9 @@
 			]
 		},
 		{
+			"name":"Box_029"
+		},
+		{
 			"mesh":109,
 			"name":"Box_029_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2705,6 +2929,9 @@
 				3.5118322372436523,
 				-8.97957992553711
 			]
+		},
+		{
+			"name":"Box_030"
 		},
 		{
 			"mesh":111,
@@ -2725,6 +2952,9 @@
 			]
 		},
 		{
+			"name":"Box_031"
+		},
+		{
 			"mesh":113,
 			"name":"Box_031_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2743,6 +2973,9 @@
 			]
 		},
 		{
+			"name":"Box_032"
+		},
+		{
 			"mesh":115,
 			"name":"Box_032_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2759,6 +2992,9 @@
 				7.002039432525635,
 				-9.135629653930664
 			]
+		},
+		{
+			"name":"Box_033"
 		},
 		{
 			"mesh":117,
@@ -2788,6 +3024,9 @@
 			]
 		},
 		{
+			"name":"Box_034"
+		},
+		{
 			"mesh":120,
 			"name":"Box_034_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2804,6 +3043,9 @@
 				7.002602577209473,
 				-13.483118057250977
 			]
+		},
+		{
+			"name":"Box_035"
 		},
 		{
 			"mesh":122,
@@ -2851,6 +3093,9 @@
 			]
 		},
 		{
+			"name":"Box_036"
+		},
+		{
 			"mesh":127,
 			"name":"Box_036_Plastic_Brown_Satin_0",
 			"translation":[
@@ -2858,6 +3103,12 @@
 				3.6857919692993164,
 				-9.02657699584961
 			]
+		},
+		{
+			"name":"Broom2"
+		},
+		{
+			"name":"Broom_Bristles"
 		},
 		{
 			"mesh":128,
@@ -2869,6 +3120,9 @@
 			]
 		},
 		{
+			"name":"Broom_Handle"
+		},
+		{
 			"mesh":129,
 			"name":"Broom_Handle_Plastic_Brown_Dark_0",
 			"translation":[
@@ -2876,6 +3130,9 @@
 				0.3326337933540344,
 				-23.474838256835938
 			]
+		},
+		{
+			"name":"Broom_Head"
 		},
 		{
 			"mesh":130,
@@ -2887,6 +3144,12 @@
 			]
 		},
 		{
+			"name":"FireExtinguisher3"
+		},
+		{
+			"name":"pCube18.001"
+		},
+		{
 			"mesh":131,
 			"name":"pCube18_Plastic_Grey_Dark_0.001",
 			"translation":[
@@ -2894,6 +3157,9 @@
 				3.684521198272705,
 				-20.75559425354004
 			]
+		},
+		{
+			"name":"pCube19.001"
 		},
 		{
 			"mesh":132,
@@ -2905,6 +3171,9 @@
 			]
 		},
 		{
+			"name":"pCylinder93.001"
+		},
+		{
 			"mesh":133,
 			"name":"pCylinder93_Plastic_Red_Matte_0.001",
 			"translation":[
@@ -2912,6 +3181,9 @@
 				1.2313389778137207,
 				-20.43353271484375
 			]
+		},
+		{
+			"name":"pCylinder94.001"
 		},
 		{
 			"mesh":134,
@@ -2923,6 +3195,9 @@
 			]
 		},
 		{
+			"name":"pCylinder95.001"
+		},
+		{
 			"mesh":135,
 			"name":"pCylinder95_Plastic_Grey_Dark_0.001",
 			"translation":[
@@ -2930,6 +3205,36 @@
 				3.315875291824341,
 				-19.950944900512695
 			]
+		},
+		{
+			"name":"First_Aid_Wall_Kit2"
+		},
+		{
+			"name":"Floor_Junk_Cluster1"
+		},
+		{
+			"name":"Floor_Junk_Cluster_01_Bolt1"
+		},
+		{
+			"name":"Floor_Junk_Cluster_01_Bolt2"
+		},
+		{
+			"name":"Floor_Junk_Cluster_01_Bolt3"
+		},
+		{
+			"name":"Floor_Junk_Cluster_01_Pin1"
+		},
+		{
+			"name":"Floor_Junk_Cluster_01_Pin2"
+		},
+		{
+			"name":"Floor_Junk_Cluster_01_Pin3"
+		},
+		{
+			"name":"group66"
+		},
+		{
+			"name":"Decal_Floor_Caution_Line"
 		},
 		{
 			"mesh":136,
@@ -2941,6 +3246,9 @@
 			]
 		},
 		{
+			"name":"pCube91"
+		},
+		{
 			"mesh":137,
 			"name":"pCube91_Plastic_Decals_0",
 			"translation":[
@@ -2948,6 +3256,9 @@
 				0.05288989096879959,
 				16.36648178100586
 			]
+		},
+		{
+			"name":"pCube92"
 		},
 		{
 			"mesh":138,
@@ -2959,6 +3270,9 @@
 			]
 		},
 		{
+			"name":"pCube93"
+		},
+		{
 			"mesh":139,
 			"name":"pCube93_Plastic_Decals_0",
 			"translation":[
@@ -2966,6 +3280,12 @@
 				0.05328812450170517,
 				0.6301116347312927
 			]
+		},
+		{
+			"name":"group68"
+		},
+		{
+			"name":"Wax_Pastel_02"
 		},
 		{
 			"mesh":140,
@@ -2986,6 +3306,9 @@
 			]
 		},
 		{
+			"name":"Wax_Pastel_03"
+		},
+		{
 			"mesh":142,
 			"name":"Wax_Pastel_03_Wax_Pastel_Label_02_0",
 			"translation":[
@@ -3004,6 +3327,99 @@
 			]
 		},
 		{
+			"name":"Lockers"
+		},
+		{
+			"name":"group21"
+		},
+		{
+			"name":"pCube177"
+		},
+		{
+			"name":"pCube179"
+		},
+		{
+			"name":"pCube187"
+		},
+		{
+			"name":"group22"
+		},
+		{
+			"name":"pCube177.001"
+		},
+		{
+			"name":"pCube179.001"
+		},
+		{
+			"name":"pCube187.001"
+		},
+		{
+			"name":"group34"
+		},
+		{
+			"name":"pCube177.002"
+		},
+		{
+			"name":"pCube179.002"
+		},
+		{
+			"name":"pCube187.002"
+		},
+		{
+			"name":"Machine_014"
+		},
+		{
+			"name":"Body"
+		},
+		{
+			"name":"Inlet"
+		},
+		{
+			"name":"Interior"
+		},
+		{
+			"name":"Led_01"
+		},
+		{
+			"name":"Led_02"
+		},
+		{
+			"name":"Led_03"
+		},
+		{
+			"name":"Led_Wire_01"
+		},
+		{
+			"name":"Led_Wire_02"
+		},
+		{
+			"name":"Led_Wire_03"
+		},
+		{
+			"name":"Leg_Holder_01"
+		},
+		{
+			"name":"Leg_Holder_02"
+		},
+		{
+			"name":"Leg_Holder_03"
+		},
+		{
+			"name":"Panel_01"
+		},
+		{
+			"name":"Panel_02"
+		},
+		{
+			"name":"Screw_01"
+		},
+		{
+			"name":"Screw_02"
+		},
+		{
+			"name":"Mesh8"
+		},
+		{
 			"mesh":144,
 			"name":"Mesh8_Plastic_Blue_0",
 			"translation":[
@@ -3011,6 +3427,18 @@
 				-0.433970183134079,
 				0.8450976014137268
 			]
+		},
+		{
+			"name":"Outlet_01"
+		},
+		{
+			"name":"group45"
+		},
+		{
+			"name":"group44"
+		},
+		{
+			"name":"Bolt14"
 		},
 		{
 			"mesh":145,
@@ -3022,6 +3450,9 @@
 			]
 		},
 		{
+			"name":"Bolt15"
+		},
+		{
 			"mesh":146,
 			"name":"Bolt15_Metal_Aluminium_0",
 			"translation":[
@@ -3029,6 +3460,9 @@
 				-0.3915337324142456,
 				3.082484722137451
 			]
+		},
+		{
+			"name":"Bolt16"
 		},
 		{
 			"mesh":147,
@@ -3040,6 +3474,9 @@
 			]
 		},
 		{
+			"name":"Bolt17"
+		},
+		{
 			"mesh":148,
 			"name":"Bolt17_Metal_Aluminium_0",
 			"translation":[
@@ -3047,6 +3484,9 @@
 				-0.3915337026119232,
 				-4.500589370727539
 			]
+		},
+		{
+			"name":"pCylinder161"
 		},
 		{
 			"mesh":149,
@@ -3058,6 +3498,9 @@
 			]
 		},
 		{
+			"name":"pCylinder162"
+		},
+		{
 			"mesh":150,
 			"name":"pCylinder162_Metal_Aluminium_0",
 			"translation":[
@@ -3065,6 +3508,9 @@
 				-0.5373071432113647,
 				3.1178383827209473
 			]
+		},
+		{
+			"name":"pCylinder163"
 		},
 		{
 			"mesh":151,
@@ -3076,6 +3522,9 @@
 			]
 		},
 		{
+			"name":"pCylinder164"
+		},
+		{
 			"mesh":152,
 			"name":"pCylinder164_Metal_Aluminium_0",
 			"translation":[
@@ -3083,6 +3532,9 @@
 				-0.5371716618537903,
 				3.2122299671173096
 			]
+		},
+		{
+			"name":"pTorus5"
 		},
 		{
 			"mesh":153,
@@ -3094,6 +3546,9 @@
 			]
 		},
 		{
+			"name":"Machine_04_Inlet_Trim_03"
+		},
+		{
 			"mesh":154,
 			"name":"Machine_04_Inlet_Trim_03_Metal_Aluminium_0",
 			"translation":[
@@ -3101,6 +3556,21 @@
 				3.897782802581787,
 				-0.6890242695808411
 			]
+		},
+		{
+			"name":"pCylinder143.001"
+		},
+		{
+			"name":"Outlet_03"
+		},
+		{
+			"name":"group45.001"
+		},
+		{
+			"name":"group44.001"
+		},
+		{
+			"name":"Bolt14.001"
 		},
 		{
 			"mesh":155,
@@ -3112,6 +3582,9 @@
 			]
 		},
 		{
+			"name":"Bolt15.001"
+		},
+		{
 			"mesh":156,
 			"name":"Bolt15_Metal_Aluminium_0.001",
 			"translation":[
@@ -3119,6 +3592,9 @@
 				-0.4318133592605591,
 				-31.122220993041992
 			]
+		},
+		{
+			"name":"Bolt16.001"
 		},
 		{
 			"mesh":157,
@@ -3130,6 +3606,9 @@
 			]
 		},
 		{
+			"name":"Bolt17.001"
+		},
+		{
 			"mesh":158,
 			"name":"Bolt17_Metal_Aluminium_0.001",
 			"translation":[
@@ -3137,6 +3616,9 @@
 				-0.43131765723228455,
 				-21.371490478515625
 			]
+		},
+		{
+			"name":"pCylinder161.001"
 		},
 		{
 			"mesh":159,
@@ -3148,6 +3630,9 @@
 			]
 		},
 		{
+			"name":"pCylinder162.001"
+		},
+		{
 			"mesh":160,
 			"name":"pCylinder162_Metal_Aluminium_0.001",
 			"translation":[
@@ -3155,6 +3640,9 @@
 				-0.5754692554473877,
 				-31.11628532409668
 			]
+		},
+		{
+			"name":"pCylinder163.001"
 		},
 		{
 			"mesh":161,
@@ -3166,6 +3654,9 @@
 			]
 		},
 		{
+			"name":"pCylinder164.001"
+		},
+		{
 			"mesh":162,
 			"name":"pCylinder164_Metal_Aluminium_0.001",
 			"translation":[
@@ -3173,6 +3664,9 @@
 				-0.5759880542755127,
 				-21.192792892456055
 			]
+		},
+		{
+			"name":"pTorus5.001"
 		},
 		{
 			"mesh":163,
@@ -3184,6 +3678,9 @@
 			]
 		},
 		{
+			"name":"Machine_04_Inlet_Trim_03.001"
+		},
+		{
 			"mesh":164,
 			"name":"Machine_04_Inlet_Trim_03_Metal_Aluminium_0.001",
 			"translation":[
@@ -3191,6 +3688,9 @@
 				3.958169460296631,
 				-21.132892608642578
 			]
+		},
+		{
+			"name":"pCube164"
 		},
 		{
 			"mesh":165,
@@ -3202,6 +3702,9 @@
 			]
 		},
 		{
+			"name":"pCube18"
+		},
+		{
 			"mesh":166,
 			"name":"pCube18_Plastic_Grey_Dark_0",
 			"translation":[
@@ -3211,6 +3714,9 @@
 			]
 		},
 		{
+			"name":"pCube19"
+		},
+		{
 			"mesh":167,
 			"name":"pCube19_Plastic_Grey_Dark_0",
 			"translation":[
@@ -3218,6 +3724,9 @@
 				3.4022576808929443,
 				6.730401039123535
 			]
+		},
+		{
+			"name":"pCube196"
 		},
 		{
 			"mesh":168,
@@ -3259,6 +3768,9 @@
 			]
 		},
 		{
+			"name":"pCube201"
+		},
+		{
 			"mesh":171,
 			"name":"pCube201_Plastic_MediumGrey_Glossy_0",
 			"rotation":[
@@ -3296,6 +3808,9 @@
 				4.020792484283447,
 				-26.25208854675293
 			]
+		},
+		{
+			"name":"pCube202"
 		},
 		{
 			"mesh":174,
@@ -3337,6 +3852,9 @@
 			]
 		},
 		{
+			"name":"pCube203"
+		},
+		{
 			"mesh":177,
 			"name":"pCube203_Plastic_Grey_Dark_0",
 			"rotation":[
@@ -3374,6 +3892,9 @@
 				2.4604828357696533,
 				-27.517038345336914
 			]
+		},
+		{
+			"name":"pCube207"
 		},
 		{
 			"mesh":180,
@@ -3415,6 +3936,9 @@
 			]
 		},
 		{
+			"name":"pCube208"
+		},
+		{
 			"mesh":183,
 			"name":"pCube208_Plastic_Grey_Dark_0",
 			"rotation":[
@@ -3452,6 +3976,9 @@
 				7.569979190826416,
 				-24.787755966186523
 			]
+		},
+		{
+			"name":"pCube209"
 		},
 		{
 			"mesh":186,
@@ -3493,6 +4020,9 @@
 			]
 		},
 		{
+			"name":"pCube210"
+		},
+		{
 			"mesh":189,
 			"name":"pCube210_Plastic_Grey_Dark_0",
 			"rotation":[
@@ -3530,6 +4060,9 @@
 				12.679475784301758,
 				-24.787755966186523
 			]
+		},
+		{
+			"name":"pCube211"
 		},
 		{
 			"mesh":192,
@@ -3571,6 +4104,9 @@
 			]
 		},
 		{
+			"name":"pCube212"
+		},
+		{
 			"mesh":195,
 			"name":"pCube212_Plastic_MediumGrey_Glossy_0",
 			"rotation":[
@@ -3610,6 +4146,9 @@
 			]
 		},
 		{
+			"name":"pCube244"
+		},
+		{
 			"mesh":198,
 			"name":"pCube244_Decal_Note_01_0",
 			"rotation":[
@@ -3625,6 +4164,9 @@
 			]
 		},
 		{
+			"name":"pCube248"
+		},
+		{
 			"mesh":199,
 			"name":"pCube248_Plastic_MediumGrey_Glossy_0",
 			"translation":[
@@ -3632,6 +4174,9 @@
 				6.057384490966797,
 				-0.5247689485549927
 			]
+		},
+		{
+			"name":"pCube249"
 		},
 		{
 			"mesh":200,
@@ -3673,6 +4218,9 @@
 			]
 		},
 		{
+			"name":"pCube250"
+		},
+		{
 			"mesh":203,
 			"name":"pCube250_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -3710,6 +4258,9 @@
 				3.5117595195770264,
 				-25.588329315185547
 			]
+		},
+		{
+			"name":"pCube251"
 		},
 		{
 			"mesh":206,
@@ -3751,6 +4302,9 @@
 			]
 		},
 		{
+			"name":"pCube252"
+		},
+		{
 			"mesh":209,
 			"name":"pCube252_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -3788,6 +4342,9 @@
 				3.076266050338745,
 				-25.4766845703125
 			]
+		},
+		{
+			"name":"pCube253"
 		},
 		{
 			"mesh":212,
@@ -3829,6 +4386,9 @@
 			]
 		},
 		{
+			"name":"pCube254"
+		},
+		{
 			"mesh":215,
 			"name":"pCube254_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -3866,6 +4426,9 @@
 				2.6741740703582764,
 				-27.45956039428711
 			]
+		},
+		{
+			"name":"pCube255"
 		},
 		{
 			"mesh":218,
@@ -3907,6 +4470,9 @@
 			]
 		},
 		{
+			"name":"pCube256"
+		},
+		{
 			"mesh":221,
 			"name":"pCube256_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -3944,6 +4510,9 @@
 				3.5117595195770264,
 				-23.782686233520508
 			]
+		},
+		{
+			"name":"pCube257"
 		},
 		{
 			"mesh":224,
@@ -3985,6 +4554,9 @@
 			]
 		},
 		{
+			"name":"pCube258"
+		},
+		{
 			"mesh":227,
 			"name":"pCube258_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -4022,6 +4594,9 @@
 				3.5117595195770264,
 				-27.60463523864746
 			]
+		},
+		{
+			"name":"pCube259"
 		},
 		{
 			"mesh":230,
@@ -4063,6 +4638,9 @@
 			]
 		},
 		{
+			"name":"pCube260"
+		},
+		{
 			"mesh":233,
 			"name":"pCube260_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -4100,6 +4678,9 @@
 				3.076266050338745,
 				-25.595462799072266
 			]
+		},
+		{
+			"name":"pCube261"
 		},
 		{
 			"mesh":236,
@@ -4141,6 +4722,9 @@
 			]
 		},
 		{
+			"name":"pCube262"
+		},
+		{
 			"mesh":239,
 			"name":"pCube262_Plastic_Brown_Dark_0",
 			"rotation":[
@@ -4178,6 +4762,9 @@
 				2.6741740703582764,
 				-27.60463523864746
 			]
+		},
+		{
+			"name":"pCube263"
 		},
 		{
 			"mesh":242,
@@ -4219,6 +4806,9 @@
 			]
 		},
 		{
+			"name":"pCube57"
+		},
+		{
 			"mesh":245,
 			"name":"pCube57_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4226,6 +4816,9 @@
 				0.11889186501502991,
 				-15.030800819396973
 			]
+		},
+		{
+			"name":"pCube59"
 		},
 		{
 			"mesh":246,
@@ -4237,6 +4830,9 @@
 			]
 		},
 		{
+			"name":"pCube60"
+		},
+		{
 			"mesh":247,
 			"name":"pCube60_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4246,6 +4842,9 @@
 			]
 		},
 		{
+			"name":"pCube61"
+		},
+		{
 			"mesh":248,
 			"name":"pCube61_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4253,6 +4852,9 @@
 				0.5796443223953247,
 				-9.71395206451416
 			]
+		},
+		{
+			"name":"pCube62"
 		},
 		{
 			"mesh":249,
@@ -4294,6 +4896,9 @@
 			]
 		},
 		{
+			"name":"pCube63"
+		},
+		{
 			"mesh":252,
 			"name":"pCube63_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4301,6 +4906,9 @@
 				0.5796442627906799,
 				-10.059332847595215
 			]
+		},
+		{
+			"name":"pCube64"
 		},
 		{
 			"mesh":253,
@@ -4312,6 +4920,9 @@
 			]
 		},
 		{
+			"name":"pCube65"
+		},
+		{
 			"mesh":254,
 			"name":"pCube65_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4319,6 +4930,9 @@
 				1.0786707401275635,
 				-4.625956058502197
 			]
+		},
+		{
+			"name":"pCube66"
 		},
 		{
 			"mesh":255,
@@ -4330,6 +4944,9 @@
 			]
 		},
 		{
+			"name":"pCube67"
+		},
+		{
 			"mesh":256,
 			"name":"pCube67_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4337,6 +4954,9 @@
 				1.0786707401275635,
 				-7.249823570251465
 			]
+		},
+		{
+			"name":"pCube68"
 		},
 		{
 			"mesh":257,
@@ -4348,6 +4968,9 @@
 			]
 		},
 		{
+			"name":"pCube69"
+		},
+		{
 			"mesh":258,
 			"name":"pCube69_Plastic_Brown_Dark_0",
 			"translation":[
@@ -4357,6 +4980,9 @@
 			]
 		},
 		{
+			"name":"pCylinder143"
+		},
+		{
 			"mesh":259,
 			"name":"pCylinder143_Plastic_Blue_0",
 			"translation":[
@@ -4364,6 +4990,9 @@
 				5.209896564483643,
 				-17.287263870239258
 			]
+		},
+		{
+			"name":"pCylinder93"
 		},
 		{
 			"mesh":260,
@@ -4411,6 +5040,9 @@
 			]
 		},
 		{
+			"name":"pCylinder94"
+		},
+		{
 			"mesh":265,
 			"name":"pCylinder94_Plastic_Grey_Dark_0",
 			"translation":[
@@ -4418,6 +5050,9 @@
 				3.00677490234375,
 				6.727651596069336
 			]
+		},
+		{
+			"name":"pCylinder95"
 		},
 		{
 			"mesh":266,
@@ -4429,6 +5064,9 @@
 			]
 		},
 		{
+			"name":"pCylinder96"
+		},
+		{
 			"mesh":267,
 			"name":"pCylinder96_Plastic_Grey_Dark_0",
 			"translation":[
@@ -4436,6 +5074,9 @@
 				1.042798638343811,
 				9.093267440795898
 			]
+		},
+		{
+			"name":"pCylinder97"
 		},
 		{
 			"mesh":268,
@@ -4447,6 +5088,9 @@
 			]
 		},
 		{
+			"name":"Recycle4"
+		},
+		{
 			"mesh":269,
 			"name":"Recycle4_Plastic_Orange_Satin_0",
 			"translation":[
@@ -4454,6 +5098,12 @@
 				1.6002063751220703,
 				-19.82516860961914
 			]
+		},
+		{
+			"name":"Shelf_Guard_01"
+		},
+		{
+			"name":"pCube188"
 		},
 		{
 			"mesh":270,
@@ -4534,6 +5184,9 @@
 			]
 		},
 		{
+			"name":"pCube190"
+		},
+		{
 			"mesh":276,
 			"name":"pCube190_Decal_Caution_0",
 			"translation":[
@@ -4582,6 +5235,9 @@
 			]
 		},
 		{
+			"name":"pCube195"
+		},
+		{
 			"mesh":280,
 			"name":"pCube195_Plastic_Decals_0",
 			"rotation":[
@@ -4621,6 +5277,24 @@
 			]
 		},
 		{
+			"name":"Wall_Prop_Clock_01"
+		},
+		{
+			"name":"Wall_Prop_Clock_01_Face"
+		},
+		{
+			"name":"Wall_Prop_Clock_01_Frame"
+		},
+		{
+			"name":"Wall_Prop_Clock_01_Hour_Hand"
+		},
+		{
+			"name":"Wall_Prop_Clock_01_Minute_Hand"
+		},
+		{
+			"name":"Walls"
+		},
+		{
 			"mesh":283,
 			"name":"Walls_Plastic_Wall_Only_0",
 			"translation":[
@@ -4628,6 +5302,48 @@
 				10.787997245788574,
 				-11.785630226135254
 			]
+		},
+		{
+			"name":"Robot1"
+		},
+		{
+			"name":"body"
+		},
+		{
+			"name":"Capsule001"
+		},
+		{
+			"name":"Capsule002"
+		},
+		{
+			"name":"Cylinder001"
+		},
+		{
+			"name":"Cylinder002"
+		},
+		{
+			"name":"head"
+		},
+		{
+			"name":"screw"
+		},
+		{
+			"name":"screw001"
+		},
+		{
+			"name":"SEEDLogo"
+		},
+		{
+			"name":"switch1"
+		},
+		{
+			"name":"Text001"
+		},
+		{
+			"name":"Tube001"
+		},
+		{
+			"name":"Cylinder005"
 		},
 		{
 			"mesh":284,
@@ -11432,10 +12148,10 @@
 			},
 			"name":"PointLight",
 			"rotation":[
-				-0.3086465001106262,
-				-0.034929484128952026,
-				0.38270965218544006,
-				0.870086669921875
+				-0.37851446866989136,
+				0.07597725838422775,
+				0.33577096462249756,
+				0.8591927289962769
 			],
 			"translation":[
 				-10.118983268737793,
@@ -11445,27 +12161,27 @@
 		},
 		{
 			"camera":0,
-			"name":"\u6444\u50cf\u673a_Orientation",
+			"name":"Camera",
 			"rotation":[
-				-0.11841243505477905,
-				0.0030553771648555994,
-				-0.0030553771648555994,
-				0.9929550886154175
+				-0.12765568494796753,
+				0.00532209686934948,
+				-0.0027215390000492334,
+				0.9918005466461182
 			],
 			"translation":[
-				0.02432769536972046,
-				26.343143463134766,
-				77.18450927734375
+				-0.07869184017181396,
+				28.19774627685547,
+				73.17000579833984
 			]
 		}
 	],
 	"cameras":[
 		{
-			"name":"\u6444\u50cf\u673a.001",
+			"name":"Camera",
 			"perspective":{
 				"aspectRatio":1.7777777777777777,
-				"yfov":0.39959651231765747,
-				"zfar":1000,
+				"yfov":0.5235987901687622,
+				"zfar":200,
 				"znear":0.10000000149011612
 			},
 			"type":"perspective"
