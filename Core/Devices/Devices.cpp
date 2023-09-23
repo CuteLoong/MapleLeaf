@@ -1,9 +1,9 @@
 #include "Devices.hpp"
 
 #include "GLFW/glfw3.h"
+// #include "imgui.h"
 #include <iostream>
 #include <memory>
-
 
 namespace MapleLeaf {
 Devices::Devices()
@@ -13,12 +13,11 @@ Devices::Devices()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
     glfwWindowHint(GLFW_STEREO, GLFW_FALSE);
-    // std::cout << "go here" << std::endl;
 }
 
 Devices::~Devices()
 {
-    glfwTerminate();
+    glfwTerminate();   // include ImGui::DestroyContext();
 }
 
 void Devices::Update()

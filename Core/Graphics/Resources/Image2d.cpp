@@ -34,6 +34,19 @@ Image2d::Image2d(std::filesystem::path filename, VkFilter filter, VkSamplerAddre
     }
 }
 
+Image2d::Image2d(std::unique_ptr<Bitmap>&& bitmap, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, VkFilter filter,
+                 VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, bool anisotropic, bool mipmap)
+    : Image(filter, addressMode, samples, layout,
+            usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, format, 1, 1,
+            {bitmap->GetSize().x, bitmap->GetSize().y, 1})
+    , anisotropic(anisotropic)
+    , mipmap(mipmap)
+    , components(bitmap->GetBytesPerPixel())
+{
+    Image2d::Load(std::move(bitmap));
+}
+
+
 void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
 {
     if (!filename.empty() && !loadBitmap) {

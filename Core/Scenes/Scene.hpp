@@ -12,7 +12,10 @@ class Scene
 
 public:
     Scene();
-    virtual ~Scene() = default;
+    virtual ~Scene() { 
+        gpuScene = nullptr;
+        entities.Clear();
+    }
 
     virtual void Start() = 0;
     virtual void Update();

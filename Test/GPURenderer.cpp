@@ -2,6 +2,7 @@
 
 #include "DeferredSubrender.hpp"
 #include "Graphics.hpp"
+#include "ImguiSubrender.hpp"
 #include "IndirectDrawSubrender.hpp"
 #include "MeshesSubrender.hpp"
 #include "PipelineGraphics.hpp"
@@ -27,7 +28,7 @@ GPURenderer::GPURenderer()
                                                   {5, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                   {6, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses = {{0, {}, {0, 2, 3, 4, 5}}, {1, {2, 3, 4, 5}, {0, 1}}};
+    std::vector<SubpassType> renderpassSubpasses = {{0, {}, {0, 2, 3, 4, 5}}, {1, {2, 3, 4, 5}, {0, 1}}, {2, {}, {0, 1}}};
 
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments, renderpassSubpasses));
 }
@@ -37,6 +38,7 @@ void GPURenderer::Start()
     AddSubrender<ShadowSubrender>({0, 0});
     AddSubrender<IndirectDrawSubrender>({1, 0});
     AddSubrender<DeferredSubrender>({1, 1});
+    AddSubrender<ImguiSubrender>({1, 2});
 }
 
 void GPURenderer::Update()
