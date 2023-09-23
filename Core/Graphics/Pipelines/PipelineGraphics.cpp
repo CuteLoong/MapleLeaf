@@ -40,6 +40,7 @@ PipelineGraphics::PipelineGraphics(Stage stage, std::vector<std::filesystem::pat
     switch (mode) {
     case Mode::Polygon: CreatePipelinePolygon(); break;
     case Mode::MRT: CreatePipelineMrt(); break;
+    case Mode::Imgui: CreatePipelineImgui(); break;
     default: throw std::runtime_error("Unknown pipeline mode");
     }
 
@@ -372,6 +373,24 @@ void PipelineGraphics::CreatePipelineMrt()
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         blendAttachmentStates.emplace_back(blendAttachmentState);
     }
+
+    colorBlendState.attachmentCount = static_cast<uint32_t>(blendAttachmentStates.size());
+    colorBlendState.pAttachments    = blendAttachmentStates.data();
+
+    CreatePipeline();
+}
+
+void PipelineGraphics::CreatePipelineImgui()
+{
+    blendAttachmentStates[0].blendEnable         = VK_TRUE;
+    blendAttachmentStates[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    blendAttachmentStates[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    blendAttachmentStates[0].colorBlendOp        = VK_BLEND_OP_ADD;
+    blendAttachmentStates[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    blendAttachmentStates[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    blendAttachmentStates[0].alphaBlendOp        = VK_BLEND_OP_ADD;
+    blendAttachmentStates[0].colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
     colorBlendState.attachmentCount = static_cast<uint32_t>(blendAttachmentStates.size());
     colorBlendState.pAttachments    = blendAttachmentStates.data();

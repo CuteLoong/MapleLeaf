@@ -90,8 +90,6 @@ void GPUScene::Update()
 
 bool GPUScene::cmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniformScene, PipelineGraphics& pipeline)
 {
-    pipeline.BindPipeline(commandBuffer);
-
     drawCommandBufferHandler.Push(drawCommands.data(), sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size());
     instancesHandler.Push(instancesData.data(), sizeof(InstanceData) * instancesData.size());
     materialsHandler.Push(materialsData.data(), sizeof(MaterialData) * materialsData.size());
@@ -106,6 +104,7 @@ bool GPUScene::cmdRender(const CommandBuffer& commandBuffer, UniformHandler& uni
     }
 
     if (!descriptorSet.Update(pipeline)) return false;
+    pipeline.BindPipeline(commandBuffer);
 
     descriptorSet.BindDescriptor(commandBuffer, pipeline);
 

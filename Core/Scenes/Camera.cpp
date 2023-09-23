@@ -5,7 +5,6 @@
 
 namespace MapleLeaf {
 void Camera::Start() {
-    
     UpdateByTransform();
 }
 void Camera::Update()
@@ -37,11 +36,11 @@ void Camera::UpdateByInput()
 
     if (!Scenes::Get()->GetScene()->IsPaused()) {
         auto positionDelta = Inputs::Get()->GetPositionDelta();
-        auto rotationDelta = Inputs::Get()->GetRotationDelta();
+        auto rotationDelta = Inputs::Get()->GetRotationDelta(); // x---yaw y---pitch
         Inputs::Get()->ResetPositionDelta();
         Inputs::Get()->ResetRotationDelta();
 
-        velocity = 3.0f * delta * positionDelta;
+        velocity = 5.0f * delta * positionDelta;
 
         rotation.y += rotationDelta.x * 0.001;
         rotation.x += rotationDelta.y * 0.001;

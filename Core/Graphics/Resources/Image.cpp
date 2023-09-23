@@ -19,7 +19,9 @@ Image::Image(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFla
 Image::~Image()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
-
+    auto graphicsQueue = logicalDevice->GetGraphicsQueue();
+    Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));
+    
     vkDestroyImageView(*logicalDevice, view, nullptr);
     vkDestroySampler(*logicalDevice, sampler, nullptr);
     vkFreeMemory(*logicalDevice, memory, nullptr);

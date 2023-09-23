@@ -3,11 +3,9 @@
 #include "DeferredSubrender.hpp"
 #include "Graphics.hpp"
 #include "MeshesSubrender.hpp"
-#include "IndirectDrawSubrender.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
 #include "ShadowSubrender.hpp"
-
 
 namespace Test {
 MainRenderer::MainRenderer()
@@ -33,7 +31,6 @@ MainRenderer::MainRenderer()
 
 void MainRenderer::Start()
 {
-    // AddSubrender<IndirectDrawSubrender>({0, 0});
     AddSubrender<ShadowSubrender>({0, 0});
 
     AddSubrender<MeshesSubrender>({1, 0});

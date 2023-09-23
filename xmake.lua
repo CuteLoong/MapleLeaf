@@ -31,7 +31,8 @@ set_configdir("Config")
 add_configfiles("./config.h.in")
 
 add_requires("volk", "glm", "glfw", "spirv-tools", "glslang", "assimp", "stb", "boost")
-add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp", "stb", "boost")
+add_requires("imgui", {configs = {glfw_vulkan = true}})
+add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp", "stb", "boost", "imgui")
 add_includedirs(
 "Core/Devices", 
 "Core/Utils", 
@@ -58,13 +59,15 @@ add_includedirs(
 "Core/Importers/Builder",
 "Core/Bitmaps",
 "Core/Inputs",
-"Core/GPUScene"
+"Core/GPUScene",
+"Core/Imgui"
 )
 
 add_includedirs(
 "RenderPass/Deferred",
 "RenderPass/Shadow",
-"RenderPass/IndirectDraw"
+"RenderPass/IndirectDraw",
+"RenderPass/Imgui"
 )
 
 target("RenderPass")
@@ -72,7 +75,8 @@ target("RenderPass")
     add_files(
     "RenderPass/Deferred/*.cpp",
     "RenderPass/Shadow/*.cpp",
-    "RenderPass/IndirectDraw/*.cpp"
+    "RenderPass/IndirectDraw/*.cpp",
+    "RenderPass/Imgui/*.cpp"
     )
 target_end()
 
@@ -103,7 +107,8 @@ target("Core")
     "Core/Importers/Builder/*.cpp",
     "Core/Bitmaps/*.cpp",
     "Core/Inputs/*.cpp",
-    "Core/GPUScene/*.cpp"
+    "Core/GPUScene/*.cpp",
+    "Core/Imgui/*.cpp"
     )
 target_end()
 
