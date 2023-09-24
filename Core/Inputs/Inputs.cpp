@@ -1,6 +1,7 @@
 #include "Inputs.hpp"
 #include "Devices.hpp"
 #include "KeyEnums.hpp"
+#include "Imgui.hpp"
 
 namespace MapleLeaf {
 Inputs::Inputs()
@@ -34,7 +35,7 @@ void Inputs::ProcessKeyboard(Key key, InputAction inputAction, InputMod inputMod
 
 void Inputs::ProcessMousePosition(glm::vec2 value)
 {
-    if (cusorLeftPress) rotationDelta -= Devices::Get()->GetWindow()->GetMousePositionDelta();
+    if (cusorLeftPress && !Imgui::Get()->GetImguiCursorState()) rotationDelta -= Devices::Get()->GetWindow()->GetMousePositionDelta();
 }
 
 }   // namespace MapleLeaf

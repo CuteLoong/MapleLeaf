@@ -7,7 +7,7 @@ Imgui::Imgui()
 
     ImGui_ImplGlfw_InitForVulkan(Devices::Get()->GetWindow()->GetWindow(), true);
 
-    ImGuiIO& io                = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO();
     // ImFont* font = io.Fonts->AddFontFromFileTTF("F:/MapleLeaf/Resources/Fonts/DroidSans.ttf", 18.0f);
     // io.FontDefault = font;
 
@@ -125,6 +125,8 @@ void Imgui::ImguiNewFrame()
     }
 
     // fps
+    uint32_t fps = Engine::Get()->GetFps();
+    ImGui::Text("FPS : %i", fps);
 
     ImGui::Render();
 
