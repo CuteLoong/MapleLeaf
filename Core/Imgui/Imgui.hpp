@@ -6,10 +6,9 @@
 #include "Graphics.hpp"
 #include "Image2d.hpp"
 #include "Imgui.h"
-#include "imgui_impl_glfw.h"
 #include "Module.hpp"
 #include "Shader.hpp"
-
+#include "imgui_impl_glfw.h"
 
 namespace MapleLeaf {
 class Imgui : public Module::Registrar<Imgui>
@@ -29,6 +28,8 @@ public:
 
     const Image2d* GetFontImage() const { return fontImage.get(); }
 
+    bool GetImguiCursorState() const { return ImGui::GetIO().WantCaptureMouse; }
+
     static Shader::VertexInput GetVertexInput(uint32_t baseBinding = 0)
     {
         std::vector<VkVertexInputBindingDescription>   bindingDescriptions   = {{baseBinding, sizeof(ImDrawVert), VK_VERTEX_INPUT_RATE_VERTEX}};
@@ -40,14 +41,14 @@ public:
     }
 
 private:
-    void UpdateDrawData();
-    void SetImguiDrawData(ImDrawData* imDrawData);
-    void ImguiNewFrame();
-
     std::unique_ptr<Buffer>  vertexBuffer;
     std::unique_ptr<Buffer>  indexBuffer;
     std::unique_ptr<Image2d> fontImage;
 
     glm::vec2 scale, translate;   // for shader
+
+    void UpdateDrawData();
+    void SetImguiDrawData(ImDrawData* imDrawData);
+    void ImguiNewFrame();
 };
 }   // namespace MapleLeaf
