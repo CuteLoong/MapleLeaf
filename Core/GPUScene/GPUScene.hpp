@@ -22,10 +22,12 @@ public:
     void SetVertices(const std::vector<Vertex3D>& vertices);
     void SetIndices(const std::vector<uint32_t>& indices);
 
-    bool cmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniformScene, PipelineGraphics& pipeline);
+    void PushDescriptors(DescriptorsHandler& descriptorSet);
+    bool cmdRender(const CommandBuffer& commandBuffer, std::unique_ptr<IndirectBuffer>& indirectBuffer);
 
-    const StorageHandler&  GetInstanceDatasHandler() const { return instancesHandler; }
-    const IndirectHandler& GetIndirectHandler() const { return drawCommandBufferHandler; }
+    const StorageHandler& GetInstanceDatasHandler() const { return instancesHandler; }
+
+    uint32_t GetInstanceCount() const { return instances.size(); }
 
 private:
     struct InstanceData
@@ -86,10 +88,8 @@ private:
     std::vector<InstanceData> instancesData;
     std::vector<MaterialData> materialsData;
 
-    StorageHandler                            instancesHandler;
-    StorageHandler                            materialsHandler;
-    std::vector<VkDrawIndexedIndirectCommand> drawCommands;
-    IndirectHandler                           drawCommandBufferHandler;
-    DescriptorsHandler                        descriptorSet;
+    StorageHandler     instancesHandler;
+    StorageHandler     materialsHandler;
+    DescriptorsHandler descriptorSet;
 };
 }   // namespace MapleLeaf

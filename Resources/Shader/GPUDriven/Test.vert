@@ -10,19 +10,6 @@ layout(set = 0, binding = 0) uniform UniformScene
     vec3 cameraPos;
 } scene;
 
-// struct IndirectCommand {
-//     uint indexCount;
-//     uint instanceCount;
-//     uint firstIndex;
-//     int  vertexOffset;
-//     uint firstInstance;
-// };
-
-// layout(set = 0, binding = 1) buffer DrawCommandBuffer 
-// {
-//     IndirectCommand commands[];
-// } drawCommandBuffer;
-
 struct GPUInstanceData
 {
     mat4 modelMatrix;

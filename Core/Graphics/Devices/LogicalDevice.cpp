@@ -4,10 +4,10 @@
 #include "PhysicalDevice.hpp"
 
 namespace MapleLeaf {
-const std::vector<const char*> LogicalDevice::DeviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-    VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
+const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                                  VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+                                                                  VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
+                                                                  VK_KHR_MAINTENANCE_4_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
 
 LogicalDevice::LogicalDevice(const Instance& instance, const PhysicalDevice& physicalDevice)
     : instance(instance)
@@ -134,7 +134,12 @@ void LogicalDevice::CreateLogicalDevice()
     indexingFeatures.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
     indexingFeatures.pNext                                         = nullptr;
 
-    deviceCreatepNextChain     = &indexingFeatures;
+    VkPhysicalDeviceMaintenance4Features maintenance4Features = {};
+    maintenance4Features.sType                            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
+    maintenance4Features.maintenance4                     = VK_TRUE;
+    maintenance4Features.pNext                            = &indexingFeatures;
+
+    deviceCreatepNextChain     = &maintenance4Features;
     extensionFeatures.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
     extensionFeatures.features = enabledFeatures;
     extensionFeatures.pNext    = deviceCreatepNextChain;

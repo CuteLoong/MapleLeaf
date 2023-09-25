@@ -10,8 +10,6 @@
 #include "Renderer.hpp"
 #include "Surface.hpp"
 #include "Swapchain.hpp"
-#include <memory>
-
 
 namespace MapleLeaf {
 class Graphics : public Module::Registrar<Graphics>
@@ -29,7 +27,7 @@ public:
     const Surface*         GetSurface() const { return surface.get(); }
     const VkPipelineCache& GetPipelineCache() const { return pipelineCache; }
 
-    const std::shared_ptr<CommandPool>& GetCommandPool();
+    const std::shared_ptr<CommandPool>& GetCommandPool(const std::thread::id &threadId = std::this_thread::get_id());
 
     Renderer* GetRenderer() const { return renderer.get(); }
     void      SetRenderer(std::unique_ptr<Renderer>&& renderer) { this->renderer = std::move(renderer); }
@@ -50,7 +48,10 @@ private:
     std::unique_ptr<Swapchain>      swapchain;
     std::unique_ptr<Surface>        surface;
 
-    std::shared_ptr<CommandPool> commandPool;
+    std::map<std::thread::id, std::shared_ptr<CommandPool>> commandPools;
+    // Timer used to remove unused command pools.
+	ElapsedTime elapsedPurge;
+
     VkPipelineCache              pipelineCache = VK_NULL_HANDLE;
 
     void CreatePipelineCache();

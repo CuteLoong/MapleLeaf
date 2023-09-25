@@ -12,4 +12,4 @@
 /* #define MAPLELEAF_GRAPHIC_DEBUG 0 */
 /* #define MAPLELEAF_GPUSCENE_DEBUG 0 */
 
-/* #define STEREORENDERING 0 */
+/* #undef STEREORENDERING */

@@ -14,7 +14,7 @@ GPUInstance::GPUInstance(Mesh* mesh, uint32_t instanceID, uint32_t materialID)
     : mesh(mesh)
     , instanceID(instanceID)
     , materialID(materialID)
-    , instanceStatus(Status::Normal)
+    , instanceStatus(Status::None)
 {
     model        = mesh->GetModel();
     modelMatrix  = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
@@ -39,7 +39,11 @@ GPUInstance::GPUInstance(Mesh* mesh, uint32_t instanceID, uint32_t materialID)
 
 void GPUInstance::Update()
 {
-    modelMatrix = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
+    if (mesh->GetEntity()->GetComponent<Transform>()->GetUpdateStatus() == Transform::UpdateStatus::Transformation) {
+        instanceStatus = Status::MatrixChanged;
+        modelMatrix    = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
+    }
+
     if (mesh->GetUpdateStatus() == Mesh::UpdateStatus::MeshAlter) {
         // Need to be optimal
         if (mesh->GetModel() != model) {
@@ -51,7 +55,7 @@ void GPUInstance::Update()
             std::copy(model->GetVertices().begin(), model->GetVertices().end(), verticesArray.end());
             modelOffset.emplace(model, std::make_pair(indexOffset, vertexOffset));
         }
-        instanceStatus = Status::Changed;
+        instanceStatus = Status::ModelChanged;
 
         // MaterialId Update if material add? or delete
     }

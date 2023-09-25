@@ -1,0 +1,55 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+struct IndirectCommand {
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int  vertexOffset;
+    uint firstInstance;
+};
+
+layout(set = 0, binding = 0) buffer DrawCommandBuffer 
+{
+    IndirectCommand commands[];
+} drawCommandBuffer;
+
+struct GPUInstanceData
+{
+    mat4 modelMatrix;
+    vec3 AABBLocalMin;
+    uint indexCount;
+    vec3 AABBLocalMax;
+    uint indexOffset;
+    uint vertexCount;
+    uint vertexOffset;
+    uint instanceID;
+    uint materialID;
+};
+
+layout(set = 0, binding = 1) buffer InstanceDatas
+{
+    GPUInstanceData instanceData[];
+} instanceDatas;
+
+layout(push_constant) uniform PushObject {
+	uint instanceCount;
+} object;
+
+void main() {
+    int idx = int(gl_GlobalInvocationID.x);
+    if (idx >= int(object.instanceCount)) return;
+
+    GPUInstanceData instance = instanceDatas.instanceData[idx];
+    IndirectCommand cmd;
+    cmd.indexCount = instance.indexCount;
+    cmd.instanceCount = 1;
+    cmd.firstIndex = instance.indexOffset;
+    cmd.vertexOffset = int(instance.vertexOffset);
+    cmd.firstInstance = instance.instanceID;
+
+    drawCommandBuffer.commands[idx] = cmd;
+}

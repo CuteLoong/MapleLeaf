@@ -10,8 +10,9 @@ class GPUInstance
 public:
     enum class Status
     {
-        Normal,
-        Changed
+        None = 0,
+        ModelChanged = 1,
+        MatrixChanged = 2
     };
 
     GPUInstance() = default;

@@ -59,7 +59,7 @@ void PipelineCompute::CreateShaderProgram()
     if (!fileLoaded) throw std::runtime_error("Could not create pipeline, missing shader stage");
 
     auto stageFlag    = Shader::GetShaderStage(shaderStage);
-    auto shaderModule = shader->CreateShaderModule(shaderStage, *fileLoaded, defineBlock.str(), stageFlag);
+    shaderModule = shader->CreateShaderModule(shaderStage, *fileLoaded, defineBlock.str(), stageFlag);
 
     shaderStageCreateInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStageCreateInfo.stage  = stageFlag;
