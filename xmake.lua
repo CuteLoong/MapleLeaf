@@ -25,7 +25,6 @@ set_configvar("MAPLELEAF_PIPELINE_DEBUG", false)
 set_configvar("MAPLELEAF_VALIDATION_DEBUG", true)
 set_configvar("MAPLELEAF_DESCRIPTOR_DEBUG", false)
 set_configvar("MAPLELEAF_RENDERSTAGE_DEBUG", false)
-set_configvar("STEREORENDERING", false)
 
 set_configdir("Config") 
 add_configfiles("./config.h.in")
@@ -99,6 +98,7 @@ target("Core")
     "Core/Files/*.cpp", 
     "Core/Models/*.cpp", 
     "Core/Materials/*.cpp", 
+    "Core/Resources/*.cpp", 
     "Core/Meshes/*.cpp", 
     "Core/Scenes/*.cpp", 
     "Core/Scenes/Light/*.cpp", 

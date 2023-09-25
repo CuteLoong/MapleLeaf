@@ -49,7 +49,6 @@ void GPUScene::Start()
             MaterialData(material.baseColor, material.metalic, material.roughness, material.baseColorTex, material.normalTex, material.materialTex));
     }
 
-
     SetIndices(GPUInstance::indicesArray);
     SetVertices(GPUInstance::verticesArray);
 }
@@ -59,22 +58,36 @@ void GPUScene::Update()
 #ifdef MAPLELEAF_GPUSCENE_DEBUG
     auto debugStart = Time::Now();
 #endif
-    // TODO UpdateMaterial
+    // Now only instance alter, e.g. instance update but not add or remove
+    // TODO UpdateMaterial and instance Add or Delete
 
     bool UpdateGPUScene = false;
-    drawCommands.clear();
-    for (auto& instance : instances) {
+    for (uint32_t i = 0; i < instances.size(); i++) {
+        GPUInstance& instance = instances[i];
         instance.Update();
-        UpdateGPUScene |= (instance.GetInstanceStatus() == GPUInstance::Status::Changed);
 
-        VkDrawIndexedIndirectCommand indirectCmd = {};
-        indirectCmd.firstIndex                   = instance.indexOffset;
-        indirectCmd.firstInstance                = instance.instanceID;
-        indirectCmd.indexCount                   = instance.indexCount;
-        indirectCmd.instanceCount                = 1;
-        indirectCmd.vertexOffset                 = instance.vertexOffset;
+        if (instance.GetInstanceStatus() == GPUInstance::Status::ModelChanged || instance.GetInstanceStatus() == GPUInstance::Status::MatrixChanged) {
+            instancesData[i] = InstanceData(instance.modelMatrix,
+                                            instance.AABBLocalMin,
+                                            instance.indexCount,
+                                            instance.AABBLocalMax,
+                                            instance.indexOffset,
+                                            instance.vertexCount,
+                                            instance.vertexOffset,
+                                            instance.instanceID,
+                                            instance.materialID);
+        }
 
-        drawCommands.push_back(indirectCmd);
+        UpdateGPUScene |= (instance.GetInstanceStatus() == GPUInstance::Status::ModelChanged);
+
+        // VkDrawIndexedIndirectCommand indirectCmd = {};
+        // indirectCmd.firstIndex                   = instance.indexOffset;
+        // indirectCmd.firstInstance                = instance.instanceID;
+        // indirectCmd.indexCount                   = instance.indexCount;
+        // indirectCmd.instanceCount                = 1;
+        // indirectCmd.vertexOffset                 = instance.vertexOffset;
+
+        // drawCommands.push_back(indirectCmd);
     }
 
     if (UpdateGPUScene) {
@@ -86,52 +99,41 @@ void GPUScene::Update()
     Log::Out("Update Vertices costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
-}
 
-bool GPUScene::cmdRender(const CommandBuffer& commandBuffer, UniformHandler& uniformScene, PipelineGraphics& pipeline)
-{
-    drawCommandBufferHandler.Push(drawCommands.data(), sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size());
     instancesHandler.Push(instancesData.data(), sizeof(InstanceData) * instancesData.size());
     materialsHandler.Push(materialsData.data(), sizeof(MaterialData) * materialsData.size());
+#ifdef MAPLELEAF_GPUSCENE_DEBUG
+    Log::Out("Update StorageBuffer Data costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
+}
 
-    descriptorSet.Push("UniformScene", uniformScene);
-    descriptorSet.Push("DrawCommandBuffer", drawCommandBufferHandler);
+void GPUScene::PushDescriptors(DescriptorsHandler& descriptorSet)
+{
     descriptorSet.Push("InstanceDatas", instancesHandler);
     descriptorSet.Push("MaterialDatas", materialsHandler);
 
     for (int i = 0; i < GPUMaterial::images.size(); i++) {
         descriptorSet.Push("ImageSamplers", GPUMaterial::images[i], i);
     }
+}
 
-    if (!descriptorSet.Update(pipeline)) return false;
-    pipeline.BindPipeline(commandBuffer);
-
-    descriptorSet.BindDescriptor(commandBuffer, pipeline);
-
+bool GPUScene::cmdRender(const CommandBuffer& commandBuffer, std::unique_ptr<IndirectBuffer>& indirectBuffer)
+{
+    if (indirectBuffer == nullptr) return false;
+    uint32_t drawCount = indirectBuffer->GetSize() / sizeof(VkDrawIndexedIndirectCommand);
     if (vertexBuffer && indexBuffer) {
         VkBuffer     vertexBuffers[1] = {vertexBuffer->GetBuffer()};
         VkDeviceSize offsets[1]       = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, indexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-        vkCmdDrawIndexedIndirect(
-            commandBuffer, drawCommandBufferHandler.GetIndirectBuffer()->GetBuffer(), 0, drawCommands.size(), sizeof(VkDrawIndexedIndirectCommand));
+        vkCmdDrawIndexedIndirect(commandBuffer, indirectBuffer->GetBuffer(), 0, drawCount, sizeof(VkDrawIndexedIndirectCommand));
     }
     else {
         return false;
     }
 
     return true;
-    // drawCommandBufferHandler.Push(drawCommands.data(), sizeof(VkDrawIndirectCommand) * drawCommands.size());
-    // uint32_t drawCount = drawCommands.size();
-
-    // drawCountHandler.Push(&drawCount, sizeof(uint32_t));
-    // descriptorSet.Push("UniformScene", uniformScene);
-    // descriptorSet.Push("DrawCommandBuffer", drawCommandBufferHandler);
-    // descriptorSet.Push("DrawCount", drawCountHandler);
-
-    // if (!descriptorSet.Update(pipeline)) return false;
-
-    // descriptorSet.BindDescriptor(commandBuffer, pipeline);
 }
 
 void GPUScene::SetVertices(const std::vector<Vertex3D>& vertices)

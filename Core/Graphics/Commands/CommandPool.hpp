@@ -1,25 +1,23 @@
 #pragma once
 
 #include "volk.h"
-#include "vulkan/vulkan_core.h"
-#include <stdint.h>
-
+#include <thread>
 
 namespace MapleLeaf {
 class CommandPool
 {
 public:
-    explicit CommandPool(const uint32_t id);
+    explicit CommandPool(const std::thread::id& threadId = std::this_thread::get_id());
 
     ~CommandPool();
 
     operator const VkCommandPool&() const { return commandPool; }
 
-    const VkCommandPool& GetCommandPool() const { return commandPool; }
-    const uint32_t&      GetPoolId() const { return poolId; }
+    const VkCommandPool&   GetCommandPool() const { return commandPool; }
+    const std::thread::id& GetPoolId() const { return threadId; }
 
 private:
-    uint32_t      poolId;
-    VkCommandPool commandPool = VK_NULL_HANDLE;
+    std::thread::id threadId;
+    VkCommandPool   commandPool = VK_NULL_HANDLE;
 };
 }   // namespace MapleLeaf

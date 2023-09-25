@@ -2,8 +2,8 @@
 #include "Graphics.hpp"
 
 namespace MapleLeaf {
-CommandPool::CommandPool(const uint32_t id)
-    : poolId(id)
+CommandPool::CommandPool(const std::thread::id& threadId)
+    : threadId(threadId)
 {
     auto logicalDevice  = Graphics::Get()->GetLogicalDevice();
     auto graphicsFamily = logicalDevice->GetGraphicsFamily();

@@ -20,7 +20,9 @@ Image::~Image()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
     auto graphicsQueue = logicalDevice->GetGraphicsQueue();
+    auto computeQueue = logicalDevice->GetComputeQueue();
     Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));
+    Graphics::CheckVk(vkQueueWaitIdle(computeQueue));
     
     vkDestroyImageView(*logicalDevice, view, nullptr);
     vkDestroySampler(*logicalDevice, sampler, nullptr);

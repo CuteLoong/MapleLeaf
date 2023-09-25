@@ -13,6 +13,15 @@ public:
 
     void CmdRender(const CommandBuffer& commandBuffer, const glm::uvec2& extent) const;
 
+    bool                                             IsPushDescriptors() const override { return pushDescriptors; }
+    const Shader*                                    GetShader() const override { return shader.get(); }
+    const std::map<uint32_t, VkDescriptorSetLayout>& GetBindlessDescriptorSetLayouts() const override { return descriptorSetBindlessLayouts; }
+    const std::map<uint32_t, VkDescriptorSetLayout>& GetNormalDescriptorSetLayouts() const override { return descriptorSetNormalLayouts; }
+    const VkDescriptorPool&                          GetDescriptorPool() const override { return descriptorPool; }
+    const VkPipeline&                                GetPipeline() const override { return pipeline; }
+    const VkPipelineLayout&                          GetPipelineLayout() const override { return pipelineLayout; }
+    const VkPipelineBindPoint&                       GetPipelineBindPoint() const override { return pipelineBindPoint; }
+
 private:
     void CreateShaderProgram();
     void CreateDescriptorLayout();
@@ -38,7 +47,5 @@ private:
     VkPipeline          pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout    pipelineLayout = VK_NULL_HANDLE;
     VkPipelineBindPoint pipelineBindPoint;
-
-    
 };
 }   // namespace MapleLeaf

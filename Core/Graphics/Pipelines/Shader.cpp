@@ -345,7 +345,7 @@ VkShaderModule Shader::CreateShaderModule(const std::filesystem::path& moduleNam
     program.buildReflection();
 
     for (uint32_t dim = 0; dim < 3; ++dim) {
-        if (auto localSize = program.getLocalSize(dim); localSize > 1) localSizes[dim] = localSize;
+        if (auto localSize = program.getLocalSize(dim); localSize >= 1) localSizes[dim] = localSize;
     }
 
     for (int32_t i = program.getNumLiveUniformBlocks() - 1; i >= 0; i--) LoadUniformBlock(program, moduleFlag, i);

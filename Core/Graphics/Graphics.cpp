@@ -26,8 +26,11 @@ Graphics::Graphics()
 Graphics::~Graphics()
 {
     auto graphicsQueue = logicalDevice->GetGraphicsQueue();
+    auto computeQueue  = logicalDevice->GetComputeQueue();
 
     CheckVk(vkQueueWaitIdle(graphicsQueue));
+    CheckVk(vkQueueWaitIdle(computeQueue));
+
     renderer  = nullptr;
     swapchain = nullptr;
     surface   = nullptr;
@@ -35,13 +38,13 @@ Graphics::~Graphics()
     glslang::FinalizeProcess();
     vkDestroyPipelineCache(*logicalDevice, pipelineCache, nullptr);
 
-    commandPool = nullptr;
+    commandPools.clear();
 }
 
-const std::shared_ptr<CommandPool>& Graphics::GetCommandPool()
+const std::shared_ptr<CommandPool>& Graphics::GetCommandPool(const std::thread::id& threadId)
 {
-    if (!commandPool) commandPool = std::make_shared<CommandPool>(0);
-    return commandPool;
+    if (auto it = commandPools.find(threadId); it != commandPools.end()) return it->second;
+    return commandPools.emplace(threadId, std::make_shared<CommandPool>(threadId)).first->second;
 }
 
 void Graphics::CreatePipelineCache()
@@ -111,6 +114,17 @@ void Graphics::Update()
             }
             EndRenderpass(*renderStage);
             stage.first++;
+        }
+    }
+
+    // Purges unused command pools.
+    if (elapsedPurge.GetElapsed() != 0) {
+        for (auto it = commandPools.begin(); it != commandPools.end();) {
+            if ((*it).second.use_count() <= 1) {
+                it = commandPools.erase(it);
+                continue;
+            }
+            ++it;
         }
     }
 }
@@ -184,10 +198,12 @@ void Graphics::RecreateCommandBuffers()
 void Graphics::RecreatePass(RenderStage& renderStage)
 {
     auto graphicsQueue = logicalDevice->GetGraphicsQueue();
+    // auto computeQueue = logicalDevice->GetComputeQueue();
 
     VkExtent2D displayExtent = {Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y};
 
     CheckVk(vkQueueWaitIdle(graphicsQueue));
+    // CheckVk(vkQueueWaitIdle(computeQueue));
 
     if (swapchain) {
         if (renderStage.HasSwapchain() && (surface->GetFramebufferResized() || !swapchain->IsSameExtent(displayExtent))) {

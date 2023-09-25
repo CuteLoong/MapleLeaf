@@ -3,7 +3,6 @@
 #include "NonCopyable.hpp"
 #include <typeindex>
 
-
 namespace MapleLeaf {
 class Resource : NonCopyable
 {
