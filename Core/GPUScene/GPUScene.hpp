@@ -1,9 +1,11 @@
 #pragma once
 
 #include "DescriptorHandler.hpp"
+#include "Future.hpp"
 #include "GPUInstance.hpp"
 #include "GPUMaterial.hpp"
-#include "IndirectHandler.hpp"
+#include "PipelineCompute.hpp"
+#include "Resources.hpp"
 #include "StorageHandler.hpp"
 
 namespace MapleLeaf {
@@ -23,11 +25,13 @@ public:
     void SetIndices(const std::vector<uint32_t>& indices);
 
     void PushDescriptors(DescriptorsHandler& descriptorSet);
-    bool cmdRender(const CommandBuffer& commandBuffer, std::unique_ptr<IndirectBuffer>& indirectBuffer);
+    bool cmdRender(const CommandBuffer& commandBuffer);
 
     const StorageHandler& GetInstanceDatasHandler() const { return instancesHandler; }
 
     uint32_t GetInstanceCount() const { return instances.size(); }
+
+    static std::unique_ptr<IndirectBuffer> ComputeFrustumCulling(const StorageBuffer* instanceBuffer);
 
 private:
     struct InstanceData
@@ -90,6 +94,7 @@ private:
 
     StorageHandler     instancesHandler;
     StorageHandler     materialsHandler;
-    DescriptorsHandler descriptorSet;
+
+    Future<std::unique_ptr<IndirectBuffer>> DrawCulling;
 };
 }   // namespace MapleLeaf

@@ -106,28 +106,31 @@ void GPUScene::Update()
     Log::Out("Update StorageBuffer Data costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
+
+    DrawCulling = Resources::Get()->GetThreadPool().Enqueue(ComputeFrustumCulling, instancesHandler.GetStorageBuffer());
 }
 
 void GPUScene::PushDescriptors(DescriptorsHandler& descriptorSet)
 {
     descriptorSet.Push("InstanceDatas", instancesHandler);
     descriptorSet.Push("MaterialDatas", materialsHandler);
+    descriptorSet.Push("DrawCommandBuffer", *DrawCulling);
 
     for (int i = 0; i < GPUMaterial::images.size(); i++) {
         descriptorSet.Push("ImageSamplers", GPUMaterial::images[i], i);
     }
 }
 
-bool GPUScene::cmdRender(const CommandBuffer& commandBuffer, std::unique_ptr<IndirectBuffer>& indirectBuffer)
+bool GPUScene::cmdRender(const CommandBuffer& commandBuffer)
 {
-    if (indirectBuffer == nullptr) return false;
-    uint32_t drawCount = indirectBuffer->GetSize() / sizeof(VkDrawIndexedIndirectCommand);
+    if ((*DrawCulling) == nullptr) return false;
+    uint32_t drawCount = (*DrawCulling)->GetSize() / sizeof(VkDrawIndexedIndirectCommand);
     if (vertexBuffer && indexBuffer) {
         VkBuffer     vertexBuffers[1] = {vertexBuffer->GetBuffer()};
         VkDeviceSize offsets[1]       = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, indexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-        vkCmdDrawIndexedIndirect(commandBuffer, indirectBuffer->GetBuffer(), 0, drawCount, sizeof(VkDrawIndexedIndirectCommand));
+        vkCmdDrawIndexedIndirect(commandBuffer, (*DrawCulling)->GetBuffer(), 0, drawCount, sizeof(VkDrawIndexedIndirectCommand));
     }
     else {
         return false;
@@ -180,5 +183,40 @@ void GPUScene::SetIndices(const std::vector<uint32_t>& indices)
     vkCmdCopyBuffer(commandBuffer, indexStaging.GetBuffer(), indexBuffer->GetBuffer(), 1, &copyRegion);
 
     commandBuffer.SubmitIdle();
+}
+
+std::unique_ptr<IndirectBuffer> GPUScene::ComputeFrustumCulling(const StorageBuffer* instanceBuffer)
+{
+    if (!instanceBuffer) return nullptr;
+    auto gpuScene = Scenes::Get()->GetScene()->GetGpuScene();
+    auto camera   = Scenes::Get()->GetScene()->GetCamera();
+
+    uint32_t instanceCount = gpuScene->GetInstanceCount();
+
+    std::unique_ptr<IndirectBuffer> indirectBuffer = std::make_unique<IndirectBuffer>(instanceCount * sizeof(VkDrawIndexedIndirectCommand));
+
+    CommandBuffer   commandBuffer(true, VK_QUEUE_COMPUTE_BIT);
+    PipelineCompute compute("F:/MapleLeaf/Resources/Shader/GPUDriven/Culling.comp");
+
+    compute.BindPipeline(commandBuffer);
+
+    DescriptorsHandler descriptorSet(compute);
+    PushHandler        pushHandler(*compute.GetShader()->GetUniformBlock("PushObject"));
+    pushHandler.Push("projection", camera->GetProjectionMatrix());
+    pushHandler.Push("view", camera->GetViewMatrix());
+    pushHandler.Push("cameraPos", camera->GetPosition());
+    pushHandler.Push("instanceCount", instanceCount);
+
+    descriptorSet.Push("InstanceDatas", instanceBuffer);
+    descriptorSet.Push("DrawCommandBuffer", indirectBuffer);
+    descriptorSet.Push("PushObject", pushHandler);
+    descriptorSet.Update(compute);
+
+    descriptorSet.BindDescriptor(commandBuffer, compute);
+    pushHandler.BindPush(commandBuffer, compute);
+    compute.CmdRender(commandBuffer, glm::uvec2(instanceCount, 1));
+    commandBuffer.SubmitIdle();
+
+    return indirectBuffer;
 }
 }   // namespace MapleLeaf
