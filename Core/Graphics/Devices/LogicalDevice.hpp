@@ -40,10 +40,10 @@ private:
     VkPhysicalDeviceFeatures enabledFeatures = {};
 
     VkQueueFlags            supportedQueues = {};
-    std::optional<uint32_t> graphicsFamily  = 0;
-    std::optional<uint32_t> presentFamily   = 0;
-    std::optional<uint32_t> computeFamily   = 0;
-    std::optional<uint32_t> transferFamily  = 0;
+    std::optional<uint32_t> graphicsFamily  = std::nullopt;
+    std::optional<uint32_t> presentFamily   = std::nullopt;
+    std::optional<uint32_t> computeFamily   = std::nullopt;
+    std::optional<uint32_t> transferFamily  = std::nullopt;
 
     VkQueue graphicsQueue = VK_NULL_HANDLE;
     VkQueue presentQueue  = VK_NULL_HANDLE;

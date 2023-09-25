@@ -59,14 +59,14 @@ void LogicalDevice::CreateQueueIndices()
 void LogicalDevice::CreateLogicalDevice()
 {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    float                                queuePriorities[1] = {0.0f};
+    std::vector<float>                   queuePriorities(3, 0.0f);   // This is the special case where all queues are from the same queue group
 
     if (supportedQueues & VK_QUEUE_GRAPHICS_BIT) {
         VkDeviceQueueCreateInfo graphicsQueueCreateInfo = {};
         graphicsQueueCreateInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         graphicsQueueCreateInfo.queueFamilyIndex        = graphicsFamily.value();
-        graphicsQueueCreateInfo.queueCount              = 1;
-        graphicsQueueCreateInfo.pQueuePriorities        = queuePriorities;
+        graphicsQueueCreateInfo.queueCount              = queuePriorities.size();
+        graphicsQueueCreateInfo.pQueuePriorities        = queuePriorities.data();
         queueCreateInfos.emplace_back(graphicsQueueCreateInfo);
     }
     else {
@@ -77,8 +77,8 @@ void LogicalDevice::CreateLogicalDevice()
         VkDeviceQueueCreateInfo computeQueueCreateInfo = {};
         computeQueueCreateInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         computeQueueCreateInfo.queueFamilyIndex        = computeFamily.value();
-        computeQueueCreateInfo.queueCount              = 1;
-        computeQueueCreateInfo.pQueuePriorities        = queuePriorities;
+        computeQueueCreateInfo.queueCount              = queuePriorities.size();
+        computeQueueCreateInfo.pQueuePriorities        = queuePriorities.data();
         queueCreateInfos.emplace_back(computeQueueCreateInfo);
     }
     else {
@@ -89,8 +89,8 @@ void LogicalDevice::CreateLogicalDevice()
         VkDeviceQueueCreateInfo transferQueueCreateInfo = {};
         transferQueueCreateInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         transferQueueCreateInfo.queueFamilyIndex        = transferFamily.value();
-        transferQueueCreateInfo.queueCount              = 1;
-        transferQueueCreateInfo.pQueuePriorities        = queuePriorities;
+        transferQueueCreateInfo.queueCount              = queuePriorities.size();
+        transferQueueCreateInfo.pQueuePriorities        = queuePriorities.data();
         queueCreateInfos.emplace_back(transferQueueCreateInfo);
     }
     else {
@@ -135,9 +135,9 @@ void LogicalDevice::CreateLogicalDevice()
     indexingFeatures.pNext                                         = nullptr;
 
     VkPhysicalDeviceMaintenance4Features maintenance4Features = {};
-    maintenance4Features.sType                            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
-    maintenance4Features.maintenance4                     = VK_TRUE;
-    maintenance4Features.pNext                            = &indexingFeatures;
+    maintenance4Features.sType                                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
+    maintenance4Features.maintenance4                         = VK_TRUE;
+    maintenance4Features.pNext                                = &indexingFeatures;
 
     deviceCreatepNextChain     = &maintenance4Features;
     extensionFeatures.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -162,7 +162,7 @@ void LogicalDevice::CreateLogicalDevice()
 
     vkGetDeviceQueue(logicalDevice, graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(logicalDevice, presentFamily.value(), 0, &presentQueue);
-    vkGetDeviceQueue(logicalDevice, computeFamily.value(), 0, &computeQueue);
-    vkGetDeviceQueue(logicalDevice, transferFamily.value(), 0, &transferQueue);
+    vkGetDeviceQueue(logicalDevice, computeFamily.value(), 1, &computeQueue);
+    vkGetDeviceQueue(logicalDevice, transferFamily.value(), 2, &transferQueue);
 }
 }   // namespace MapleLeaf
