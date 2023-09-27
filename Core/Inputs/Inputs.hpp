@@ -4,13 +4,14 @@
 #include "Engine.hpp"
 #include "Graphics.hpp"
 #include "KeyEnums.hpp"
+#include "Scenes.hpp"
 #include "boost/signals2.hpp"
 
 namespace MapleLeaf {
 
 class Inputs : public Module::Registrar<Inputs>
 {
-    inline static const bool Registered = Register(Stage::Pre, Requires<Devices, Graphics>());
+    inline static const bool Registered = Register(Stage::Pre, Requires<Devices, Graphics,Scenes>());
 
 public:
     Inputs();

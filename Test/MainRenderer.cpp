@@ -12,7 +12,7 @@ MainRenderer::MainRenderer()
 {
     std::vector<Attachment> renderpassAttachments0 = {{0, "shadows", Attachment::Type::Depth, false}};
 
-    std::vector<SubpassType> renderpassSubpasses0 = {{0, {}, {0}}};
+    std::vector<SubpassType> renderpassSubpasses0 = {{0, SubpassType::Type::Graphic, {}, {0}}};
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments0, renderpassSubpasses0, Viewport({4096, 4096})));
 
     // // attachment 一定不能跨index,必须要是连续的,不然会导致framebuffer读取view时索引越界,且renderpass的attachment索引也会对不上
@@ -24,7 +24,7 @@ MainRenderer::MainRenderer()
                                                   {5, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                   {6, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses = {{0, {}, {0, 2, 3, 4, 5}}, {1, {2, 3, 4, 5}, {0, 1}}};
+    std::vector<SubpassType> renderpassSubpasses = {{0, SubpassType::Type::Graphic, {}, {0, 2, 3, 4, 5}}, {1, SubpassType::Type::Graphic, {2, 3, 4, 5}, {0, 1}}};
 
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments, renderpassSubpasses));
 }
