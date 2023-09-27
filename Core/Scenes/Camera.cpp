@@ -4,7 +4,8 @@
 #include "Scenes.hpp"
 
 namespace MapleLeaf {
-void Camera::Start() {
+void Camera::Start()
+{
     UpdateByTransform();
 }
 void Camera::Update()
@@ -19,6 +20,9 @@ void Camera::Update()
 
     viewMatrix       = glm::lookAt(position, position + forward, up);
     projectionMatrix = glm::perspective(fieldOfView, aspectRatio, nearPlane, farPlane);
+
+    invViewMatrix       = glm::inverse(viewMatrix);
+    invProjectionMatrix = glm::inverse(projectionMatrix);
 }
 
 void Camera::UpdateByTransform()
@@ -36,7 +40,7 @@ void Camera::UpdateByInput()
 
     if (!Scenes::Get()->GetScene()->IsPaused()) {
         auto positionDelta = Inputs::Get()->GetPositionDelta();
-        auto rotationDelta = Inputs::Get()->GetRotationDelta(); // x---yaw y---pitch
+        auto rotationDelta = Inputs::Get()->GetRotationDelta();   // x---yaw y---pitch
         Inputs::Get()->ResetPositionDelta();
         Inputs::Get()->ResetRotationDelta();
 
