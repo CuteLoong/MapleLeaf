@@ -31,26 +31,28 @@ layout(set=0, binding = 2) buffer BufferDirectionalLights {
 	DirectionalLight lights[];
 } bufferDirectionalLights;
 
-layout(set=0, input_attachment_index = 0, binding = 3) uniform subpassInput inPosition;
-layout(set=0, input_attachment_index = 1, binding = 4) uniform subpassInput inDiffuse;
-layout(set=0, input_attachment_index = 2, binding = 5) uniform subpassInput inNormal;
-layout(set=0, input_attachment_index = 3, binding = 6) uniform subpassInput inMaterial;
+layout(set=0, binding = 3) uniform sampler2D inPosition;
+layout(set=0, binding = 4) uniform sampler2D inDiffuse;
+layout(set=0, binding = 5) uniform sampler2D inNormal;
+layout(set=0, binding = 6) uniform sampler2D inMaterial;
 layout(set=0, binding = 7) uniform sampler2D inShadowMap;
 
-// layout(location = 0) in vec2 inUV;
+layout(location = 0) in vec2 inUV;
 
 layout(location = 0) out vec4 outColour;
 
 #include "Lighting.glsl"
 
 void main() {
-	vec3 worldPosition = subpassLoad(inPosition).rgb;
+	vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
+
+	vec3 worldPosition = texture(inPosition, uv).rgb;
 	vec4 screenPosition = scene.view * vec4(worldPosition, 1.0f);
 	vec4 shadowCoords = scene.shadowMatrix * vec4(worldPosition, 1.0f);
 
-	vec3 diffuse = subpassLoad(inDiffuse).rgb;
-	vec3 normal = subpassLoad(inNormal).rgb;
-	vec3 material = subpassLoad(inMaterial).rgb;
+	vec3 diffuse = texture(inDiffuse, uv).rgb;
+	vec3 normal = texture(inNormal, uv).rgb;
+	vec3 material = texture(inMaterial, uv).rgb;
 
 	float metallic = material.r;
 	float roughness = material.g;

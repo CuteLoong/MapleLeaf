@@ -7,7 +7,9 @@
 #include "MeshesSubrender.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
+#include "SSAOSubrender.hpp"
 #include "ShadowSubrender.hpp"
+#include "vulkan/vulkan_core.h"
 
 
 namespace Test {
@@ -19,26 +21,45 @@ GPURenderer::GPURenderer()
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments0, renderpassSubpasses0, Viewport({4096, 4096})));
 
     // attachment 一定不能跨index,必须要是连续的,不然会导致framebuffer读取view时索引越界,且renderpass的attachment索引也会对不上
-    std::vector<Attachment> renderpassAttachments{{0, "depth", Attachment::Type::Depth, false},
-                                                  {1, "swapchain", Attachment::Type::Swapchain, false},
-                                                  {2, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                  {3, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                  {4, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                  {5, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                  {6, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                  {7, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+    std::vector<Attachment> renderpassAttachments1{{0, "depth", Attachment::Type::Depth, false},
+                                                   {1, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                   {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                   {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses = {{0, SubpassType::Type::Graphic, {}, {0, 2, 3, 4, 5}}, {1, SubpassType::Type::Graphic, {2, 3, 4, 5}, {0, 1}}, {2, SubpassType::Type::Graphic, {}, {0, 1}}};
+    std::vector<SubpassType> renderpassSubpasses1 = {{0,
+                                                      SubpassType::Type::Graphic,
+                                                      {},
+                                                      {
+                                                          0,
+                                                          1,
+                                                          2,
+                                                          3,
+                                                          4,
+                                                      }}};
 
-    AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments, renderpassSubpasses));
+    AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments1, renderpassSubpasses1));
+
+    std::vector<Attachment> renderpassAttachments2{{0, "swapchain", Attachment::Type::Swapchain, false},
+                                                   {1, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                   {2, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+
+    std::vector<SubpassType> renderpassSubpasses2 = {
+        {0, SubpassType::Type::Graphic, {}, {2}}, {1, SubpassType::Type::Graphic, {2}, {0}}, {2, SubpassType::Type::Graphic, {}, {0}}};
+
+    AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments2, renderpassSubpasses2));
+    
 }
 
 void GPURenderer::Start()
 {
     AddSubrender<ShadowSubrender>({0, 0});
+
     AddSubrender<IndirectDrawSubrender>({1, 0});
-    AddSubrender<DeferredSubrender>({1, 1});
-    AddSubrender<ImguiSubrender>({1, 2});
+
+    AddSubrender<SSAOSubrender>({2, 0});
+    AddSubrender<DeferredSubrender>({2, 1});
+    AddSubrender<ImguiSubrender>({2, 2});
 }
 
 void GPURenderer::Update()

@@ -12181,7 +12181,7 @@
 			"perspective":{
 				"aspectRatio":1.7777777777777777,
 				"yfov":0.5235987901687622,
-				"zfar":200,
+				"zfar":120,
 				"znear":0.10000000149011612
 			},
 			"type":"perspective"

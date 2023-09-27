@@ -43,7 +43,6 @@ void main()
 	int normalTex = materialData.normalTex;
 	int materialTex = materialData.materialTex;
 
-	// diffuse = texture(ImageSamplers[0], inUV);
 	if(baseColorTex != -1) diffuse = texture(ImageSamplers[baseColorTex], inUV);
 
 	if(materialTex != -1) {
@@ -72,8 +71,4 @@ void main()
 	outDiffuse = diffuse;
 	outNormal = vec4(normalize(normal), 1.0f);
 	outMaterial = vec4(material, 1.0f);
-	
-	// outColour = vec4(outDiffuse.rgb, 1.0);
-	// outColour = vec4(1.0);
-
 }

@@ -67,6 +67,9 @@ public:
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
+    const glm::mat4& GetInverseViewMatrix() const { return invViewMatrix; }
+    const glm::mat4& GetInverseProjectionMatrix() const { return invProjectionMatrix; }
+
 protected:
     std::string name;
 
@@ -82,5 +85,7 @@ protected:
 
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+    glm::mat4 invViewMatrix;
+    glm::mat4 invProjectionMatrix;
 };
 }   // namespace MapleLeaf
