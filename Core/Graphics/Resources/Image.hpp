@@ -31,7 +31,7 @@ public:
     VkFilter              GetFilter() const { return filter; }
     VkSamplerAddressMode  GetAddressMode() const { return addressMode; }
     VkImageLayout         GetLayout() const { return layout; }
-    const VkImage&        GetImage() { return image; }
+    const VkImage&        GetImage() const { return image; }
     const VkDeviceMemory& GetMemory() { return memory; }
     const VkSampler&      GetSampler() const { return sampler; }
     const VkImageView&    GetView() const { return view; }

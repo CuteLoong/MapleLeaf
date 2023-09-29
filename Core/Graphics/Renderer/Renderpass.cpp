@@ -26,11 +26,11 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
         switch (attachment.GetType()) {
         case Attachment::Type::Image:
-            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL_KHR;   // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;   // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             attachmentDescription.format      = attachment.GetFormat();
             break;
         case Attachment::Type::Depth:
-            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL_KHR;   // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;   // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
             attachmentDescription.format      = depthFormat;
             break;
         case Attachment::Type::Swapchain:
@@ -47,6 +47,8 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
     std::vector<VkSubpassDependency>                 dependencies;
 
     for (const auto& subpassType : renderStage.GetSubpasses()) {
+        if (subpassType.GetType() == SubpassType::Type::Compute) continue;
+        
         std::vector<VkAttachmentReference> subpassOutputColorAttachments;
         std::vector<VkAttachmentReference> subpassInputColorAttachments;
 
@@ -62,7 +64,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
             VkAttachmentReference attachmentReference = {};
             attachmentReference.attachment            = attachment->GetBinding();
-            attachmentReference.layout                = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL_KHR;   // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            attachmentReference.layout                = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;   // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             subpassInputColorAttachments.emplace_back(attachmentReference);
         }
         for (const auto& attachmentBinding : subpassType.GetOutputAttachmentBindings()) {
@@ -80,7 +82,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
             VkAttachmentReference attachmentReference = {};
             attachmentReference.attachment            = attachment->GetBinding();
-            attachmentReference.layout                = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;   // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+            attachmentReference.layout                = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
             subpassOutputColorAttachments.emplace_back(attachmentReference);
         }
 
@@ -91,10 +93,8 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
         // Subpass dependencies.
         VkSubpassDependency subpassDependency = {};
 
-        subpassDependency.srcStageMask = subpassType.GetType() == SubpassType::Type::Compute ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
-                                                                                             : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDependency.dstStageMask =
-            subpassType.GetType() == SubpassType::Type::Compute ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
         subpassDependency.srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         subpassDependency.dstAccessMask   = VK_ACCESS_SHADER_READ_BIT;
@@ -103,8 +103,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
         if (subpassType.GetBinding() == 0) {
             subpassDependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
             subpassDependency.srcStageMask  = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-            subpassDependency.dstStageMask  = subpassType.GetType() == SubpassType::Type::Compute ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
-                                                                                                  : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            subpassDependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             subpassDependency.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
             subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         }
@@ -114,8 +113,7 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
 
         if (subpassType.GetBinding() == renderStage.GetSubpasses().size()) {
             subpassDependency.dstSubpass    = VK_SUBPASS_EXTERNAL;
-            subpassDependency.srcStageMask  = subpassType.GetType() == SubpassType::Type::Compute ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
-                                                                                                  : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            subpassDependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             subpassDependency.dstStageMask  = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
             subpassDependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             subpassDependency.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
