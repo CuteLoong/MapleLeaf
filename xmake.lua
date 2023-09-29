@@ -67,7 +67,8 @@ add_includedirs(
 "RenderPass/Shadow",
 "RenderPass/IndirectDraw",
 "RenderPass/Imgui",
-"RenderPass/AO"
+"RenderPass/AO",
+"RenderPass/HiZDraw"
 )
 
 target("RenderPass")
@@ -77,7 +78,8 @@ target("RenderPass")
     "RenderPass/Shadow/*.cpp",
     "RenderPass/IndirectDraw/*.cpp",
     "RenderPass/Imgui/*.cpp",
-    "RenderPass/AO/*.cpp"
+    "RenderPass/AO/*.cpp",
+    "RenderPass/HiZDraw/*.cpp"
     )
 target_end()
 

@@ -121,6 +121,7 @@ void LogicalDevice::CreateLogicalDevice()
         enabledFeatures.samplerAnisotropy = VK_TRUE;
     else
         Log::Warning("Selected GPU does not support sampler anisotropy!\n");
+    
 
     // add bindless feature
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};

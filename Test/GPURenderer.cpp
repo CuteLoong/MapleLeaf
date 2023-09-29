@@ -9,8 +9,7 @@
 #include "RenderStage.hpp"
 #include "SSAOSubrender.hpp"
 #include "ShadowSubrender.hpp"
-#include "vulkan/vulkan_core.h"
-
+#include "HiZDrawSubrender.hpp"
 
 namespace Test {
 GPURenderer::GPURenderer()
@@ -25,7 +24,8 @@ GPURenderer::GPURenderer()
                                                    {1, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                    {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                   {5, "HiZ", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT}};
 
     std::vector<SubpassType> renderpassSubpasses1 = {{0,
                                                       SubpassType::Type::Graphic,
@@ -48,7 +48,6 @@ GPURenderer::GPURenderer()
         {0, SubpassType::Type::Graphic, {}, {2}}, {1, SubpassType::Type::Graphic, {2}, {0}}, {2, SubpassType::Type::Graphic, {}, {0}}};
 
     AddRenderStage(std::make_unique<RenderStage>(renderpassAttachments2, renderpassSubpasses2));
-    
 }
 
 void GPURenderer::Start()
@@ -56,6 +55,8 @@ void GPURenderer::Start()
     AddSubrender<ShadowSubrender>({0, 0});
 
     AddSubrender<IndirectDrawSubrender>({1, 0});
+    AddSubrender<HiZDrawSubrender>({1, 0});
+
 
     AddSubrender<SSAOSubrender>({2, 0});
     AddSubrender<DeferredSubrender>({2, 1});
