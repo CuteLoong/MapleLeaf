@@ -2,6 +2,7 @@
 #include "Color.hpp"
 #include "DefaultMaterial.hpp"
 #include "Devices.hpp"
+#include "Files.hpp"
 #include "Light.hpp"
 #include "SceneGraph.hpp"
 #include "Transform.hpp"
@@ -75,8 +76,8 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
 #ifdef MAPLELEAF_SCENE_DEBUG
     auto debugStart = Time::Now();
 #endif
-
-    if (!std::filesystem::exists(path)) {
+    auto exisitPath = Files::Get()->GetExistPath(path);
+    if (!exisitPath) {
         Log::Error("Failed to open file ", path);
         return;
     }
@@ -98,16 +99,16 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
     Assimp::Importer importer;
     importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeFlags);
 
-    const aiScene* pScene = importer.ReadFile(path.string().c_str(), assimpFlags);
+    const aiScene* pScene = importer.ReadFile(exisitPath->string().c_str(), assimpFlags);
     if (!pScene) Log::Error("Failed to open scene: ", importer.GetErrorString());
 
-    ImporterData data(path, pScene, builder);
+    ImporterData data(exisitPath.value(), pScene, builder);
 
-    auto searchPath = path.parent_path();
+    auto searchPath = exisitPath->parent_path();
 
     ImportMode importMode = ImportMode::Default;
-    if (path.extension() == ".obj") importMode = ImportMode::OBJ;
-    if (path.extension() == ".gltf" || path.extension() == ".glb") importMode = ImportMode::GLTF2;
+    if (exisitPath->extension() == ".obj") importMode = ImportMode::OBJ;
+    if (exisitPath->extension() == ".gltf" || exisitPath->extension() == ".glb") importMode = ImportMode::GLTF2;
 
     CreateAllMaterials(data, searchPath, importMode);
 #ifdef MAPLELEAF_SCENE_DEBUG

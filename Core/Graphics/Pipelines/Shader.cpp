@@ -24,7 +24,7 @@ public:
     IncludeResult* includeLocal(const char* headerName, const char* includerName, size_t inclusionDepth) override
     {
         auto directory  = std::filesystem::path(includerName).parent_path();
-        auto fileLoaded = Files::Read(directory / headerName);
+        auto fileLoaded = Files::Get()->Read(directory / headerName);
 
         if (!fileLoaded) {
             Log::Error("Shader Include could not be loaded: ", std::quoted(headerName), '\n');
@@ -38,7 +38,7 @@ public:
 
     IncludeResult* includeSystem(const char* headerName, const char* includerName, size_t inclusionDepth) override
     {
-        auto fileLoaded = Files::Read(headerName);
+        auto fileLoaded = Files::Get()->Read(headerName);
 
         if (!fileLoaded) {
             Log::Error("Shader Include could not be loaded: ", std::quoted(headerName), '\n');

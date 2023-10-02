@@ -3,7 +3,7 @@
 namespace MapleLeaf {
 ImguiSubrender::ImguiSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"F:/MapleLeaf/Resources/Shader/Imgui/ui.vert", "F:/MapleLeaf/Resources/Shader/Imgui/ui.frag"},
+    , pipeline(pipelineStage, {"Shader/Imgui/ui.vert", "Shader/Imgui/ui.frag"},
                {Imgui::GetVertexInput()}, {}, PipelineGraphics::Mode::Imgui, PipelineGraphics::Depth::None)
 {}
 
@@ -23,4 +23,6 @@ void ImguiSubrender::Render(const CommandBuffer& commandBuffer)
 
     Imgui::Get()->cmdRender(commandBuffer);
 }
+
+void ImguiSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 }   // namespace MapleLeaf

@@ -28,6 +28,7 @@ MainApp::MainApp()
 {
     // Registers file search paths.
     Log::Out("Working Directory: ", std::filesystem::current_path(), '\n');
+	Files::Get()->AddSearchPath("Resources");
 }
 
 MainApp::~MainApp() {}

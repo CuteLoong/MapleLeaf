@@ -196,7 +196,7 @@ std::unique_ptr<IndirectBuffer> GPUScene::ComputeFrustumCulling(const StorageBuf
     std::unique_ptr<IndirectBuffer> indirectBuffer = std::make_unique<IndirectBuffer>(instanceCount * sizeof(VkDrawIndexedIndirectCommand));
 
     CommandBuffer   commandBuffer(true, VK_QUEUE_COMPUTE_BIT);
-    PipelineCompute compute("F:/MapleLeaf/Resources/Shader/GPUDriven/Culling.comp");
+    PipelineCompute compute("Shader/GPUDriven/Culling.comp");
 
     compute.BindPipeline(commandBuffer);
 

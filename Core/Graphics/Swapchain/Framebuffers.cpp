@@ -14,13 +14,14 @@ Framebuffers::Framebuffers(const LogicalDevice& logicalDevice, const Swapchain& 
 
         switch (attachment.GetType()) {
         case Attachment::Type::Image:
-            imageAttachments.emplace_back(std::make_unique<Image2d>(extent,
-                                                                    attachment.GetFormat(),
-                                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
-                                                                    VK_FILTER_LINEAR,
-                                                                    VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-                                                                    attachmentSamples));
+            imageAttachments.emplace_back(
+                std::make_unique<Image2d>(extent,
+                                          attachment.GetFormat(),
+                                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+                                          VK_FILTER_LINEAR,
+                                          VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                                          attachmentSamples));
             break;
         case Attachment::Type::Depth: imageAttachments.emplace_back(nullptr); break;
         case Attachment::Type::Swapchain: imageAttachments.emplace_back(nullptr); break;

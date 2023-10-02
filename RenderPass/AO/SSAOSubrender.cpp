@@ -6,7 +6,7 @@ namespace MapleLeaf {
 SSAOSubrender::SSAOSubrender(const Pipeline::Stage& pipelineStage, SSAOData ssaoData)
     : Subrender(pipelineStage)
     , ssaoData(ssaoData)
-    , pipeline(PipelineGraphics(pipelineStage, {"F:/MapleLeaf/Resources/Shader/AO/SSAO.vert", "F:/MapleLeaf/Resources/Shader/AO/SSAO.frag"}, {},
+    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/SSAO.vert", "Shader/AO/SSAO.frag"}, {},
                                 {GetDefines()}, PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
 {
 
@@ -49,13 +49,15 @@ void SSAOSubrender::Render(const CommandBuffer& commandBuffer)
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
+void SSAOSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+
 std::shared_ptr<Image2d> SSAOSubrender::ComputeNoise(uint32_t width, uint32_t height)
 {
     std::vector<glm::vec4> ssaoNoise(width * height);
 
     for (uint32_t i = 0; i < width * height; i++) {
         glm::vec2 dir = glm::normalize(glm::linearRand(glm::vec2(-1.0f), glm::vec2(1.0f))) * 0.5f + 0.5f;
-        ssaoNoise[i]    = glm::vec4(dir, 0.0f, 0.0f);
+        ssaoNoise[i]  = glm::vec4(dir, 0.0f, 0.0f);
     }
 
     std::unique_ptr<uint8_t[]> dataPtr(new uint8_t[width * height * 4]);

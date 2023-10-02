@@ -12,10 +12,13 @@ elseif is_plat("linux") then
     set_toolchains("clang")
 end
 
+rootPath = os.projectdir():gsub("\\", "\\\\")
+
 add_includedirs("Config/")
-set_configvar("CONFIG_VERSION_MAJOR", 1)
-set_configvar("CONFIG_VERSION_MINOR", 0)
-set_configvar("CONFIG_VERSION_ALTER", 0)
+set_configvar("VERSION_MAJOR", 1)
+set_configvar("VERSION_MINOR", 1)
+set_configvar("VERSION_ALTER", 0)
+set_configvar("PROJECT_DIR", rootPath)
 set_configvar("MAPLELEAF_SCENE_DEBUG", false)
 set_configvar("MAPLELEAF_SHADER_DEBUG", false)
 set_configvar("MAPLELEAF_DEVICE_DEBUG", false)

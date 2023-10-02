@@ -9,7 +9,7 @@ namespace MapleLeaf {
 
 DeferredSubrender::DeferredSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"F:/MapleLeaf/Resources/Shader/Deferred/Deferred.vert", "F:/MapleLeaf/Resources/Shader/Deferred/Deferred.frag"}, {},
+    , pipeline(pipelineStage, {"Shader/Deferred/Deferred.vert", "Shader/Deferred/Deferred.frag"}, {},
                {}, PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None)
 {}
 
@@ -71,4 +71,6 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.BindDescriptor(commandBuffer, pipeline);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
+
+void DeferredSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 }   // namespace MapleLeaf

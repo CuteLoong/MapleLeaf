@@ -97,12 +97,13 @@ void Graphics::Update()
         for (auto& renderStage : renderer->renderStages) {
             renderStage->Update();
 
-            if (!StartRenderpass(*renderStage)) {
+            if (!StartRecordCommandBuffer(*renderStage)) {
                 return;
             }
 
             auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
 
+            StartRenderpass(*renderStage);
             for (const auto& subpass : renderStage->GetSubpasses()) {
                 stage.second = subpass.GetBinding();
 
@@ -113,6 +114,15 @@ void Graphics::Update()
                     vkCmdNextSubpass(*commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
             }
             EndRenderpass(*renderStage);
+
+            // now postRender only support compute pass, TODO add support of default pipeline render
+            for (const auto& subpass : renderStage->GetSubpasses()) {
+                stage.second = subpass.GetBinding();
+
+                // Compute Pass.
+                renderer->subrenderHolder.PostRenderStage(stage, *commandBuffer);
+            }
+            EndRecordCommandBuffer(*renderStage);
             stage.first++;
         }
     }
@@ -198,12 +208,10 @@ void Graphics::RecreateCommandBuffers()
 void Graphics::RecreatePass(RenderStage& renderStage)
 {
     auto graphicsQueue = logicalDevice->GetGraphicsQueue();
-    // auto computeQueue = logicalDevice->GetComputeQueue();
 
     VkExtent2D displayExtent = {Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y};
 
     CheckVk(vkQueueWaitIdle(graphicsQueue));
-    // CheckVk(vkQueueWaitIdle(computeQueue));
 
     if (swapchain) {
         if (renderStage.HasSwapchain() && (surface->GetFramebufferResized() || !swapchain->IsSameExtent(displayExtent))) {
@@ -223,7 +231,7 @@ void Graphics::RecreateAttachmentsMap()
     }
 }
 
-bool Graphics::StartRenderpass(RenderStage& renderStage)
+bool Graphics::StartRecordCommandBuffer(RenderStage& renderStage)
 {
     if (renderStage.IsOutOfDate()) {
         RecreatePass(renderStage);
@@ -233,6 +241,13 @@ bool Graphics::StartRenderpass(RenderStage& renderStage)
     auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
 
     if (!commandBuffer->IsRunning()) commandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+
+    return true;
+}
+
+void Graphics::StartRenderpass(RenderStage& renderStage)
+{
+    auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
 
     VkRect2D renderArea = {};
     renderArea.offset   = {renderStage.GetRenderArea().GetOffset().x, renderStage.GetRenderArea().GetOffset().y};
@@ -262,16 +277,18 @@ bool Graphics::StartRenderpass(RenderStage& renderStage)
     renderPassBeginInfo.clearValueCount       = static_cast<uint32_t>(clearValues.size());
     renderPassBeginInfo.pClearValues          = clearValues.data();
     vkCmdBeginRenderPass(*commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    return true;
 }
 
 void Graphics::EndRenderpass(RenderStage& renderStage)
 {
+    auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
+    vkCmdEndRenderPass(*commandBuffer);
+}
+
+void Graphics::EndRecordCommandBuffer(RenderStage& renderStage)
+{
     auto  presentQueue  = logicalDevice->GetPresentQueue();
     auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
-
-    vkCmdEndRenderPass(*commandBuffer);
 
     if (!renderStage.HasSwapchain()) return;
 

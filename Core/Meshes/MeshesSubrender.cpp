@@ -26,4 +26,6 @@ void MeshesSubrender::Render(const CommandBuffer& commandBuffer)
 
     for (const auto& mesh : meshes) mesh->CmdRender(commandBuffer, uniformScene, GetStage());
 }
+
+void MeshesSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 }   // namespace MapleLeaf

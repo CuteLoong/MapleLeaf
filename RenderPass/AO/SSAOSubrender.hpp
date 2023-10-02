@@ -30,6 +30,7 @@ public:
     explicit SSAOSubrender(const Pipeline::Stage& pipelineStage, SSAOData ssaoData = SSAOData());
 
     void Render(const CommandBuffer& commandBuffer) override;
+    void PostRender(const CommandBuffer& commandBuffer) override;
 
 private:
     PipelineGraphics pipeline;

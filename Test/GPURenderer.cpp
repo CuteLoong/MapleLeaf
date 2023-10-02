@@ -24,8 +24,7 @@ GPURenderer::GPURenderer()
                                                    {1, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                    {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                   {5, "HiZ", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT}};
+                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
     std::vector<SubpassType> renderpassSubpasses1 = {{0,
                                                       SubpassType::Type::Graphic,
@@ -56,7 +55,6 @@ void GPURenderer::Start()
 
     AddSubrender<IndirectDrawSubrender>({1, 0});
     AddSubrender<HiZDrawSubrender>({1, 0});
-
 
     AddSubrender<SSAOSubrender>({2, 0});
     AddSubrender<DeferredSubrender>({2, 1});

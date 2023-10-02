@@ -88,7 +88,7 @@ void PipelineGraphics::CreateShaderProgram()
     for (const auto& [defineName, defineValue] : defines) defineBlock << "#define " << defineName << " " << defineValue << '\n';
 
     for (const auto& shaderStage : shaderStages) {
-        auto fileLoaded = Files::Read(shaderStage);
+        auto fileLoaded = Files::Get()->Read(shaderStage);
 
         if (!fileLoaded) throw std::runtime_error("Could not create pipeline, missing shader stage");
 

@@ -97,6 +97,8 @@ private:
      */
     void RenderStage(const Pipeline::Stage& stage, const CommandBuffer& commandBuffer);
 
+    void PostRenderStage(const Pipeline::Stage& stage, const CommandBuffer& commandBuffer);
+
     /// List of all Subrenders.
     std::unordered_map<TypeId, std::unique_ptr<Subrender>> subrenders;
     /// List of subrender stages.
