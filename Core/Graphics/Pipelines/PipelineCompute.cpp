@@ -54,7 +54,7 @@ void PipelineCompute::CreateShaderProgram()
     std::stringstream defineBlock;
     for (const auto& [defineName, defineValue] : defines) defineBlock << "#define " << defineName << " " << defineValue << '\n';
 
-    auto fileLoaded = Files::Read(shaderStage);
+    auto fileLoaded = Files::Get()->Read(shaderStage);
 
     if (!fileLoaded) throw std::runtime_error("Could not create pipeline, missing shader stage");
 

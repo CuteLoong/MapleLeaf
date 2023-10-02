@@ -8,7 +8,7 @@ Imgui::Imgui()
     ImGui_ImplGlfw_InitForVulkan(Devices::Get()->GetWindow()->GetWindow(), true);
 
     ImGuiIO& io = ImGui::GetIO();
-    // ImFont* font = io.Fonts->AddFontFromFileTTF("F:/MapleLeaf/Resources/Fonts/DroidSans.ttf", 18.0f);
+    // ImFont* font = io.Fonts->AddFontFromFileTTF("Fonts/DroidSans.ttf", 18.0f);
     // io.FontDefault = font;
 
     io.FontGlobalScale         = 1.0f;

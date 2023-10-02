@@ -14,6 +14,7 @@ public:
     explicit DeferredSubrender(const Pipeline::Stage& pipelineStage);
 
     void Render(const CommandBuffer& commandBuffer) override;
+    void PostRender(const CommandBuffer& commandBuffer) override;
 
 private:
     struct PointLight

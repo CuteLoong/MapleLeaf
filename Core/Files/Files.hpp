@@ -22,6 +22,10 @@ public:
 
     void Update() override;
 
+    void AddSearchPath(const std::string& path);
+    void RemoveSearchPath(const std::string& path);
+    void ClearSearchPath();
+
     /**
      * Gets if the path is found in one of the search paths.
      * @param path The path to look for.
@@ -34,9 +38,11 @@ public:
      * @param path The path to read.
      * @return The data read from the file.
      */
-    static std::optional<std::string> Read(const std::filesystem::path& path);
+    std::optional<std::string>                 Read(const std::filesystem::path& path);
+    const std::optional<std::filesystem::path> GetExistPath(const std::filesystem::path& path);
 
 private:
     std::vector<std::string> searchPaths;
+    std::filesystem::path    rootPath;
 };
 }   // namespace MapleLeaf

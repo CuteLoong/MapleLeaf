@@ -22,6 +22,8 @@ public:
      */
     virtual void Render(const CommandBuffer& commandBuffer) = 0;
 
+    virtual void PostRender(const CommandBuffer& commandBuffer) = 0;
+
     const Pipeline::Stage& GetStage() const { return stage; }
 
     bool IsEnabled() const { return enabled; }

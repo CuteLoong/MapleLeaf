@@ -32,4 +32,19 @@ void SubrenderHolder::RenderStage(const Pipeline::Stage& stage, const CommandBuf
         }
     }
 }
+
+void SubrenderHolder::PostRenderStage(const Pipeline::Stage& stage, const CommandBuffer& commandBuffer)
+{
+    for (const auto& [stageIndex, typeId] : stages) {
+        if (stageIndex.first != stage) {
+            continue;
+        }
+
+        if (auto& subrender = subrenders[typeId]) {
+            if (subrender->IsEnabled()) {
+                subrender->PostRender(commandBuffer);
+            }
+        }
+    }
+}
 }   // namespace MapleLeaf

@@ -5,7 +5,6 @@
 #include "Swapchain.hpp"
 #include "glm/glm.hpp"
 
-
 namespace MapleLeaf {
 class LogicalDevice;
 class ImageDepth;

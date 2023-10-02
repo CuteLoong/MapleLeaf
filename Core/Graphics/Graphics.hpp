@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
 #include "Devices.hpp"
 #include "Engine.hpp"
@@ -60,7 +61,10 @@ private:
     void RecreateCommandBuffers();
     void RecreatePass(RenderStage& renderStage);
     void RecreateAttachmentsMap();
-    bool StartRenderpass(RenderStage& renderStage);
+    bool StartRecordCommandBuffer(RenderStage& renderStage);
+    void StartRenderpass(RenderStage& renderStage);
     void EndRenderpass(RenderStage& renderStage);
+    void EndRecordCommandBuffer(RenderStage& renderStage);
+
 };
 }   // namespace MapleLeaf

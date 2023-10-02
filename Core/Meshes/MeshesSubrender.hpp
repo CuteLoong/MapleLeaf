@@ -19,6 +19,7 @@ public:
     explicit MeshesSubrender(const Pipeline::Stage& pipelineStage, Sort sort = Sort::None);
 
     void Render(const CommandBuffer& commandBuffer) override;
+    void PostRender(const CommandBuffer& commandBuffer) override;
 
 private:
     Sort           sort;

@@ -20,10 +20,10 @@ Image::~Image()
 {
     auto logicalDevice = Graphics::Get()->GetLogicalDevice();
     auto graphicsQueue = logicalDevice->GetGraphicsQueue();
-    auto computeQueue = logicalDevice->GetComputeQueue();
+    auto computeQueue  = logicalDevice->GetComputeQueue();
     Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));
     Graphics::CheckVk(vkQueueWaitIdle(computeQueue));
-    
+
     vkDestroyImageView(*logicalDevice, view, nullptr);
     vkDestroySampler(*logicalDevice, sampler, nullptr);
     vkFreeMemory(*logicalDevice, memory, nullptr);
@@ -318,7 +318,8 @@ void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImage
 
         imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         break;
-    default: throw std::runtime_error("Unsupported image layout transition destination"); break;
+    default:   // throw std::runtime_error("Unsupported image layout transition destination");
+        break;
     }
 
     vkCmdPipelineBarrier(

@@ -95,7 +95,7 @@ void RenderStage::Rebuild(const Swapchain& swapchain)
     for (const auto& image : attachments) {
         if (image.GetType() == Attachment::Type::Depth)
             where = descriptors.insert(where, {image.GetName(), depthStencil.get()});
-        else
+        else if (image.GetType() == Attachment::Type::Image)
             where = descriptors.insert(where, {image.GetName(), framebuffers->GetAttachment(image.GetBinding())});
     }
 
