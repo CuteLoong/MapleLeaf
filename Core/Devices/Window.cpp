@@ -68,7 +68,7 @@ void CallbackKey(GLFWwindow* glfwWindow, int32_t key, int32_t scancode, int32_t 
 
 Window::Window(std::size_t id)
     : windowId(id)
-    , size(1080, 720)
+    , size(2160, 1440)
     , title("MapleLeaf Window")
     , resizable(true)
     , focused(true)

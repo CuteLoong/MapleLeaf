@@ -8,9 +8,8 @@
 #include "MeshesSubrender.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
-#include "SSAOSubrender.hpp"
+#include "SSAOStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
-
 
 namespace Test {
 StereoRenderer::StereoRenderer()
@@ -54,7 +53,7 @@ void StereoRenderer::Start()
 
     AddSubrender<IndirectDrawStereoSubrender>({1, 0});
 
-    AddSubrender<SSAOSubrender>({2, 0});
+    AddSubrender<SSAOStereoSubrender>({2, 0});
     AddSubrender<DeferredSubrender>({2, 1});
     AddSubrender<ImguiSubrender>({2, 2});
 }

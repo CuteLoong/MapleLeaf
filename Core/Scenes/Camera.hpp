@@ -63,6 +63,7 @@ public:
 
     const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; };
     const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
+    const std::array<glm::vec4, 2>& GetStereoViewPosition() const { return stereoViewPosition; }
 
     const glm::mat4& GetInverseViewMatrix() const { return invViewMatrix; }
     const glm::mat4& GetInverseProjectionMatrix() const { return invProjectionMatrix; }
@@ -80,12 +81,14 @@ protected:
 
     glm::vec3 up;
     glm::vec3 forward;
+    glm::vec3 right;
 
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
     glm::mat4 invViewMatrix;
     glm::mat4 invProjectionMatrix;
 
+    std::array<glm::vec4, 2> stereoViewPosition;
     std::array<glm::mat4, 2> stereoViewMatrix;
     std::array<glm::mat4, 2> stereoProjectionMatrix;
 };
