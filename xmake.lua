@@ -29,8 +29,6 @@ set_configvar("MAPLELEAF_VALIDATION_DEBUG", true)
 set_configvar("MAPLELEAF_DESCRIPTOR_DEBUG", false)
 set_configvar("MAPLELEAF_RENDERSTAGE_DEBUG", false)
 
-set_configvar("")
-
 set_configdir("Config") 
 add_configfiles("./config.h.in")
 
@@ -73,7 +71,8 @@ add_includedirs(
 "RenderPass/IndirectDraw",
 "RenderPass/Imgui",
 "RenderPass/AO",
-"RenderPass/HiZDraw"
+"RenderPass/HiZDraw",
+"RenderPass/Mesh"
 )
 
 target("RenderPass")
@@ -84,7 +83,8 @@ target("RenderPass")
     "RenderPass/IndirectDraw/*.cpp",
     "RenderPass/Imgui/*.cpp",
     "RenderPass/AO/*.cpp",
-    "RenderPass/HiZDraw/*.cpp"
+    "RenderPass/HiZDraw/*.cpp",
+    "RenderPass/Mesh/*.cpp"
     )
 target_end()
 
@@ -125,8 +125,6 @@ target("MapleLeaf")
     set_kind("binary")
     add_deps("Core")
     add_deps("RenderPass")
-    add_includedirs("Test/")
-    add_files("Test/*.cpp")
-
-    
+    add_includedirs("App/", "Renderer/GPURenderer", "Renderer/MultiDrawRenderer", "Renderer/StereoRenderer")
+    add_files("App/*.cpp", "Renderer/GPURenderer/*.cpp", "Renderer/MultiDrawRenderer/*.cpp", "Renderer/StereoRenderer/*.cpp")
 target_end()

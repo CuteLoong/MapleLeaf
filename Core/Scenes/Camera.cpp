@@ -35,6 +35,11 @@ void Camera::Update()
 
     invViewMatrix       = glm::inverse(viewMatrix);
     invProjectionMatrix = glm::inverse(projectionMatrix);
+
+    stereoViewMatrix[0] = glm::lookAt(position - eyeSeparation / 2.0f, position - eyeSeparation / 2.0f + forward, up);
+    stereoViewMatrix[1] = glm::lookAt(position + eyeSeparation / 2.0f, position + eyeSeparation / 2.0f + forward, up);
+    stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
+    stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
 }
 
 void Camera::UpdateByTransform()
