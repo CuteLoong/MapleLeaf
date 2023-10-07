@@ -41,6 +41,8 @@ PipelineGraphics::PipelineGraphics(Stage stage, std::vector<std::filesystem::pat
     case Mode::Polygon: CreatePipelinePolygon(); break;
     case Mode::MRT: CreatePipelineMrt(); break;
     case Mode::Imgui: CreatePipelineImgui(); break;
+    case Mode::Stereo: CreatePipelineStereo(); break;
+    case Mode::StereoMRT: CreatePipelineStereoMRT(); break;
     default: throw std::runtime_error("Unknown pipeline mode");
     }
 
@@ -394,6 +396,47 @@ void PipelineGraphics::CreatePipelineImgui()
 
     colorBlendState.attachmentCount = static_cast<uint32_t>(blendAttachmentStates.size());
     colorBlendState.pAttachments    = blendAttachmentStates.data();
+
+    CreatePipeline();
+}
+
+void PipelineGraphics::CreatePipelineStereo()
+{
+    viewportState.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 2;
+    viewportState.scissorCount  = 2;
+
+    CreatePipeline();
+}
+
+void PipelineGraphics::CreatePipelineStereoMRT()
+{
+    auto renderStage     = Graphics::Get()->GetRenderStage(stage.first);
+    auto attachmentCount = renderStage->GetOutputAttachmentCount(stage.second);
+
+    std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates;
+    blendAttachmentStates.reserve(attachmentCount);
+
+    for (uint32_t i = 0; i < attachmentCount; i++) {
+        VkPipelineColorBlendAttachmentState blendAttachmentState = {};
+        blendAttachmentState.blendEnable                         = VK_TRUE;
+        blendAttachmentState.srcColorBlendFactor                 = VK_BLEND_FACTOR_SRC_ALPHA;
+        blendAttachmentState.dstColorBlendFactor                 = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        blendAttachmentState.colorBlendOp                        = VK_BLEND_OP_ADD;
+        blendAttachmentState.srcAlphaBlendFactor                 = VK_BLEND_FACTOR_ONE;
+        blendAttachmentState.dstAlphaBlendFactor                 = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        blendAttachmentState.alphaBlendOp                        = VK_BLEND_OP_ADD;
+        blendAttachmentState.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        blendAttachmentStates.emplace_back(blendAttachmentState);
+    }
+
+    colorBlendState.attachmentCount = static_cast<uint32_t>(blendAttachmentStates.size());
+    colorBlendState.pAttachments    = blendAttachmentStates.data();
+
+    viewportState.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 2;
+    viewportState.scissorCount  = 2;
 
     CreatePipeline();
 }

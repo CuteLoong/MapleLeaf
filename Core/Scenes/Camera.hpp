@@ -3,20 +3,14 @@
 #include "Component.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <array>
 #include <string>
 
 namespace MapleLeaf {
-class Camera: public Component::Registrar<Camera>
+class Camera : public Component::Registrar<Camera>
 {
 public:
-    Camera()
-        : nearPlane(0.1f)
-        , farPlane(100.0f)
-        , fieldOfView(glm::radians(60.0f))
-        , up(glm::vec3(0.0f, 1.0f, 0.0f))
-        , forward(glm::vec3(0.0f, 0.0f, -1.0f))   // rotation(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f))
-        , position(glm::vec3(0.0f, 0.0f, 2.0f))
-    {}
+    Camera();
 
     ~Camera() = default;
 
@@ -67,6 +61,9 @@ public:
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
+    const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; };
+    const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
+
     const glm::mat4& GetInverseViewMatrix() const { return invViewMatrix; }
     const glm::mat4& GetInverseProjectionMatrix() const { return invProjectionMatrix; }
 
@@ -75,6 +72,7 @@ protected:
 
     float nearPlane, farPlane;
     float fieldOfView, aspectRatio;
+    float eyeSeparation;
 
     glm::vec3 position;
     glm::vec3 rotation;   // (0, 0, -1.0) ROTATION
@@ -87,5 +85,8 @@ protected:
     glm::mat4 projectionMatrix;
     glm::mat4 invViewMatrix;
     glm::mat4 invProjectionMatrix;
+
+    std::array<glm::mat4, 2> stereoViewMatrix;
+    std::array<glm::mat4, 2> stereoProjectionMatrix;
 };
 }   // namespace MapleLeaf

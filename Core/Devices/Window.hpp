@@ -20,8 +20,12 @@ public:
     void Update();
 
     const glm::uvec2& GetSize(bool checkFullscreen = true) const;
+    const glm::uvec2 GetStereoSize(bool checkFullscreen = true) const;
+
     void              SetSize(const glm::uvec2& size);
     float             GetAspectRatio() const;
+    float             GetStereoAspectRatio() const;
+
 
     const std::string& GetTitle();
     void               SetTitle(const std::string& title);
