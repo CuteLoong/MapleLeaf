@@ -14,7 +14,9 @@ Camera::Camera()
     , up(glm::vec3(0.0f, 1.0f, 0.0f))
     , forward(glm::vec3(0.0f, 0.0f, -1.0f))   // rotation(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f))
     , position(glm::vec3(0.0f, 0.0f, 2.0f))
-{}
+{
+    right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+}
 
 void Camera::Start()
 {
@@ -36,8 +38,11 @@ void Camera::Update()
     invViewMatrix       = glm::inverse(viewMatrix);
     invProjectionMatrix = glm::inverse(projectionMatrix);
 
-    stereoViewMatrix[0] = glm::lookAt(position - eyeSeparation / 2.0f, position - eyeSeparation / 2.0f + forward, up);
-    stereoViewMatrix[1] = glm::lookAt(position + eyeSeparation / 2.0f, position + eyeSeparation / 2.0f + forward, up);
+    stereoViewPosition[0] = glm::vec4(position - right * eyeSeparation / 2.0f, 1.0f);
+    stereoViewPosition[1] = glm::vec4(position + right * eyeSeparation / 2.0f, 1.0f);
+
+    stereoViewMatrix[0]       = glm::lookAt(glm::vec3(stereoViewPosition[0]), glm::vec3(stereoViewPosition[0]) + forward, up);
+    stereoViewMatrix[1]       = glm::lookAt(glm::vec3(stereoViewPosition[1]), glm::vec3(stereoViewPosition[1]) + forward, up);
     stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
     stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
 }
@@ -75,8 +80,8 @@ void Camera::UpdateByInput()
 
         forward = glm::normalize(forward);
 
-        glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-        up              = glm::normalize(glm::cross(right, forward));
+        right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+        up    = glm::normalize(glm::cross(right, forward));
 
         position += velocity.z * forward;
         position += velocity.x * right;
