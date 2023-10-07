@@ -121,7 +121,11 @@ void LogicalDevice::CreateLogicalDevice()
         enabledFeatures.samplerAnisotropy = VK_TRUE;
     else
         Log::Warning("Selected GPU does not support sampler anisotropy!\n");
-    
+
+    if (physicalDeviceFeatures.multiViewport)
+        enabledFeatures.multiViewport = VK_TRUE;
+    else
+        Log::Warning("Selected GPU does not support multiple viewport!\n");
 
     // add bindless feature
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
