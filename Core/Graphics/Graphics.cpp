@@ -253,19 +253,54 @@ void Graphics::StartRenderpass(RenderStage& renderStage)
     renderArea.offset   = {renderStage.GetRenderArea().GetOffset().x, renderStage.GetRenderArea().GetOffset().y};
     renderArea.extent   = {renderStage.GetRenderArea().GetExtent().x, renderStage.GetRenderArea().GetExtent().y};
 
-    VkViewport viewport = {};
-    viewport.x          = 0.0f;
-    viewport.y          = static_cast<float>(renderArea.extent.height);
-    viewport.width      = static_cast<float>(renderArea.extent.width);
-    viewport.height     = -static_cast<float>(renderArea.extent.height);
-    viewport.minDepth   = 0.0f;
-    viewport.maxDepth   = 1.0f;
-    vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+    if (renderStage.GetRenderStageType() == RenderStage::Type::MONO) {
+        VkViewport viewport = {};
+        viewport.x          = 0.0f;
+        viewport.y          = static_cast<float>(renderArea.extent.height);
+        viewport.width      = static_cast<float>(renderArea.extent.width);
+        viewport.height     = -static_cast<float>(renderArea.extent.height);
+        viewport.minDepth   = 0.0f;
+        viewport.maxDepth   = 1.0f;
+        vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
 
-    VkRect2D scissor = {};
-    scissor.offset   = renderArea.offset;
-    scissor.extent   = renderArea.extent;
-    vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+        VkRect2D scissor = {};
+        scissor.offset   = renderArea.offset;
+        scissor.extent   = renderArea.extent;
+
+        vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+    }
+    else if (renderStage.GetRenderStageType() == RenderStage::Type::STEREO) {
+        std::array<VkRect2D, 2> renderArea = {};
+        renderArea[0].offset               = {renderStage.GetRenderArea().GetOffset().x, renderStage.GetRenderArea().GetOffset().y};
+        renderArea[0].extent               = {renderStage.GetRenderArea().GetExtent().x / 2, renderStage.GetRenderArea().GetExtent().y};
+        renderArea[1].offset = {static_cast<int32_t>(renderStage.GetRenderArea().GetExtent().x / 2 + renderStage.GetRenderArea().GetOffset().x),
+                                renderStage.GetRenderArea().GetOffset().y};
+        renderArea[1].extent = {renderStage.GetRenderArea().GetExtent().x / 2, renderStage.GetRenderArea().GetExtent().y};
+
+        std::array<VkViewport, 2> viewport{};
+        viewport[0].x        = 0.0f;
+        viewport[0].y        = static_cast<float>(renderArea[0].extent.height);
+        viewport[0].width    = static_cast<float>(renderArea[0].extent.width);
+        viewport[0].height   = -static_cast<float>(renderArea[0].extent.height);
+        viewport[0].minDepth = 0.0f;
+        viewport[0].maxDepth = 1.0f;
+
+        viewport[1].x        = static_cast<float>(renderArea[0].extent.width);
+        viewport[1].y        = static_cast<float>(renderArea[1].extent.height);
+        viewport[1].width    = static_cast<float>(renderArea[1].extent.width);
+        viewport[1].height   = -static_cast<float>(renderArea[1].extent.height);
+        viewport[1].minDepth = 0.0f;
+        viewport[1].maxDepth = 1.0f;
+        vkCmdSetViewport(*commandBuffer, 0, 2, viewport.data());
+
+        std::array<VkRect2D, 2> scissor{};
+        scissor[0].offset = renderArea[0].offset;
+        scissor[0].extent = renderArea[0].extent;
+
+        scissor[1].offset = renderArea[1].offset;
+        scissor[1].extent = renderArea[1].extent;
+        vkCmdSetScissor(*commandBuffer, 0, 2, scissor.data());
+    }
 
     auto clearValues = renderStage.GetClearValues();
 

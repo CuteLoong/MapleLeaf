@@ -57,28 +57,18 @@ private:
 class SubpassType
 {
 public:
-    enum class Type
-    {
-        Graphic,
-        Compute,
-        RayTracing
-    };
-
-    SubpassType(uint32_t binding, Type type, std::vector<uint32_t> inputAttachmentBindings, std::vector<uint32_t> outputAttachmentBindings)
+    SubpassType(uint32_t binding, std::vector<uint32_t> inputAttachmentBindings, std::vector<uint32_t> outputAttachmentBindings)
         : binding(binding)
-        , type(type)
         , inputAttachmentBindings(std::move(inputAttachmentBindings))
         , outputAttachmentBindings(std::move(outputAttachmentBindings))
     {}
 
     uint32_t                     GetBinding() const { return binding; }
-    Type                         GetType() const { return type; }
     const std::vector<uint32_t>& GetInputAttachmentBindings() const { return inputAttachmentBindings; }
     const std::vector<uint32_t>& GetOutputAttachmentBindings() const { return outputAttachmentBindings; }
 
 private:
     uint32_t              binding;
-    Type                  type;
     std::vector<uint32_t> inputAttachmentBindings;
     std::vector<uint32_t> outputAttachmentBindings;
 };
@@ -139,7 +129,14 @@ class RenderStage
     friend class Graphics;
 
 public:
-    explicit RenderStage(std::vector<Attachment> images = {}, std::vector<SubpassType> subpasses = {}, const Viewport& viewport = Viewport());
+    enum class Type
+    {
+        MONO,
+        STEREO
+    };
+
+    explicit RenderStage(Type stageType = Type::MONO, std::vector<Attachment> images = {}, std::vector<SubpassType> subpasses = {},
+                         const Viewport& viewport = Viewport());
 
     void Update();
     void Rebuild(const Swapchain& swapchain);
@@ -158,6 +155,7 @@ public:
     const RenderArea& GetRenderArea() const { return renderArea; }
 
     bool IsOutOfDate() const { return outOfDate; }
+    Type GetRenderStageType() const { return stageType; }
 
     const Renderpass*   GetRenderpass() const { return renderpass.get(); }
     const ImageDepth*   GetDepthStencil() const { return depthStencil.get(); }
@@ -190,6 +188,8 @@ private:
     std::vector<bool>         subpassMultisampled;
 
     RenderArea renderArea;
-    bool       outOfDate = false;
+
+    Type stageType;
+    bool outOfDate = false;
 };
 }   // namespace MapleLeaf

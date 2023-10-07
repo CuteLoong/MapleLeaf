@@ -3,6 +3,7 @@
 #include "GPURenderer.hpp"
 #include "Log.hpp"
 #include "MainRenderer.hpp"
+#include "StereoRenderer.hpp"
 #include "SceneBuilder.hpp"
 #include "Scenes.hpp"
 
@@ -37,7 +38,9 @@ void MainApp::Start()
 {
     Devices::Get()->GetWindow()->SetTitle("MapleLeaf");
     // Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
-    Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
+    // Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
+    Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
+
 
     std::unique_ptr<SceneBuilder> scene = std::make_unique<SceneBuilder>();
     Scenes::Get()->SetScene(std::move(scene));

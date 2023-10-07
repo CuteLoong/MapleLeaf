@@ -6,8 +6,9 @@
 #include "config.h"
 
 namespace MapleLeaf {
-RenderStage::RenderStage(std::vector<Attachment> images, std::vector<SubpassType> subpasses, const Viewport& viewport)
-    : attachments(std::move(images))
+RenderStage::RenderStage(Type stageType, std::vector<Attachment> images, std::vector<SubpassType> subpasses, const Viewport& viewport)
+    : stageType(stageType)
+    , attachments(std::move(images))
     , subpasses(std::move(subpasses))
     , viewport(viewport)
     , subpassOutputAttachmentCount(this->subpasses.size())

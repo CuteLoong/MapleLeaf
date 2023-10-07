@@ -47,8 +47,6 @@ Renderpass::Renderpass(const LogicalDevice& logicalDevice, const RenderStage& re
     std::vector<VkSubpassDependency>                 dependencies;
 
     for (const auto& subpassType : renderStage.GetSubpasses()) {
-        if (subpassType.GetType() == SubpassType::Type::Compute) continue;
-
         std::vector<VkAttachmentReference> subpassOutputColorAttachments;
         std::vector<VkAttachmentReference> subpassInputColorAttachments;
 
