@@ -61,6 +61,16 @@ public:
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
+    // Values used to linearize the Z buffer (http://www.humus.name/temp/Linearize%20depth.txt)
+    // x = 1-far/near
+    // y = far/near
+    // z = x/far
+    // w = y/far
+    const glm::vec4 GetZBufferParams() const
+    {
+        return glm::vec4(1.0f - farPlane / nearPlane, farPlane / nearPlane, 1.0f / farPlane - 1.0f / nearPlane, 1.0f / nearPlane);
+    }
+
     const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; };
     const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
     const std::array<glm::vec4, 2>& GetStereoViewPosition() const { return stereoViewPosition; }
