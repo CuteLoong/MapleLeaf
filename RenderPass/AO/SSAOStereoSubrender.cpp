@@ -6,8 +6,8 @@ namespace MapleLeaf {
 SSAOStereoSubrender::SSAOStereoSubrender(const Pipeline::Stage& pipelineStage, SSAOData ssaoData)
     : Subrender(pipelineStage)
     , ssaoData(ssaoData)
-    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/SSAOStereo.vert", "Shader/AO/SSAOStereo.frag"}, {},
-                                {GetDefines()}, PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
+    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/SSAOStereo.vert", "Shader/AO/SSAOStereo.frag"}, {}, {GetDefines()},
+                                PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
 {
 
     noiseSize = Devices::Get()->GetWindow()->GetSize() / ssaoData.noiseScale;
