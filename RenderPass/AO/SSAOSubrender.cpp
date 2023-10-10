@@ -6,10 +6,9 @@ namespace MapleLeaf {
 SSAOSubrender::SSAOSubrender(const Pipeline::Stage& pipelineStage, SSAOData ssaoData)
     : Subrender(pipelineStage)
     , ssaoData(ssaoData)
-    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/SSAO.vert", "Shader/AO/SSAO.frag"}, {},
-                                {GetDefines()}, PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
+    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/SSAO.vert", "Shader/AO/SSAO.frag"}, {}, {GetDefines()}, PipelineGraphics::Mode::Polygon,
+                                PipelineGraphics::Depth::None))
 {
-
     noiseSize = Devices::Get()->GetWindow()->GetSize() / ssaoData.noiseScale;
     noise     = (Resources::Get()->GetThreadPool().Enqueue(ComputeNoise, noiseSize.x, noiseSize.y));
 

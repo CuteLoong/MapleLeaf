@@ -2,6 +2,7 @@
 
 #include "DeferredSubrender.hpp"
 #include "Graphics.hpp"
+#include "HBAOSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
 #include "IndirectDrawSubrender.hpp"
@@ -55,7 +56,7 @@ void GPURenderer::Start()
     AddSubrender<IndirectDrawSubrender>({1, 0});
     // AddSubrender<HiZDrawSubrender>({1, 0});
 
-    AddSubrender<SSAOSubrender>({2, 0});
+    AddSubrender<HBAOSubrender>({2, 0});
     AddSubrender<DeferredSubrender>({2, 1});
     AddSubrender<ImguiSubrender>({2, 2});
 }
