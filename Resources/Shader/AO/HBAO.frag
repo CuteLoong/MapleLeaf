@@ -7,22 +7,24 @@
 
 layout(set=0, binding=0) uniform UniformScene
 {
-	mat4 projection;
-	mat4 view;
-    mat4 invProjection;
-    mat4 invView;
-    vec4 zBufferParams;
-	vec3 cameraPosition;
+	mat4  projection;
+	mat4  view;
+    mat4  invProjection;
+    mat4  invView;
+    vec4  zBufferParams;
+    uvec4 pixelSize; // camera's pixelWidth, pixelHeight, 1.0 / pixelWidth, 1.0f / pixelHeight
+	vec3  cameraPosition;
 } scene;
 
-layout(set=0, binding=1) uniform UniformControl {
+layout(set=0, binding=1) uniform UniformHBAOData {
 	uvec2 noiseScale;
-    uvec2 screenSize;
     uint  numRays;
-    float strengthPerRay;
-    uint  maxStepsPerRay;
+    uint  stepCount;
+    float maxRadiusPixels;
     float sampleRadius;
-} control;
+    float intensity;
+    float angleBias;
+} hbaoData;
 
 layout(set=0, binding = 2) uniform sampler2D inDepth;
 layout(set=0, binding = 3) uniform sampler2D hbaoNoise;
@@ -53,8 +55,8 @@ vec3 ViewNormalAtScreenUV(vec2 uv)
     vec3 viewSpacePos_c = ViewSpacePosAtScreenUV(uv + vec2(0.0f, 0.0f));
 
     // get view space position at 1 pixel offsets in each major direction
-    vec3 viewSpacePos_r = ViewSpacePosAtScreenUV(uv + vec2(1.0f / control.screenSize.x, 0.0f));
-    vec3 viewSpacePos_u = ViewSpacePosAtScreenUV(uv + vec2(0.0f, 1.0f / control.screenSize.y));
+    vec3 viewSpacePos_r = ViewSpacePosAtScreenUV(uv + vec2(scene.pixelSize.z, 0.0f));
+    vec3 viewSpacePos_u = ViewSpacePosAtScreenUV(uv + vec2(0.0f, scene.pixelSize.w));
 
     // get the difference between the current and each offset position
     vec3 hDeriv = viewSpacePos_r - viewSpacePos_c;
@@ -71,7 +73,7 @@ vec2 RotateDirection(vec2 dir, vec2 cosSin)
   return vec2(dir.x*cosSin.x - dir.y*cosSin.y, dir.x*cosSin.y + dir.y*cosSin.x);
 }
 
-float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos)
+float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, float topOcclusion)
 {
     vec3 horizonVector = sampleViewPos - viewPosition;
     float horizonVectorLength = length(horizonVector);
@@ -80,10 +82,13 @@ float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos)
 
     occlusion = dot(viewNormal, horizonVector) / horizonVectorLength;
 
-    float distanceFactor = clamp(horizonVectorLength / control.sampleRadius, 0.0f, 1.0f);
-    distanceFactor = 1.0f - distanceFactor * distanceFactor;
+    float diff = max(occlusion - topOcclusion, 0);
+    topOcclusion = max(occlusion, topOcclusion);
 
-    return clamp(occlusion - 0.03f, 0.0f, 1.0f) * distanceFactor;
+    float distanceFactor = horizonVectorLength / hbaoData.sampleRadius;
+    distanceFactor = clamp(1.0f - distanceFactor * distanceFactor, 0.0f, 1.0f);
+
+    return diff * distanceFactor;
 }
 
 void main()
@@ -92,42 +97,36 @@ void main()
     vec3 viewPosition = ViewSpacePosAtScreenUV(uv);
     vec3 viewNormal = ViewNormalAtScreenUV(uv);
 
-    // get projected sphere size.
-    float w = viewPosition.z * abs(scene.projection[2][3]) + abs(scene.projection[3][3]);
-    vec2 projectedRadii = control.sampleRadius * vec2(scene.projection[0][0], scene.projection[1][1]) / (2.0f * w);
-    float screenPixelRadius = projectedRadii.x * control.screenSize.x;
+    float stride = min(hbaoData.sampleRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
-    // bail out if there's nothing to march
-	if (screenPixelRadius < 1.0f)
-	{
+    if(stride < 1.0f) {
         outColour = vec4(1.0f);
-        return;
+        return ;
     }
-
-    float stepSizePixels = screenPixelRadius / (control.maxStepsPerRay + 1.0f);
 
     float totalOcclusion = 0.0f;
 
-    vec4 rand = texture(hbaoNoise, uv * control.noiseScale).rgba;
-    const float alpha = 2.0f * M_PI / control.numRays;
+    vec4 rand = texture(hbaoNoise, uv * hbaoData.noiseScale).rgba;
+    const float alpha = 2.0f * M_PI / hbaoData.numRays;
 
-    for(int dirIndex = 0; dirIndex < control.numRays; dirIndex++) {
+    for(int dirIndex = 0; dirIndex < hbaoData.numRays; dirIndex++) {
         float angle = alpha * float(dirIndex);
 
         vec2 direction = RotateDirection(vec2(cos(angle), sin(angle)), rand.xy);
-        vec2 rayPixels = (rand.zw * projectedRadii + 1.0f);
+        vec2 rayPixels = rand.zw * stride + 1.0f;
+        float topOcclusion = hbaoData.angleBias;
 
-        for(int stepIndex = 0; stepIndex < control.maxStepsPerRay; stepIndex++) {
-            vec2 SnappedUV = round(rayPixels * direction) * vec2(1.0f / control.screenSize.x, 1.0f / control.screenSize.y) + uv;
+        for(int stepIndex = 0; stepIndex < hbaoData.stepCount; stepIndex++) {
+            vec2 SnappedUV = round(rayPixels * direction) * scene.pixelSize.zw + uv;
             vec3 sampleViewPos = ViewSpacePosAtScreenUV(SnappedUV);
 
-            rayPixels += stepSizePixels;
+            rayPixels += stride;
 
-            totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos);
+            totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion);
         }
     }
-    float weight = 1.0f / (control.numRays * control.maxStepsPerRay);
+    float weight = 1.0f / hbaoData.numRays / hbaoData.stepCount;
 
-    float ao = clamp(1.0f - totalOcclusion * weight * 2.0f, 0.0f, 1.0f);
+    float ao = clamp(1.0f - totalOcclusion * weight * hbaoData.intensity, 0.0f, 1.0f);
     outColour = vec4(ao, ao, ao, 1.0f);
 }

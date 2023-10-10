@@ -88,4 +88,36 @@ void Camera::UpdateByInput()
         position += velocity.y * up;
     }
 }
+
+
+const glm::vec4 Camera::GetZBufferParams() const
+{
+    return glm::vec4(1.0f - farPlane / nearPlane, farPlane / nearPlane, 1.0f / farPlane - 1.0f / nearPlane, 1.0f / nearPlane);
+}
+
+const uint32_t Camera::GetPixelHeight() const
+{
+    return Devices::Get()->GetWindow()->GetSize().x;
+}
+const uint32_t Camera::GetPixelWidth() const
+{
+    return Devices::Get()->GetWindow()->GetSize().y;
+}
+const glm::uvec4 Camera::GetPixelSize() const
+{
+    return glm::uvec4(GetPixelWidth(), GetPixelHeight(), 1.0f / GetPixelWidth(), 1.0f / GetPixelHeight());
+}
+
+const uint32_t Camera::GetStereoPixelHeight() const
+{
+    return Devices::Get()->GetWindow()->GetStereoSize().y;
+}
+const uint32_t Camera::GetStereoPixelWidth() const
+{
+    return Devices::Get()->GetWindow()->GetStereoSize().x;
+}
+const glm::uvec4 Camera::GetStereoPixelSize() const
+{
+    return glm::uvec4(GetStereoPixelWidth(), GetStereoPixelHeight(), 1.0f / GetStereoPixelWidth(), 1.0f / GetStereoPixelHeight());
+}
 }   // namespace MapleLeaf
