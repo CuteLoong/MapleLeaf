@@ -27,17 +27,20 @@ void HBAOSubrender::Render(const CommandBuffer& commandBuffer)
     uniformScene.Push("invView", camera->GetViewMatrix());
     uniformScene.Push("cameraPosition", camera->GetPosition());
     uniformScene.Push("zBufferParams", camera->GetZBufferParams());
+    uniformScene.Push("pixelSize", camera->GetPixelSize());
 
-    uniformControl.Push("noiseScale", hbaoData.noiseScale);
-    uniformControl.Push("screenSize", Devices::Get()->GetWindow()->GetSize());
-    uniformControl.Push("sampleRadius", hbaoData.sampleRadius);
-    uniformControl.Push("maxStepsPerRay", hbaoData.maxStepsPerRay);
-    uniformControl.Push("numRays", hbaoData.numRays);
-    uniformControl.Push("strengthPerRay", hbaoData.strengthPerRay);
+    float sampleRadius = camera->GetPixelHeight() * hbaoData.sampleRadius / (2.0f * glm::tan(camera->GetFieldOfView()));
 
+    uniformHBAOData.Push("noiseScale", hbaoData.noiseScale);
+    uniformHBAOData.Push("numRays", hbaoData.numRays);
+    uniformHBAOData.Push("stepCount", hbaoData.stepCount);
+    uniformHBAOData.Push("maxRadiusPixels", hbaoData.maxRadiusPixels);
+    uniformHBAOData.Push("sampleRadius", sampleRadius);
+    uniformHBAOData.Push("intensity", hbaoData.intensity);
+    uniformHBAOData.Push("angleBias", hbaoData.angleBias);
 
     descriptorSet.Push("UniformScene", uniformScene);
-    descriptorSet.Push("UniformControl", uniformControl);
+    descriptorSet.Push("UniformHBAOData", uniformHBAOData);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("hbaoNoise", *hbaoNoise);
 

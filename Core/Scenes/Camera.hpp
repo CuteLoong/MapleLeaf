@@ -66,10 +66,15 @@ public:
     // y = far/near
     // z = x/far
     // w = y/far
-    const glm::vec4 GetZBufferParams() const
-    {
-        return glm::vec4(1.0f - farPlane / nearPlane, farPlane / nearPlane, 1.0f / farPlane - 1.0f / nearPlane, 1.0f / nearPlane);
-    }
+    const glm::vec4 GetZBufferParams() const;
+
+    const uint32_t GetPixelHeight() const;
+    const uint32_t GetPixelWidth() const;
+    const glm::uvec4 GetPixelSize() const;
+
+    const uint32_t GetStereoPixelHeight() const;
+    const uint32_t GetStereoPixelWidth() const;
+    const glm::uvec4 GetStereoPixelSize() const;
 
     const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; };
     const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
