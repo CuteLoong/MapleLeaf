@@ -18,6 +18,8 @@ HiZDrawSubrender::HiZDrawSubrender(const Pipeline::Stage& pipelineStage)
                                                VK_SAMPLE_COUNT_1_BIT);
 }
 
+void HiZDrawSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void HiZDrawSubrender::Render(const CommandBuffer& commandBuffer) {}
 
 void HiZDrawSubrender::PostRender(const CommandBuffer& commandBuffer)

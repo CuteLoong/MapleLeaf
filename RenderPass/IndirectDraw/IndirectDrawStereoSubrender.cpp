@@ -5,9 +5,11 @@
 namespace MapleLeaf {
 IndirectDrawStereoSubrender::IndirectDrawStereoSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"Shader/GPUDriven/DefaultStereo.vert", "Shader/GPUDriven/Multiview.geom","Shader/GPUDriven/DefaultStereo.frag"},
+    , pipeline(pipelineStage, {"Shader/GPUDriven/DefaultStereo.vert", "Shader/GPUDriven/Multiview.geom", "Shader/GPUDriven/DefaultStereo.frag"},
                {Vertex3D::GetVertexInput()}, {}, PipelineGraphics::Mode::StereoMRT)
 {}
+
+void IndirectDrawStereoSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 
 void IndirectDrawStereoSubrender::Render(const CommandBuffer& commandBuffer)
 {

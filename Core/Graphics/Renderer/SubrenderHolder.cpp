@@ -18,6 +18,21 @@ void SubrenderHolder::RemoveSubrenderStage(const TypeId& id)
     }
 }
 
+void SubrenderHolder::PreRenderStage(const Pipeline::Stage& stage, const CommandBuffer& commandBuffer)
+{
+    for (const auto& [stageIndex, typeId] : stages) {
+        if (stageIndex.first != stage) {
+            continue;
+        }
+
+        if (auto& subrender = subrenders[typeId]) {
+            if (subrender->IsEnabled()) {
+                subrender->PreRender(commandBuffer);
+            }
+        }
+    }
+}
+
 void SubrenderHolder::RenderStage(const Pipeline::Stage& stage, const CommandBuffer& commandBuffer)
 {
     for (const auto& [stageIndex, typeId] : stages) {

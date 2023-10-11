@@ -15,6 +15,7 @@ class IndirectDrawStereoSubrender : public Subrender
 public:
     explicit IndirectDrawStereoSubrender(const Pipeline::Stage& pipelineStage);
 
+    void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
     void PostRender(const CommandBuffer& commandBuffer) override;
 

@@ -7,8 +7,11 @@
 namespace MapleLeaf {
 ShadowSubrender::ShadowSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"Shader/ShadowMap/ShadowMap.vert", "Shader/ShadowMap/ShadowMap.frag"}, {Vertex3D::GetVertexInput()}, {}, PipelineGraphics::Mode::Polygon)
+    , pipeline(pipelineStage, {"Shader/ShadowMap/ShadowMap.vert", "Shader/ShadowMap/ShadowMap.frag"}, {Vertex3D::GetVertexInput()}, {},
+               PipelineGraphics::Mode::Polygon)
 {}
+
+void ShadowSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 
 void ShadowSubrender::Render(const CommandBuffer& commandBuffer)
 {

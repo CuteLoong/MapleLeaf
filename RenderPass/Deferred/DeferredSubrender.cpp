@@ -9,9 +9,11 @@ namespace MapleLeaf {
 
 DeferredSubrender::DeferredSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"Shader/Deferred/Deferred.vert", "Shader/Deferred/Deferred.frag"}, {},
-               {}, PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None)
+    , pipeline(pipelineStage, {"Shader/Deferred/Deferred.vert", "Shader/Deferred/Deferred.frag"}, {}, {}, PipelineGraphics::Mode::Polygon,
+               PipelineGraphics::Depth::None)
 {}
+
+void DeferredSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 
 void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
 {

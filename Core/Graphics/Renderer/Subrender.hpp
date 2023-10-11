@@ -16,6 +16,7 @@ public:
 
     virtual ~Subrender() = default;
 
+    virtual void PreRender(const CommandBuffer& commandBuffer) = 0;
     /**
      * Runs the render pipeline in the current renderpass.
      * @param commandBuffer The command buffer to record render command into.

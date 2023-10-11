@@ -23,6 +23,7 @@ public:
     explicit GaussianBlurSubrender(const Pipeline::Stage& pipelineStage, std::string filterTextureName,
                                    const GaussianData& gaaussianData = GaussianData());
 
+    void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
     void PostRender(const CommandBuffer& commandBuffer) override;
 

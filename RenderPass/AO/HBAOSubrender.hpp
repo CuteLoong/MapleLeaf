@@ -35,6 +35,7 @@ public:
 
     explicit HBAOSubrender(const Pipeline::Stage& pipelineStage, HBAOData hbaoData = HBAOData());
 
+    void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
     void PostRender(const CommandBuffer& commandBuffer) override;
 

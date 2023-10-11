@@ -90,6 +90,7 @@ private:
     using StageIndex = std::pair<Pipeline::Stage, std::size_t>;
     void RemoveSubrenderStage(const TypeId& id);
 
+    void PreRenderStage(const Pipeline::Stage& stage, const CommandBuffer& commandBuffer);
     /**
      * Iterates through all Subrenders.
      * @param stage The Subrender stage.

@@ -10,7 +10,7 @@ Camera::Camera()
     : nearPlane(0.1f)
     , farPlane(100.0f)
     , fieldOfView(glm::radians(60.0f))
-    , eyeSeparation(0.08f)
+    , eyeSeparation(5.0f)
     , up(glm::vec3(0.0f, 1.0f, 0.0f))
     , forward(glm::vec3(0.0f, 0.0f, -1.0f))   // rotation(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f))
     , position(glm::vec3(0.0f, 0.0f, 2.0f))
@@ -41,10 +41,14 @@ void Camera::Update()
     stereoViewPosition[0] = glm::vec4(position - right * eyeSeparation / 2.0f, 1.0f);
     stereoViewPosition[1] = glm::vec4(position + right * eyeSeparation / 2.0f, 1.0f);
 
-    stereoViewMatrix[0]       = glm::lookAt(glm::vec3(stereoViewPosition[0]), glm::vec3(stereoViewPosition[0]) + forward, up);
-    stereoViewMatrix[1]       = glm::lookAt(glm::vec3(stereoViewPosition[1]), glm::vec3(stereoViewPosition[1]) + forward, up);
-    stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
-    stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
+    stereoViewMatrix[0]          = glm::lookAt(glm::vec3(stereoViewPosition[0]), glm::vec3(stereoViewPosition[0]) + forward, up);
+    stereoViewMatrix[1]          = glm::lookAt(glm::vec3(stereoViewPosition[1]), glm::vec3(stereoViewPosition[1]) + forward, up);
+    stereoProjectionMatrix[0]    = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
+    stereoProjectionMatrix[1]    = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
+    invStereoViewMatrix[0]       = glm::inverse(stereoViewMatrix[0]);
+    invStereoViewMatrix[1]       = glm::inverse(stereoViewMatrix[1]);
+    invStereoProjectionMatrix[0] = glm::inverse(stereoProjectionMatrix[0]);
+    invStereoProjectionMatrix[1] = glm::inverse(stereoProjectionMatrix[1]);
 }
 
 void Camera::UpdateByTransform()
@@ -68,8 +72,10 @@ void Camera::UpdateByInput()
 
         velocity = 5.0f * delta * positionDelta;
 
-        rotation.y += rotationDelta.x * 0.001;
-        rotation.x += rotationDelta.y * 0.001;
+        float mouseSensity = 0.0001f * Engine::Get()->GetUps();
+
+        rotation.y += rotationDelta.x * mouseSensity;
+        rotation.x += rotationDelta.y * mouseSensity;
         rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
         glm::mat4 rotationMatrix = glm::mat4(1.0f);

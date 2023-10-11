@@ -11,6 +11,8 @@ MeshesSubrender::MeshesSubrender(const Pipeline::Stage& pipelineStage, Sort sort
     , uniformScene(true)
 {}
 
+void MeshesSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void MeshesSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();

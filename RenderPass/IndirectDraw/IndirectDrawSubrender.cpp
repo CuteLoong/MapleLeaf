@@ -5,9 +5,11 @@
 namespace MapleLeaf {
 IndirectDrawSubrender::IndirectDrawSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"Shader/GPUDriven/Default.vert", "Shader/GPUDriven/Default.frag"},
-               {Vertex3D::GetVertexInput()}, {}, PipelineGraphics::Mode::MRT)
+    , pipeline(pipelineStage, {"Shader/GPUDriven/Default.vert", "Shader/GPUDriven/Default.frag"}, {Vertex3D::GetVertexInput()}, {},
+               PipelineGraphics::Mode::MRT)
 {}
+
+void IndirectDrawSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 
 void IndirectDrawSubrender::Render(const CommandBuffer& commandBuffer)
 {
