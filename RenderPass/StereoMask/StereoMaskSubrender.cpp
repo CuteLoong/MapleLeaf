@@ -9,17 +9,19 @@ StereoMaskSubrender::StereoMaskSubrender(const Pipeline::Stage& pipelineStage)
                                 PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
 {}
 
+void StereoMaskSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void StereoMaskSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     uniformScene.Push("projection", camera->GetStereoProjectionMatrix());
-    uniformScene.Push("view", camera->GetStereoViewMatrix()); 
+    uniformScene.Push("view", camera->GetStereoViewMatrix());
     uniformScene.Push("zBufferParams", camera->GetZBufferParams());
 
     descriptorSet.Push("UniformScene", uniformScene);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
-    
+
     if (!descriptorSet.Update(pipeline)) return;
 
     // Draws the quad.

@@ -29,6 +29,7 @@ public:
 
     explicit SSAOStereoSubrender(const Pipeline::Stage& pipelineStage, SSAOData ssaoData = SSAOData());
 
+    void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
     void PostRender(const CommandBuffer& commandBuffer) override;
 

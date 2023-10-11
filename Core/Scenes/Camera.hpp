@@ -61,6 +61,9 @@ public:
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
+    const glm::mat4& GetInverseViewMatrix() const { return invViewMatrix; }
+    const glm::mat4& GetInverseProjectionMatrix() const { return invProjectionMatrix; }
+
     // Values used to linearize the Z buffer (http://www.humus.name/temp/Linearize%20depth.txt)
     // x = 1-far/near
     // y = far/near
@@ -76,12 +79,12 @@ public:
     const uint32_t  GetStereoPixelWidth() const;
     const glm::vec4 GetStereoPixelSize() const;
 
-    const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; };
-    const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
     const std::array<glm::vec4, 2>& GetStereoViewPosition() const { return stereoViewPosition; }
 
-    const glm::mat4& GetInverseViewMatrix() const { return invViewMatrix; }
-    const glm::mat4& GetInverseProjectionMatrix() const { return invProjectionMatrix; }
+    const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; }
+    const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
+    const std::array<glm::mat4, 2>& GetInvStereoViewMatrix() const { return invStereoViewMatrix; };
+    const std::array<glm::mat4, 2>& GetInvStereoProjectionMatrix() const { return invStereoProjectionMatrix; }
 
 protected:
     std::string name;
@@ -104,7 +107,10 @@ protected:
     glm::mat4 invProjectionMatrix;
 
     std::array<glm::vec4, 2> stereoViewPosition;
+
     std::array<glm::mat4, 2> stereoViewMatrix;
     std::array<glm::mat4, 2> stereoProjectionMatrix;
+    std::array<glm::mat4, 2> invStereoViewMatrix;
+    std::array<glm::mat4, 2> invStereoProjectionMatrix;
 };
 }   // namespace MapleLeaf

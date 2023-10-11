@@ -25,6 +25,8 @@ SSAOStereoSubrender::SSAOStereoSubrender(const Pipeline::Stage& pipelineStage, S
     }
 }
 
+void SSAOStereoSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void SSAOStereoSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();

@@ -24,6 +24,8 @@ SSAOSubrender::SSAOSubrender(const Pipeline::Stage& pipelineStage, SSAOData ssao
     }
 }
 
+void SSAOSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void SSAOSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();

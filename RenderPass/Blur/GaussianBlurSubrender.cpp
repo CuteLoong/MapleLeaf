@@ -37,6 +37,8 @@ GaussianBlurSubrender::GaussianBlurSubrender(const Pipeline::Stage& pipelineStag
     }
 }
 
+void GaussianBlurSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void GaussianBlurSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();

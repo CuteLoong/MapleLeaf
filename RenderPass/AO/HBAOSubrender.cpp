@@ -17,6 +17,8 @@ HBAOSubrender::HBAOSubrender(const Pipeline::Stage& pipelineStage, HBAOData hbao
     hbaoNoise = (Resources::Get()->GetThreadPool().Enqueue(ComputeNoise, noiseSize.x, noiseSize.y, hbaoData.numRays));
 }
 
+void HBAOSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
 void HBAOSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
