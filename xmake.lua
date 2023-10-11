@@ -73,7 +73,8 @@ add_includedirs(
 "RenderPass/AO",
 "RenderPass/HiZDraw",
 "RenderPass/Mesh",
-"RenderPass/StereoMask"
+"RenderPass/StereoMask",
+"RenderPass/Blur"
 )
 
 target("RenderPass")
@@ -86,7 +87,8 @@ target("RenderPass")
     "RenderPass/AO/*.cpp",
     "RenderPass/HiZDraw/*.cpp",
     "RenderPass/Mesh/*.cpp",
-    "RenderPass/StereoMask/*.cpp"
+    "RenderPass/StereoMask/*.cpp",
+    "RenderPass/Blur/*.cpp"
     )
 target_end()
 
