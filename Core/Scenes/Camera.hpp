@@ -68,13 +68,13 @@ public:
     // w = y/far
     const glm::vec4 GetZBufferParams() const;
 
-    const uint32_t GetPixelHeight() const;
-    const uint32_t GetPixelWidth() const;
-    const glm::uvec4 GetPixelSize() const;
+    const uint32_t  GetPixelHeight() const;
+    const uint32_t  GetPixelWidth() const;
+    const glm::vec4 GetPixelSize() const;
 
-    const uint32_t GetStereoPixelHeight() const;
-    const uint32_t GetStereoPixelWidth() const;
-    const glm::uvec4 GetStereoPixelSize() const;
+    const uint32_t  GetStereoPixelHeight() const;
+    const uint32_t  GetStereoPixelWidth() const;
+    const glm::vec4 GetStereoPixelSize() const;
 
     const std::array<glm::mat4, 2>& GetStereoViewMatrix() const { return stereoViewMatrix; };
     const std::array<glm::mat4, 2>& GetStereoProjectionMatrix() const { return stereoProjectionMatrix; }
