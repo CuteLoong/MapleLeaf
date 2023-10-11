@@ -12,7 +12,7 @@ layout(set=0, binding=0) uniform UniformScene
     mat4  invProjection;
     mat4  invView;
     vec4  zBufferParams;
-    uvec4 pixelSize; // camera's pixelWidth, pixelHeight, 1.0 / pixelWidth, 1.0f / pixelHeight
+    vec4 pixelSize; // camera's pixelWidth, pixelHeight, 1.0 / pixelWidth, 1.0f / pixelHeight
 	vec3  cameraPosition;
 } scene;
 
@@ -22,6 +22,7 @@ layout(set=0, binding=1) uniform UniformHBAOData {
     uint  stepCount;
     float maxRadiusPixels;
     float sampleRadius;
+    float pixelRadius;
     float intensity;
     float angleBias;
 } hbaoData;
@@ -63,7 +64,7 @@ vec3 ViewNormalAtScreenUV(vec2 uv)
     vec3 vDeriv = viewSpacePos_u - viewSpacePos_c;
 
     // get view space normal from the cross product of the diffs
-    vec3 viewNormal = normalize(cross(hDeriv, vDeriv));
+    vec3 viewNormal = normalize(cross(vDeriv,  hDeriv));
 
     return viewNormal;
 }
@@ -73,16 +74,14 @@ vec2 RotateDirection(vec2 dir, vec2 cosSin)
   return vec2(dir.x*cosSin.x - dir.y*cosSin.y, dir.x*cosSin.y + dir.y*cosSin.x);
 }
 
-float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, float topOcclusion)
+float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, inout float topOcclusion)
 {
     vec3 horizonVector = sampleViewPos - viewPosition;
     float horizonVectorLength = length(horizonVector);
 
-    float occlusion;
+    float occlusion = dot(viewNormal, horizonVector) / horizonVectorLength;
 
-    occlusion = dot(viewNormal, horizonVector) / horizonVectorLength;
-
-    float diff = max(occlusion - topOcclusion, 0);
+    float diff = max(occlusion - topOcclusion, 0.0f);
     topOcclusion = max(occlusion, topOcclusion);
 
     float distanceFactor = horizonVectorLength / hbaoData.sampleRadius;
@@ -97,7 +96,7 @@ void main()
     vec3 viewPosition = ViewSpacePosAtScreenUV(uv);
     vec3 viewNormal = ViewNormalAtScreenUV(uv);
 
-    float stride = min(hbaoData.sampleRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
+    float stride = min(hbaoData.pixelRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
     if(stride < 1.0f) {
         outColour = vec4(1.0f);
@@ -125,8 +124,8 @@ void main()
             totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion);
         }
     }
-    float weight = 1.0f / hbaoData.numRays / hbaoData.stepCount;
+    float weight = 1.0f / hbaoData.numRays;
 
-    float ao = clamp(1.0f - totalOcclusion * weight * hbaoData.intensity, 0.0f, 1.0f);
+    float ao = clamp(1.0f - totalOcclusion * weight, 0.0f, 1.0f);
     outColour = vec4(ao, ao, ao, 1.0f);
 }

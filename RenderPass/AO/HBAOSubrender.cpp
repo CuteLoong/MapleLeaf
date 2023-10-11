@@ -29,13 +29,14 @@ void HBAOSubrender::Render(const CommandBuffer& commandBuffer)
     uniformScene.Push("zBufferParams", camera->GetZBufferParams());
     uniformScene.Push("pixelSize", camera->GetPixelSize());
 
-    float sampleRadius = camera->GetPixelHeight() * hbaoData.sampleRadius / (2.0f * glm::tan(camera->GetFieldOfView()));
+    float pixelRadius = camera->GetPixelHeight() * hbaoData.sampleRadius / (2.0f * glm::tan(camera->GetFieldOfView()));
 
     uniformHBAOData.Push("noiseScale", hbaoData.noiseScale);
     uniformHBAOData.Push("numRays", hbaoData.numRays);
     uniformHBAOData.Push("stepCount", hbaoData.stepCount);
     uniformHBAOData.Push("maxRadiusPixels", hbaoData.maxRadiusPixels);
-    uniformHBAOData.Push("sampleRadius", sampleRadius);
+    uniformHBAOData.Push("sampleRadius", hbaoData.sampleRadius);
+    uniformHBAOData.Push("pixelRadius", pixelRadius);
     uniformHBAOData.Push("intensity", hbaoData.intensity);
     uniformHBAOData.Push("angleBias", hbaoData.angleBias);
 
