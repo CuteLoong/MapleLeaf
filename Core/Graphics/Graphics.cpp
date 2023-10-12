@@ -103,7 +103,7 @@ void Graphics::Update()
 
             auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
 
-            // now postRender only support compute pass, TODO add support of default pipeline render
+            // preRender
             for (const auto& subpass : renderStage->GetSubpasses()) {
                 stage.second = subpass.GetBinding();
 

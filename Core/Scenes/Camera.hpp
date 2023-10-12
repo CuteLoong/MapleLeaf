@@ -49,6 +49,7 @@ public:
     const glm::vec3& GetVelocity() const { return velocity; }
     const glm::vec3& GetUpVector() const { return up; }
     const glm::vec3& GetForward() const { return forward; }
+    const glm::vec3& GetRight() const { return right; }
     void             SetUpVector(const glm::vec3& up) { this->up = up; }
     void             SetForward(const glm::vec3& forward) { this->forward = forward; }
     void             SetPosition(const glm::vec3& position) { this->position = position; }
