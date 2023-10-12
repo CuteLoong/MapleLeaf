@@ -63,7 +63,7 @@ vec3[4] GetCameraFarClipPlanePoint() {
     vec3 points[4]; 
 
     float distance = object.farPlane;
-    float halfFovRad = object.fieldOfView;
+    float halfFovRad = object.fieldOfView / 2.0;
     float upLen = distance * tan(halfFovRad);
     float rightLen = upLen * object.aspectRatio;
 
@@ -71,6 +71,10 @@ vec3[4] GetCameraFarClipPlanePoint() {
     vec3 up = upLen * object.up;
     vec3 right = rightLen * object.right;
 
+    //2--------3
+    //-        -
+    //-        -
+    //0--------1
     points[0] = farCenterPoint - up - right;
     points[1] = farCenterPoint - up + right;
     points[2] = farCenterPoint + up - right;
