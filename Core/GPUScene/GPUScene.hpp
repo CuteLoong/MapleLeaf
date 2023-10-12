@@ -1,12 +1,13 @@
 #pragma once
 
 #include "DescriptorHandler.hpp"
-#include "Future.hpp"
 #include "GPUInstance.hpp"
 #include "GPUMaterial.hpp"
 #include "PipelineCompute.hpp"
 #include "Resources.hpp"
+#include "StorageBuffer.hpp"
 #include "StorageHandler.hpp"
+#include <memory>
 
 namespace MapleLeaf {
 class GPUScene
@@ -27,11 +28,13 @@ public:
     void PushDescriptors(DescriptorsHandler& descriptorSet);
     bool cmdRender(const CommandBuffer& commandBuffer);
 
-    const StorageHandler& GetInstanceDatasHandler() const { return instancesHandler; }
+    const StorageBuffer* GetInstanceDatasHandler() const { return instancesBuffer.get(); }
+
+    const IndirectBuffer* GetIndirectBuffer() const { return drawCullingIndirectBuffer.get(); }
 
     uint32_t GetInstanceCount() const { return instances.size(); }
 
-    static std::unique_ptr<IndirectBuffer> ComputeFrustumCulling(const StorageBuffer* instanceBuffer);
+    // static std::unique_ptr<IndirectBuffer> ComputeFrustumCulling(const StorageBuffer* instanceBuffer);
 
 private:
     struct InstanceData
@@ -92,9 +95,12 @@ private:
     std::vector<InstanceData> instancesData;
     std::vector<MaterialData> materialsData;
 
-    StorageHandler     instancesHandler;
-    StorageHandler     materialsHandler;
+    // StorageHandler instancesHandler;
+    // StorageHandler materialsHandler;
 
-    Future<std::unique_ptr<IndirectBuffer>> DrawCulling;
+    std::unique_ptr<StorageBuffer> instancesBuffer;
+    std::unique_ptr<StorageBuffer> materialsBuffer;
+
+    std::unique_ptr<IndirectBuffer> drawCullingIndirectBuffer;
 };
 }   // namespace MapleLeaf
