@@ -20,8 +20,11 @@ public:
     void PostRender(const CommandBuffer& commandBuffer) override;
 
 private:
-    PipelineGraphics   pipeline;
-    DescriptorsHandler descriptorSet;
+    PipelineGraphics pipeline;
+    PipelineCompute  compute;
+
+    DescriptorsHandler descriptorSetCompute;
+    DescriptorsHandler descriptorSetGraphics;
 
     UniformHandler uniformScene;
 };
