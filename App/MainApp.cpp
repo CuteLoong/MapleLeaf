@@ -30,6 +30,7 @@ MainApp::MainApp()
     // Registers file search paths.
     Log::Out("Working Directory: ", std::filesystem::current_path(), '\n');
     Files::Get()->AddSearchPath("Resources");
+    Files::Get()->AddSearchPath("Resources/Shader");
 }
 
 MainApp::~MainApp() {}
@@ -38,7 +39,7 @@ void MainApp::Start()
 {
     Devices::Get()->GetWindow()->SetTitle("MapleLeaf");
     // Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
-     Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
+    Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
 
 
