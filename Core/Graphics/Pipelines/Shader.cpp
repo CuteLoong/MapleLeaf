@@ -14,9 +14,7 @@
 #include "config.h"
 
 namespace MapleLeaf {
-const std::vector<const char*> Shader::BindelssLayouts = {
-    "ImageSamplers"
-};
+const std::vector<const char*> Shader::BindelssLayouts = {"ImageSamplers"};
 
 class ShaderIncluder : public glslang::TShader::Includer
 {
