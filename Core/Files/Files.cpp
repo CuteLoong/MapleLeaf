@@ -39,7 +39,7 @@ std::optional<std::string> Files::Read(const std::filesystem::path& path)
 {
     auto exisitPath = GetExistPath(path);
     if (!exisitPath) {
-        Log::Error("Path ", path, "not found");
+        Log::Error("Path ", path, "not found", '\n');
         return std::nullopt;
     }
 
