@@ -20,9 +20,14 @@ public:
     void PostRender(const CommandBuffer& commandBuffer) override;
 
 private:
-    PipelineGraphics   pipeline;
-    DescriptorsHandler descriptorSet;
+    PipelineGraphics pipeline;
+    PipelineCompute  compute;
 
-    UniformHandler uniformScene;
+    DescriptorsHandler descriptorSetCompute;
+    DescriptorsHandler descriptorSetGraphics;
+
+    PushHandler    pushHandler;
+    UniformHandler uniformCamera;
+    UniformHandler uniformCameraCompute;
 };
 }   // namespace MapleLeaf

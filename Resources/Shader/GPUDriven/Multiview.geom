@@ -1,15 +1,12 @@
 #version 450
 
 #extension GL_ARB_viewport_array : enable
+#extension GL_GOOGLE_include_directive : require
 
 layout (triangles, invocations = 2) in;
 layout (triangle_strip, max_vertices = 3) out;
 
-layout (set = 0, binding = 0) uniform UniformScene{
-    mat4 projection[2];
-    mat4 view[2];
-    vec3 cameraPos;
-} scene;
+#include <Misc/Camera.glsl>
 
 layout(location = 0) in vec3 inPosition[];
 layout(location = 1) in vec2 inUV[];
@@ -31,7 +28,7 @@ void main()
         outMaterialId = inMaterialId[i];
 
         vec4 worldPosition = gl_in[i].gl_Position;
-        gl_Position = scene.projection[gl_InvocationID] * scene.view[gl_InvocationID] * worldPosition;
+        gl_Position = camera.stereoProjection[gl_InvocationID] * camera.stereoView[gl_InvocationID] * worldPosition;
 
         gl_ViewportIndex = gl_InvocationID;
         EmitVertex();
