@@ -23,8 +23,16 @@ layout(set=0, binding=0) uniform UniformCamera
     vec4 cameraStereoPosition[2];
 } camera;
 
+mat4 GetProjection(){ return camera.projection; }
+
+mat4 GetView(){ return camera.view; }
+
 vec4[6] GetFrustumPlanes(int viewIndex) {
     return viewIndex == 0 ? camera.stereoLeftFrustumPlane : camera.stereoRightFrustumPlane;
+}
+
+vec4[6] GetFrustumPlanes() {
+    return camera.frustumPlane;
 }
 
 vec4 GetCameraPosition(int viewIndex) {
