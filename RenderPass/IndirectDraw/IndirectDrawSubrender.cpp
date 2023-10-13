@@ -19,24 +19,17 @@ void IndirectDrawSubrender::PreRender(const CommandBuffer& commandBuffer)
     if (!gpuScene->GetIndirectBuffer()) return;
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
+    camera->PushUniforms(uniformCameraCompute);
 
-    uint32_t    instanceCount = gpuScene->GetInstanceCount();
+    uint32_t instanceCount = gpuScene->GetInstanceCount();
+
     PushHandler pushHandler(*compute.GetShader()->GetUniformBlock("PushObject"));
 
-    pushHandler.Push("projection", camera->GetProjectionMatrix());
-    pushHandler.Push("view", camera->GetViewMatrix());
-    pushHandler.Push("cameraPos", camera->GetPosition());
-    pushHandler.Push("up", camera->GetUpVector());
-    pushHandler.Push("forward", camera->GetForward());
-    pushHandler.Push("right", camera->GetRight());
-    pushHandler.Push("nearPlane", camera->GetNearPlane());
-    pushHandler.Push("farPlane", camera->GetFarPlane());
-    pushHandler.Push("fieldOfView", camera->GetFieldOfView());
-    pushHandler.Push("aspectRatio", camera->GetAspectRatio());
     pushHandler.Push("instanceCount", instanceCount);
 
     descriptorSetCompute.Push("InstanceDatas", gpuScene->GetInstanceDatasHandler());
     descriptorSetCompute.Push("DrawCommandBuffer", gpuScene->GetIndirectBuffer());
+    descriptorSetCompute.Push("UniformCamera", uniformCameraCompute);
     descriptorSetCompute.Push("PushObject", pushHandler);
 
     if (!descriptorSetCompute.Update(compute)) return;
@@ -54,11 +47,9 @@ void IndirectDrawSubrender::Render(const CommandBuffer& commandBuffer)
     if (!gpuScene) return;
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
-    uniformScene.Push("projection", camera->GetProjectionMatrix());
-    uniformScene.Push("view", camera->GetViewMatrix());
-    uniformScene.Push("cameraPos", camera->GetPosition());
+    camera->PushUniforms(uniformCamera);
 
-    descriptorSetGraphics.Push("UniformScene", uniformScene);
+    descriptorSetGraphics.Push("UniformCamera", uniformCamera);
     gpuScene->PushDescriptors(descriptorSetGraphics);
 
     if (!descriptorSetGraphics.Update(pipeline)) return;
