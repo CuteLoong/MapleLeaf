@@ -45,15 +45,7 @@ void IndirectDrawSubrender::PreRender(const CommandBuffer& commandBuffer)
     pushHandler.BindPush(commandBuffer, compute);
     compute.CmdRender(commandBuffer, glm::uvec2(instanceCount, 1));
 
-    VkBufferMemoryBarrier imageMemoryBarrier = {};
-    imageMemoryBarrier.sType                 = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-    imageMemoryBarrier.srcAccessMask         = VK_ACCESS_SHADER_WRITE_BIT;
-    imageMemoryBarrier.dstAccessMask         = VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-    imageMemoryBarrier.buffer                = gpuScene->GetIndirectBuffer()->GetBuffer();
-    imageMemoryBarrier.offset                = 0;
-    imageMemoryBarrier.size                  = VK_WHOLE_SIZE;
-    vkCmdPipelineBarrier(
-        commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, 0, 0, nullptr, 1, &imageMemoryBarrier, 0, nullptr);
+    gpuScene->GetIndirectBuffer()->IndirectBufferPipelineBarrier(commandBuffer);
 }
 
 void IndirectDrawSubrender::Render(const CommandBuffer& commandBuffer)

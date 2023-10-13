@@ -1,0 +1,82 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+#include <Misc/Camera.glsl>
+
+struct IndirectCommand {
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int  vertexOffset;
+    uint firstInstance;
+};
+
+
+layout(set = 0, binding = 1) buffer DrawCommandBuffer 
+{
+    IndirectCommand commands[];
+} drawCommandBuffer;
+
+struct GPUInstanceData
+{
+    mat4 modelMatrix;
+    vec3 AABBLocalMin;
+    uint indexCount;
+    vec3 AABBLocalMax;
+    uint indexOffset;
+    uint vertexCount;
+    uint vertexOffset;
+    uint instanceID;
+    uint materialID;
+};
+
+layout(set = 0, binding = 2) buffer InstanceDatas
+{
+    GPUInstanceData instanceData[];
+} instanceDatas;
+
+layout(push_constant) uniform PushObject {
+	uint instanceCount;
+} object;
+
+bool CulledByFrustum(GPUInstanceData inst, int viewIndex) {
+    vec4[6] frustumPlane = GetFrustumPlanes(viewIndex);
+    mat4 M = inst.modelMatrix;
+    for (int j = 0; j < 6; j++) {
+        bool culled = true;
+        vec4 plane = frustumPlane[j];
+        for (int i = 0; i < 8; i++) {
+            vec3 w = vec3(i & 1, (i >> 1) & 1, (i >> 2) & 1);
+            vec4 p = M * vec4(mix(inst.AABBLocalMin, inst.AABBLocalMax, w), 1.0f);
+
+            culled = culled && dot(plane, p) < 0.0f;
+        }
+        if (culled) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool IsVisible(GPUInstanceData inst) {
+    return !CulledByFrustum(inst, 0) || !CulledByFrustum(inst, 1);
+}
+
+void main() {
+    int idx = int(gl_GlobalInvocationID.x);
+    if (idx >= int(object.instanceCount)) return;
+
+    GPUInstanceData instance = instanceDatas.instanceData[idx];
+    IndirectCommand cmd;
+    cmd.indexCount = instance.indexCount;
+    cmd.instanceCount = IsVisible(instance) ? 1 : 0;
+    cmd.firstIndex = instance.indexOffset;
+    cmd.vertexOffset = int(instance.vertexOffset);
+    cmd.firstInstance = instance.instanceID;
+
+    drawCommandBuffer.commands[idx] = cmd;
+}

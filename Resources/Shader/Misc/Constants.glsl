@@ -3,6 +3,7 @@
 
 #undef M_PI
 #define M_PI 3.1415926535897932384626433832795
-#define INV_M_PI (1.0 / PI)
+#undef M_PI
+#define INV_M_PI (1.0 / M_PI)
 
 #endif

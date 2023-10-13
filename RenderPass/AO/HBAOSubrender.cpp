@@ -31,7 +31,7 @@ void HBAOSubrender::Render(const CommandBuffer& commandBuffer)
     uniformScene.Push("zBufferParams", camera->GetZBufferParams());
     uniformScene.Push("pixelSize", camera->GetPixelSize());
 
-    float pixelRadius = camera->GetPixelHeight() * hbaoData.sampleRadius / (2.0f * glm::tan(camera->GetFieldOfView()));
+    float pixelRadius = camera->GetPixelHeight() * hbaoData.sampleRadius / (2.0f * glm::tan(camera->GetFieldOfView() / 2.0f));
 
     uniformHBAOData.Push("noiseScale", hbaoData.noiseScale);
     uniformHBAOData.Push("numRays", hbaoData.numRays);
