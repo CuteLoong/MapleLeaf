@@ -98,7 +98,7 @@ void Buffer::InsertBufferMemoryBarrier(const CommandBuffer& commandBuffer, const
                                        VkDeviceSize offset, VkDeviceSize size)
 {
     VkBufferMemoryBarrier bufferMemoryBarrier = {};
-    bufferMemoryBarrier.sType                 = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    bufferMemoryBarrier.sType                 = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
     bufferMemoryBarrier.srcAccessMask         = srcAccessMask;
     bufferMemoryBarrier.dstAccessMask         = dstAccessMask;
     bufferMemoryBarrier.srcQueueFamilyIndex   = VK_QUEUE_FAMILY_IGNORED;
