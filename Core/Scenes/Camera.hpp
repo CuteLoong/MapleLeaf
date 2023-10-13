@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.hpp"
+#include "DescriptorHandler.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <array>
@@ -19,6 +20,11 @@ public:
 
     void UpdateByTransform();
     void UpdateByInput();
+
+    void UpdateCameraInfo();
+    void UpdateStereoCameraInfo();
+
+    void PushUniforms(UniformHandler& uniformObject);
 
     /**
      * Gets the distance of the near pane of the view frustum.
@@ -107,11 +113,25 @@ protected:
     glm::mat4 invViewMatrix;
     glm::mat4 invProjectionMatrix;
 
+    /* frustum's four vector, start from camera position
+     *0    1
+     *2    3
+     */
+    std::array<glm::vec4, 4> frustumVector;
+
+    /* frustum's six plane, store normal
+     * left, right, bottom, top, near, far
+     */
+    std::array<glm::vec4, 6> frustumPlane;
+
     std::array<glm::vec4, 2> stereoViewPosition;
 
     std::array<glm::mat4, 2> stereoViewMatrix;
     std::array<glm::mat4, 2> stereoProjectionMatrix;
     std::array<glm::mat4, 2> invStereoViewMatrix;
     std::array<glm::mat4, 2> invStereoProjectionMatrix;
+
+    std::array<std::array<glm::vec4, 4>, 2> stereoFrustumVector;
+    std::array<std::array<glm::vec4, 6>, 2> stereoFrustumPlane;
 };
 }   // namespace MapleLeaf

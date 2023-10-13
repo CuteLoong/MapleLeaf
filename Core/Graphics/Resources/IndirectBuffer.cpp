@@ -38,6 +38,16 @@ WriteDescriptorSet IndirectBuffer::GetWriteDescriptor(uint32_t binding, VkDescri
     return {descriptorWrite, bufferInfo};
 }
 
+void IndirectBuffer::IndirectBufferPipelineBarrier(const CommandBuffer& commandBuffer) const
+{
+    Buffer::InsertBufferMemoryBarrier(commandBuffer,
+                                      this->buffer,
+                                      VK_ACCESS_SHADER_WRITE_BIT,
+                                      VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                                      VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                      VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+}
+
 VkDescriptorSetLayoutBinding IndirectBuffer::GetDescriptorSetLayout(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stage,
                                                                     uint32_t count)
 {

@@ -34,8 +34,6 @@ public:
 
     uint32_t GetInstanceCount() const { return instances.size(); }
 
-    // static std::unique_ptr<IndirectBuffer> ComputeFrustumCulling(const StorageBuffer* instanceBuffer);
-
 private:
     struct InstanceData
     {
