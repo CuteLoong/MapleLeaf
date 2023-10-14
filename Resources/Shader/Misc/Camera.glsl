@@ -17,8 +17,10 @@ layout(set=0, binding=0) uniform UniformCamera
     vec4 stereoRightFrustumVector[4];
     vec4 stereoLeftFrustumPlane[6];
     vec4 stereoRightFrustumPlane[6];
+    vec4 projectionParams; // x = 1 or -1 (-1 if projection is flipped), y = near plane, z = far plane, w = 1/far plane
     vec4 zBufferParams; // x = 1-far/near, y = far/near,  z = x/far, w = y/far
     vec4 pixelSize; // camera's pixelWidth, pixelHeight, 1.0 / pixelWidth, 1.0f / pixelHeight
+    vec4 stereoPixelSize;
     vec4 cameraPosition;
     vec4 cameraStereoPosition[2];
 } camera;
@@ -37,14 +39,6 @@ vec4[6] GetFrustumPlanes() {
 
 vec4 GetCameraPosition(int viewIndex) {
     return camera.cameraStereoPosition[viewIndex];
-}
-
-float Linear01Depth(float z) {
-    return 1.0 / (camera.zBufferParams.x * z + camera.zBufferParams.y);
-}
-
-float LinearEyeDepth(float z) {
-    return 1.0 / (camera.zBufferParams.z * z + camera.zBufferParams.w);
 }
 
 #endif

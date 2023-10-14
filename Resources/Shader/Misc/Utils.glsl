@@ -1,0 +1,69 @@
+#ifndef MISC_Utils_GLSL
+#define MISC_Utils_GLSL
+
+float Linear01Depth(float z) {
+    return 1.0 / (camera.zBufferParams.x * z + camera.zBufferParams.y);
+}
+
+float LinearEyeDepth(float z) {
+    return 1.0 / (camera.zBufferParams.z * z + camera.zBufferParams.w);
+}
+
+// inspired by keijiro's depth inverse projection
+// https://github.com/keijiro/DepthInverseProjection
+// constructs view space ray at the far clip plane from the screen uv
+// then multiplies that ray by the linear 01 depth
+vec3 ViewSpacePosAtScreenUV(vec2 uv)
+{
+    vec3 viewSpaceRay = vec3(camera.invProjection * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, 1.0f, -1.0f) * camera.projectionParams.z)); // left hand to right hand
+    float rawDepth = texture(inDepth, uv).r;
+    return viewSpaceRay * Linear01Depth(rawDepth);
+}
+
+vec3 StereoViewSpacePosAtScreenUV(vec2 uv, int viewIndex)
+{
+    vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, 1.0f, -1.0f) * camera.projectionParams.z)); // left hand to right hand
+    vec2 halfUV = vec2(uv.x / 2.0f + viewIndex * 0.5f, uv.y); // uv is in [0, 1] range, so we need to offset it by half the view index
+    float rawDepth = texture(inDepth, halfUV).r;
+    return viewSpaceRay * Linear01Depth(rawDepth);
+}
+
+vec3 ViewNormalAtScreenUV(vec2 uv)
+{
+    // get current pixel's view space position
+    vec3 viewSpacePos_c = ViewSpacePosAtScreenUV(uv + vec2(0.0f, 0.0f));
+
+    // get view space position at 1 pixel offsets in each major direction
+    vec3 viewSpacePos_r = ViewSpacePosAtScreenUV(uv + vec2(camera.pixelSize.z, 0.0f));
+    vec3 viewSpacePos_d = ViewSpacePosAtScreenUV(uv + vec2(0.0f, camera.pixelSize.w));
+
+    // get the difference between the current and each offset position
+    vec3 hDeriv = viewSpacePos_r - viewSpacePos_c;
+    vec3 vDeriv = viewSpacePos_d - viewSpacePos_c;
+
+    // get view space normal from the cross product of the diffs
+    vec3 viewNormal = normalize(cross(hDeriv, vDeriv));
+
+    return viewNormal;
+}
+
+vec3 StereoViewNormalAtScreenUV(vec2 uv, int viewIndex)
+{
+    // get current pixel's view space position
+    vec3 viewSpacePos_c = StereoViewSpacePosAtScreenUV(uv + vec2(0.0f, 0.0f), viewIndex);
+
+    // get view space position at 1 pixel offsets in each major direction
+    vec3 viewSpacePos_r = StereoViewSpacePosAtScreenUV(uv + vec2(camera.pixelSize.z, 0.0f), viewIndex);
+    vec3 viewSpacePos_d = StereoViewSpacePosAtScreenUV(uv + vec2(0.0f, camera.pixelSize.w), viewIndex);
+
+    // get the difference between the current and each offset position
+    vec3 hDeriv = viewSpacePos_r - viewSpacePos_c;
+    vec3 vDeriv = viewSpacePos_d - viewSpacePos_c;
+
+    // get view space normal from the cross product of the diffs
+    vec3 viewNormal = normalize(cross(hDeriv, vDeriv));
+
+    return viewNormal;
+}
+
+#endif

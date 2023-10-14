@@ -1,9 +1,7 @@
 #ifndef MISC_CONSTANTS_GLSL
 #define MISC_CONSTANTS_GLSL
 
-#undef M_PI
-#define M_PI 3.1415926535897932384626433832795
-#undef M_PI
-#define INV_M_PI (1.0 / M_PI)
+#define M_PI 3.1415926535897932384626433832795f
+#define INV_M_PI (1.0f / M_PI)
 
 #endif
