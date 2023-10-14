@@ -2,13 +2,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_GOOGLE_include_directive : require
 
-layout(set = 0, binding = 0) uniform UniformScene
-{
-    mat4 projection;
-    mat4 view;
-    vec3 cameraPos;
-} scene;
+#include <Misc/Camera.glsl>
 
 struct GPUInstanceData
 {
@@ -49,7 +45,10 @@ void main()
     vec4 worldPosition = instanceData.modelMatrix * position;
     mat3 normalMatrix = transpose(inverse(mat3(instanceData.modelMatrix)));
 
-    gl_Position = scene.projection * scene.view * worldPosition;
+    mat4 projection = GetProjection();
+    mat4 view = GetView();
+
+    gl_Position = projection * view * worldPosition;
 
     outPosition = worldPosition.xyz;
     outUV = inUV;

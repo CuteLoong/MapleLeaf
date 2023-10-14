@@ -1,8 +1,11 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
 
 layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+#include <Misc/Camera.glsl>
 
 struct IndirectCommand {
     uint indexCount;
@@ -12,7 +15,7 @@ struct IndirectCommand {
     uint firstInstance;
 };
 
-layout(set = 0, binding = 0) buffer DrawCommandBuffer 
+layout(set = 0, binding = 1) buffer DrawCommandBuffer 
 {
     IndirectCommand commands[];
 } drawCommandBuffer;
@@ -30,79 +33,18 @@ struct GPUInstanceData
     uint materialID;
 };
 
-layout(set = 0, binding = 1) buffer InstanceDatas
+layout(set = 0, binding = 2) buffer InstanceDatas
 {
     GPUInstanceData instanceData[];
 } instanceDatas;
 
 layout(push_constant) uniform PushObject {
-    mat4 projection;
-    mat4 view;
-    vec3 cameraPos;
-    vec3 up;
-    vec3 forward;
-    vec3 right;
-    float nearPlane;
-    float farPlane;
-    float fieldOfView;
-    float aspectRatio;
 	uint instanceCount;
 } object;
 
-vec4 GetPlane(vec3 normal, vec3 point) {
-    return vec4(normal.x, normal.y, normal.z, -dot(normal, point));
-}
-
-vec4 GetPlane(vec3 a, vec3 b, vec3 c) {
-    vec3 normal = -normalize(cross(b-a,c-a));
-    return GetPlane(normal, a);
-}
-
-//get camera far plane's 4 points
-vec3[4] GetCameraFarClipPlanePoint() {
-    vec3 points[4]; 
-
-    float distance = object.farPlane;
-    float halfFovRad = object.fieldOfView / 2.0;
-    float upLen = distance * tan(halfFovRad);
-    float rightLen = upLen * object.aspectRatio;
-
-    vec3 farCenterPoint = object.cameraPos + distance * object.forward;
-    vec3 up = upLen * object.up;
-    vec3 right = rightLen * object.right;
-
-    //2--------3
-    //-        -
-    //-        -
-    //0--------1
-    points[0] = farCenterPoint - up - right;
-    points[1] = farCenterPoint - up + right;
-    points[2] = farCenterPoint + up - right;
-    points[3] = farCenterPoint + up + right;
-
-    return points;
-}
-
-vec4[6] GetFrustumPlane() {
-    vec4 planes[6];
-
-    vec3 camPos = object.cameraPos;
-    vec3 points[4] = GetCameraFarClipPlanePoint();
-
-    //clockwise 
-    planes[0] = GetPlane(camPos, points[0], points[2]);//left
-    planes[1] = GetPlane(camPos, points[3], points[1]);//right
-    planes[2] = GetPlane(camPos, points[1], points[0]);//bottom
-    planes[3] = GetPlane(camPos, points[2], points[3]);//up
-    planes[4] = GetPlane(-object.forward, camPos + object.forward * object.nearPlane);//near
-    planes[5] = GetPlane(object.forward, camPos + object.forward * object.farPlane);//far
-
-    return planes;
-}
-
 bool IsOutsideThePlane(vec4 plane, vec3 pointPosition)
 {
-    if(dot(plane.xyz, pointPosition) + plane.w > 0)
+    if(dot(plane.xyz, pointPosition) + plane.w < 0)
         return true;
     return false;
 }
@@ -119,11 +61,12 @@ void main() {
     cmd.vertexOffset = int(instance.vertexOffset);
     cmd.firstInstance = instance.instanceID;
 
+
+    vec4[6] planes = GetFrustumPlanes();
+
     mat4 M = instance.modelMatrix;
     vec3 boundMin = instance.AABBLocalMin;
     vec3 boundMax = instance.AABBLocalMax;
-
-    vec4[6] planes = GetFrustumPlane();
 
     vec4 boundVerts[8];
     boundVerts[0] = M * vec4(boundMin, 1);
