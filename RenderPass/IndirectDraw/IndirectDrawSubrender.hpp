@@ -27,5 +27,8 @@ private:
     DescriptorsHandler descriptorSetGraphics;
 
     UniformHandler uniformScene;
+
+    UniformHandler uniformCamera;
+    UniformHandler uniformCameraCompute;
 };
 }   // namespace MapleLeaf
