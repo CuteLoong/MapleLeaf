@@ -10,3 +10,4 @@ a real-time render.
 2. frame buffer create resource accroding component count.
 3. preFrame function.
 4. renderpass's ui component
+5. separate sampler and image2D
