@@ -20,9 +20,8 @@ public:
         float      intensity;
         float      angleBias;
 
-
-        HBAOData(glm::uvec2 noiseScale = glm::uvec2{1.0f, 1.0f}, uint32_t numRays = 8, uint32_t stepCount = 5, float maxRadiusPixels = 32.0f,
-                 float sampleRadius = 0.5f, float intensity = 2.0f, float angleBias = 0.1f)
+        HBAOData(glm::uvec2 noiseScale = glm::uvec2{1.0f, 1.0f}, uint32_t numRays = 8, uint32_t stepCount = 5, float maxRadiusPixels = 64.0f,
+                 float sampleRadius = 1.0f, float intensity = 2.0f, float angleBias = 0.1f)
             : noiseScale(noiseScale)
             , numRays(numRays)
             , stepCount(stepCount)
@@ -43,7 +42,7 @@ private:
     PipelineGraphics pipeline;
 
     UniformHandler     uniformHBAOData;
-    UniformHandler     uniformScene;
+    UniformHandler     uniformCamera;
     DescriptorsHandler descriptorSet;
 
     HBAOData hbaoData;

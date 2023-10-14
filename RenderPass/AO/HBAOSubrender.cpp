@@ -22,14 +22,7 @@ void HBAOSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 void HBAOSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
-
-    uniformScene.Push("projection", camera->GetProjectionMatrix());
-    uniformScene.Push("view", camera->GetViewMatrix());
-    uniformScene.Push("invProjection", camera->GetProjectionMatrix());
-    uniformScene.Push("invView", camera->GetViewMatrix());
-    uniformScene.Push("cameraPosition", camera->GetPosition());
-    uniformScene.Push("zBufferParams", camera->GetZBufferParams());
-    uniformScene.Push("pixelSize", camera->GetPixelSize());
+    camera->PushUniforms(uniformCamera);
 
     float pixelRadius = camera->GetPixelHeight() * hbaoData.sampleRadius / (2.0f * glm::tan(camera->GetFieldOfView() / 2.0f));
 
@@ -42,7 +35,7 @@ void HBAOSubrender::Render(const CommandBuffer& commandBuffer)
     uniformHBAOData.Push("intensity", hbaoData.intensity);
     uniformHBAOData.Push("angleBias", hbaoData.angleBias);
 
-    descriptorSet.Push("UniformScene", uniformScene);
+    descriptorSet.Push("UniformCamera", uniformCamera);
     descriptorSet.Push("UniformHBAOData", uniformHBAOData);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("hbaoNoise", *hbaoNoise);

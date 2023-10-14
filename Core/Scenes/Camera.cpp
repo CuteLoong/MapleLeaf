@@ -176,6 +176,11 @@ const glm::vec4 Camera::GetZBufferParams() const
     return glm::vec4(1.0f - farPlane / nearPlane, farPlane / nearPlane, 1.0f / farPlane - 1.0f / nearPlane, 1.0f / nearPlane);
 }
 
+const glm::vec4 Camera::GetProjectionParams() const
+{
+    return glm::vec4(1.0f, nearPlane, farPlane, 1.0f / farPlane);
+}
+
 const uint32_t Camera::GetPixelHeight() const
 {
     return Devices::Get()->GetWindow()->GetSize().x;
@@ -219,7 +224,9 @@ void Camera::PushUniforms(UniformHandler& uniformObject)
     uniformObject.Push("stereoLeftFrustumPlane", stereoFrustumPlane[0]);
     uniformObject.Push("stereoRightFrustumPlane", stereoFrustumPlane[1]);
     uniformObject.Push("zBufferParams", GetZBufferParams());
+    uniformObject.Push("projectionParams", GetProjectionParams());
     uniformObject.Push("pixelSize", GetPixelSize());
+    uniformObject.Push("stereoPixelSize", GetStereoPixelSize());
     uniformObject.Push("cameraPosition", glm::vec4(position, 1.0f));
     uniformObject.Push("cameraStereoPosition", stereoViewPosition);
 }

@@ -3,19 +3,6 @@
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_GOOGLE_include_directive : require
 
-#define M_PI 3.14159265f
-
-layout(set=0, binding=0) uniform UniformScene
-{
-	mat4  projection;
-	mat4  view;
-    mat4  invProjection;
-    mat4  invView;
-    vec4  zBufferParams;
-    vec4 pixelSize; // camera's pixelWidth, pixelHeight, 1.0 / pixelWidth, 1.0f / pixelHeight
-	vec3  cameraPosition;
-} scene;
-
 layout(set=0, binding=1) uniform UniformHBAOData {
 	uvec2 noiseScale;
     uint  numRays;
@@ -30,44 +17,13 @@ layout(set=0, binding=1) uniform UniformHBAOData {
 layout(set=0, binding = 2) uniform sampler2D inDepth;
 layout(set=0, binding = 3) uniform sampler2D hbaoNoise;
 
+#include <Misc/Constants.glsl>
+#include <Misc/Camera.glsl>
+#include <Misc/Utils.glsl>
+
 layout(location = 0) out vec4 outColour;
 
 layout(location = 0) in vec2 inUV;
-
-float Linear01Depth(float z)
-{
-    return 1.0f / (scene.zBufferParams.x * z + scene.zBufferParams.y);
-}
-
-// inspired by keijiro's depth inverse projection
-// https://github.com/keijiro/DepthInverseProjection
-// constructs view space ray at the far clip plane from the screen uv
-// then multiplies that ray by the linear 01 depth
-vec3 ViewSpacePosAtScreenUV(vec2 uv)
-{
-    vec3 viewSpaceRay = vec3(scene.invProjection * (vec4(uv * 2.0f - 1.0f, 1.0f, 1.0f) * scene.zBufferParams.z));
-    float rawDepth = texture(inDepth, uv).r;
-    return viewSpaceRay * Linear01Depth(rawDepth);
-}
-
-vec3 ViewNormalAtScreenUV(vec2 uv)
-{
-    // get current pixel's view space position
-    vec3 viewSpacePos_c = ViewSpacePosAtScreenUV(uv + vec2(0.0f, 0.0f));
-
-    // get view space position at 1 pixel offsets in each major direction
-    vec3 viewSpacePos_r = ViewSpacePosAtScreenUV(uv + vec2(scene.pixelSize.z, 0.0f));
-    vec3 viewSpacePos_u = ViewSpacePosAtScreenUV(uv + vec2(0.0f, scene.pixelSize.w));
-
-    // get the difference between the current and each offset position
-    vec3 hDeriv = viewSpacePos_r - viewSpacePos_c;
-    vec3 vDeriv = viewSpacePos_u - viewSpacePos_c;
-
-    // get view space normal from the cross product of the diffs
-    vec3 viewNormal = normalize(cross(vDeriv,  hDeriv));
-
-    return viewNormal;
-}
 
 vec2 RotateDirection(vec2 dir, vec2 cosSin)
 {
@@ -116,7 +72,7 @@ void main()
         float topOcclusion = hbaoData.angleBias;
 
         for(int stepIndex = 0; stepIndex < hbaoData.stepCount; stepIndex++) {
-            vec2 SnappedUV = round(rayPixels * direction) * scene.pixelSize.zw + uv;
+            vec2 SnappedUV = round(rayPixels * direction) * camera.pixelSize.zw + uv;
             vec3 sampleViewPos = ViewSpacePosAtScreenUV(SnappedUV);
 
             rayPixels += stride;

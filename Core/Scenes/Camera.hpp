@@ -77,6 +77,7 @@ public:
     // z = x/far
     // w = y/far
     const glm::vec4 GetZBufferParams() const;
+    const glm::vec4 GetProjectionParams() const;
 
     const uint32_t  GetPixelHeight() const;
     const uint32_t  GetPixelWidth() const;
