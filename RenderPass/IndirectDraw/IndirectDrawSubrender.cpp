@@ -23,8 +23,6 @@ void IndirectDrawSubrender::PreRender(const CommandBuffer& commandBuffer)
 
     uint32_t instanceCount = gpuScene->GetInstanceCount();
 
-    PushHandler pushHandler(*compute.GetShader()->GetUniformBlock("PushObject"));
-
     pushHandler.Push("instanceCount", instanceCount);
 
     descriptorSetCompute.Push("InstanceDatas", gpuScene->GetInstanceDatasHandler());

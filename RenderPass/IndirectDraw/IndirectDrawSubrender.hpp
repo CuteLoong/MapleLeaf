@@ -26,8 +26,7 @@ private:
     DescriptorsHandler descriptorSetCompute;
     DescriptorsHandler descriptorSetGraphics;
 
-    UniformHandler uniformScene;
-
+    PushHandler    pushHandler;
     UniformHandler uniformCamera;
     UniformHandler uniformCameraCompute;
 };

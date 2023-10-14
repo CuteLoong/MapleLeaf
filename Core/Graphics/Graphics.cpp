@@ -98,7 +98,7 @@ void Graphics::Update()
             renderStage->Update();
 
             if (!StartRecordCommandBuffer(*renderStage)) {
-                return;
+                continue;
             }
 
             auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
