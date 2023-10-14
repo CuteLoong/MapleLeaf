@@ -1,16 +1,18 @@
 #include "StereoRenderer.hpp"
 
 #include "DeferredSubrender.hpp"
+#include "GaussianBlurSubrender.hpp"
 #include "Graphics.hpp"
+#include "HBAOStereoSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
 #include "MeshesSubrender.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
-#include "SSAOStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
+
 
 namespace Test {
 StereoRenderer::StereoRenderer()
@@ -39,14 +41,26 @@ StereoRenderer::StereoRenderer()
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::STEREO, renderpassAttachments1, renderpassSubpasses1));
 
-    std::vector<Attachment> renderpassAttachments2{{0, "swapchain", Attachment::Type::Swapchain, false},
-                                                   {1, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                   {2, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                   {3, "StereoMask", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+    std::vector<Attachment> renderpassAttachments2{{0, "StereoMask", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                   {1, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {3}}, {1, {}, {2}}, {2, {2}, {0}}, {3, {}, {0}}};
+    std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {0}}, {1, {}, {1}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments2, renderpassSubpasses2));
+
+    std::vector<Attachment> renderpassAttachments3{{0, "AOMapFilter", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+
+    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {0}}};
+
+    AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments3, renderpassSubpasses3));
+
+    std::vector<Attachment> renderpassAttachments4{
+        {0, "swapchain", Attachment::Type::Swapchain, false},
+    };
+
+    std::vector<SubpassType> renderpassSubpasses4 = {{0, {}, {0}}};
+
+    AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments4, renderpassSubpasses4));
 }
 
 void StereoRenderer::Start()
@@ -55,9 +69,10 @@ void StereoRenderer::Start()
     AddSubrender<IndirectDrawStereoSubrender>({1, 0});
 
     AddSubrender<StereoMaskSubrender>({2, 0});
-    AddSubrender<SSAOStereoSubrender>({2, 1});
-    AddSubrender<DeferredSubrender>({2, 2});
-    AddSubrender<ImguiSubrender>({2, 3});
+    AddSubrender<HBAOStereoSubrender>({2, 1});
+    AddSubrender<GaussianBlurSubrender>({3, 0}, "AOMap");
+    AddSubrender<DeferredSubrender>({4, 0});
+    AddSubrender<ImguiSubrender>({4, 0});
 }
 
 void StereoRenderer::Update()
