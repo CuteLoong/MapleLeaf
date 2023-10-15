@@ -25,7 +25,7 @@ vec3 StereoViewSpacePosAtScreenUV(vec2 uv, int viewIndex)
     vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, 1.0f, -1.0f) * camera.projectionParams.z)); // left hand to right hand
 
     float viewOffset = float(viewIndex) * 0.5f;
-    float uvx = clamp(uv.x / 2.0f + viewOffset, viewOffset + 0.0005f, 0.5f + viewOffset - 0.0005f); // clamp to avoid sampling from the other view, and avoid sampling by linear interpolation
+    float uvx = clamp(uv.x / 2.0f + viewOffset, viewOffset + camera.stereoPixelSize.z, 0.5f + viewOffset - camera.stereoPixelSize.z); // clamp to avoid sampling from the other view, and avoid sampling by linear interpolation
     vec2 halfUV = vec2(uvx, uv.y); // uv is in [0, 1] range, so we need to offset it by half the view index
 
     float rawDepth = texture(inDepth, halfUV).r;
