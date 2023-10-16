@@ -2,6 +2,7 @@
 
 #include "DeferredSubrender.hpp"
 #include "GaussianBlurSubrender.hpp"
+#include "GlobalAttachmentsHandler.hpp"
 #include "Graphics.hpp"
 #include "HBAOStereoSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
@@ -17,6 +18,11 @@
 namespace Test {
 StereoRenderer::StereoRenderer()
 {
+    std::vector<FrameAttachment> globalAttachments = {{"gaussianX", FrameAttachment::Type::Image2d, false},
+                                                      {"gaussianY", FrameAttachment::Type::Image2d, false}};
+
+    CreateGlobalAttachmentsHanlder(globalAttachments);
+
     std::vector<Attachment> renderpassAttachments0 = {{0, "shadows", Attachment::Type::Depth, false}};
 
     std::vector<SubpassType> renderpassSubpasses0 = {{0, {}, {0}}};
@@ -78,5 +84,6 @@ void StereoRenderer::Start()
 void StereoRenderer::Update()
 {
     // std::cout << "Main Renderer Update" << std::endl;
+    GetGlobalAttachmentsHandler()->Update();
 }
 }   // namespace Test
