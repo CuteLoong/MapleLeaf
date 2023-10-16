@@ -28,10 +28,13 @@ public:
     const Surface*         GetSurface() const { return surface.get(); }
     const VkPipelineCache& GetPipelineCache() const { return pipelineCache; }
 
-    const std::shared_ptr<CommandPool>& GetCommandPool(const std::thread::id &threadId = std::this_thread::get_id());
+    const std::shared_ptr<CommandPool>& GetCommandPool(const std::thread::id& threadId = std::this_thread::get_id());
 
     Renderer* GetRenderer() const { return renderer.get(); }
     void      SetRenderer(std::unique_ptr<Renderer>&& renderer) { this->renderer = std::move(renderer); }
+
+    const glm::uvec2& GetNonRTAttachmentSize() const { return renderer->GetNonRTAttachmentsHandler()->GetFrameAttachmentSize(); }
+    const Descriptor* GetNonRTAttachment(const std::string& name) const { return renderer->GetNonRTAttachmentsHandler()->GetDescriptor(name); }
 
     const RenderStage* GetRenderStage(uint32_t index) const;
     const Descriptor*  GetAttachment(const std::string& name) const;
@@ -51,9 +54,9 @@ private:
 
     std::map<std::thread::id, std::shared_ptr<CommandPool>> commandPools;
     // Timer used to remove unused command pools.
-	ElapsedTime elapsedPurge;
+    ElapsedTime elapsedPurge;
 
-    VkPipelineCache              pipelineCache = VK_NULL_HANDLE;
+    VkPipelineCache pipelineCache = VK_NULL_HANDLE;
 
     void CreatePipelineCache();
     void ResetRenderStages();
@@ -65,6 +68,5 @@ private:
     void StartRenderpass(RenderStage& renderStage);
     void EndRenderpass(RenderStage& renderStage);
     void EndRecordCommandBuffer(RenderStage& renderStage);
-
 };
 }   // namespace MapleLeaf

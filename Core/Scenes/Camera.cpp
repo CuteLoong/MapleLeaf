@@ -183,11 +183,11 @@ const glm::vec4 Camera::GetProjectionParams() const
 
 const uint32_t Camera::GetPixelHeight() const
 {
-    return Devices::Get()->GetWindow()->GetSize().x;
+    return Devices::Get()->GetWindow()->GetSize().y;
 }
 const uint32_t Camera::GetPixelWidth() const
 {
-    return Devices::Get()->GetWindow()->GetSize().y;
+    return Devices::Get()->GetWindow()->GetSize().x;
 }
 const glm::vec4 Camera::GetPixelSize() const
 {

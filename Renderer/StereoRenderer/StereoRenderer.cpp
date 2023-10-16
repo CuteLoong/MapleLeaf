@@ -2,24 +2,26 @@
 
 #include "DeferredSubrender.hpp"
 #include "GaussianBlurSubrender.hpp"
-#include "GlobalAttachmentsHandler.hpp"
+#include "GaussianBlurXYSubrender.hpp"
 #include "Graphics.hpp"
 #include "HBAOStereoSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
 #include "MeshesSubrender.hpp"
+#include "NonRTAttachmentsHandler.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
 
 
+
 namespace Test {
 StereoRenderer::StereoRenderer()
 {
-    std::vector<FrameAttachment> globalAttachments = {{"gaussianX", FrameAttachment::Type::Image2d, false},
-                                                      {"gaussianY", FrameAttachment::Type::Image2d, false}};
+    std::vector<NonRTAttachment> globalAttachments = {{"gaussianX", NonRTAttachment::Type::Image2d, false},
+                                                      {"gaussianY", NonRTAttachment::Type::Image2d, false}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -76,7 +78,10 @@ void StereoRenderer::Start()
 
     AddSubrender<StereoMaskSubrender>({2, 0});
     AddSubrender<HBAOStereoSubrender>({2, 1});
-    AddSubrender<GaussianBlurSubrender>({3, 0}, "AOMap");
+
+    // AddSubrender<GaussianBlurSubrender>({3, 0}, "AOMap");
+    AddSubrender<GaussianBlurXYSubrender>({3, 0}, "AOMap");
+
     AddSubrender<DeferredSubrender>({4, 0});
     AddSubrender<ImguiSubrender>({4, 0});
 }
@@ -84,6 +89,6 @@ void StereoRenderer::Start()
 void StereoRenderer::Update()
 {
     // std::cout << "Main Renderer Update" << std::endl;
-    GetGlobalAttachmentsHandler()->Update();
+    GetNonRTAttachmentsHandler()->Update();
 }
 }   // namespace Test

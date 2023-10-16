@@ -100,4 +100,53 @@ void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
         TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, layout, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
     }
 }
+
+void Image2d::Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const
+{
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_SHADER_READ_BIT,
+                             layout,
+                             layout,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+}
+void Image2d::Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const
+{
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_SHADER_READ_BIT,
+                             layout,
+                             layout,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+}
+void Image2d::Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer) const
+{
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_SHADER_READ_BIT,
+                             layout,
+                             layout,
+                             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+}
 }   // namespace MapleLeaf

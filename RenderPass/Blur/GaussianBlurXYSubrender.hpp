@@ -31,10 +31,10 @@ private:
     PipelineCompute pipelineX;
     PipelineCompute pipelineY;
 
-    UniformHandler     uniformGaussian;
-    UniformHandler     uniformScene;
-    StorageHandler     storageWeights;
-    DescriptorsHandler descriptorSet;
+    UniformHandler     uniformGaussian[2];
+    UniformHandler     uniformScene[2];
+    StorageHandler     storageWeights[2];
+    DescriptorsHandler descriptorSet[2];
 
     GaussianData       gaussianData;
     std::string        filterTextureName;

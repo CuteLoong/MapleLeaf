@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GlobalAttachmentsHandler.hpp"
+#include "NonRTAttachmentsHandler.hpp"
 #include "Pipeline.hpp"
 #include "RenderStage.hpp"
 #include "SubrenderHolder.hpp"
@@ -27,12 +27,12 @@ public:
 
     void AddRenderStage(std::unique_ptr<RenderStage>&& renderStage) { renderStages.emplace_back(std::move(renderStage)); }
 
-    void CreateGlobalAttachmentsHanlder(const std::vector<FrameAttachment>& frameAttachmentTypes)
+    void CreateGlobalAttachmentsHanlder(const std::vector<NonRTAttachment>& nonRTAttachments)
     {
-        globalAttachmentsHandler = std::make_unique<GlobalAttachmentsHandler>(frameAttachmentTypes);
+        nonRTAttachmentsHandler = std::make_unique<NonRTAttachmentsHandler>(nonRTAttachments);
     }
 
-    GlobalAttachmentsHandler* GetGlobalAttachmentsHandler() const { return globalAttachmentsHandler.get(); }
+    NonRTAttachmentsHandler* GetNonRTAttachmentsHandler() const { return nonRTAttachmentsHandler.get(); }
 
     template<typename T>
     bool HasSubrender() const
@@ -65,6 +65,6 @@ private:
     std::vector<std::unique_ptr<RenderStage>> renderStages;
     SubrenderHolder                           subrenderHolder;
 
-    std::unique_ptr<GlobalAttachmentsHandler> globalAttachmentsHandler;
+    std::unique_ptr<NonRTAttachmentsHandler> nonRTAttachmentsHandler;
 };
 }   // namespace MapleLeaf
