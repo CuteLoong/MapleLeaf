@@ -19,7 +19,7 @@ public:
 private:
     PipelineGraphics pipeline;
 
-    UniformHandler     uniformScene;
+    UniformHandler     uniformCamera;
     DescriptorsHandler descriptorSet;
 };
 }   // namespace MapleLeaf

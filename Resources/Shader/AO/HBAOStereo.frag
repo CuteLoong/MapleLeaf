@@ -54,7 +54,7 @@ void main()
     vec2 stereoUV =  vec2(uv.x * 2.0f - float(viewIndex), uv.y); // [0, 0.5] -> [0, 1] or [0.5, 1.0] -> [0, 1]
 
     vec3 viewPosition = StereoViewSpacePosAtScreenUV(stereoUV, viewIndex);
-    vec3 viewNormal = StereoViewNormalAtScreenUV(stereoUV, viewIndex);
+    vec3 viewNormal = StereoViewNormalAtScreenUVImproved(stereoUV, viewIndex);
 
     float stride = min(hbaoData.pixelRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
@@ -76,7 +76,7 @@ void main()
         float topOcclusion = hbaoData.angleBias;
 
         for(int stepIndex = 0; stepIndex < hbaoData.stepCount; stepIndex++) {
-            vec2 SnappedUV = round(rayPixels * direction) * camera.pixelSize.zw + stereoUV; // calculate the pixel position in screen space
+            vec2 SnappedUV = round(rayPixels * direction) * camera.stereoPixelSize.zw + stereoUV; // calculate the pixel position in screen space
             vec3 sampleViewPos = StereoViewSpacePosAtScreenUV(SnappedUV, viewIndex);
 
             rayPixels += stride;

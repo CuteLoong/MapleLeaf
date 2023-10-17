@@ -15,8 +15,9 @@ layout(set=0, binding=1) uniform UniformHBAOData {
 } hbaoData;
 
 layout(set=0, binding = 2) uniform sampler2D inDepth;
-layout(set=0, binding = 3) uniform sampler2D inStereo;
-layout(set=0, binding = 4) uniform sampler2D hbaoNoise;
+layout(set=0, binding = 3) uniform sampler2D inStereoMask;
+layout(set=0, binding = 4) uniform sampler2D inStereoMV;
+layout(set=0, binding = 5) uniform sampler2D hbaoNoise;
 
 #include <Misc/Constants.glsl>
 #include <Misc/Camera.glsl>
@@ -47,9 +48,29 @@ float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, inout fl
     return diff * distanceFactor;
 }
 
+vec2 ConvertStereoUVToScreenUV(vec2 stereoUV, int viewIndex)
+{
+    vec2 screenUV;
+    screenUV.x = stereoUV.x / 2.0f + float(viewIndex) * 0.5f;
+    screenUV.y = stereoUV.y;
+    return screenUV;
+}
+
+vec2 GetOtherEyeUV(vec2 screenUV)
+{
+    vec2 otherEyeUV = screenUV + texture(inStereoMV, screenUV).xy;
+    return otherEyeUV;
+}
+
+int GetMask(vec2 screenUV)
+{
+    return int(texture(inStereoMask, screenUV).x);
+}
+
 void main()
 {
     int viewIndex = inUV.x < 0.5f ? 0 : 1;
+    int inverseViewIndex = 1 - viewIndex;
     
     if(viewIndex == 1) {
         outColour = vec4(1.0f);
@@ -58,9 +79,26 @@ void main()
     
     vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
     vec2 stereoUV =  vec2(uv.x * 2.0f - float(viewIndex), uv.y); // [0, 0.5] -> [0, 1] or [0.5, 1.0] -> [0, 1]
+    int centerMask = GetMask(uv);
 
     vec3 viewPosition = StereoViewSpacePosAtScreenUV(stereoUV, viewIndex);
-    vec3 viewNormal = StereoViewNormalAtScreenUV(stereoUV, viewIndex);
+    vec3 viewNormal = StereoViewNormalAtScreenUVImproved(stereoUV, viewIndex);
+
+
+    vec2 otherEyeUV;
+    vec2 stereoUVOtherEye;
+
+    vec3 viewPositionOtherEye;
+    vec3 viewNormalOtherEye;
+
+    if(centerMask == 0) {
+        otherEyeUV = GetOtherEyeUV(uv);
+        stereoUVOtherEye = vec2(otherEyeUV.x * 2.0f - float(inverseViewIndex), otherEyeUV.y);
+
+        viewPositionOtherEye = StereoViewSpacePosAtScreenUV(stereoUVOtherEye, inverseViewIndex);
+        viewNormalOtherEye = StereoViewNormalAtScreenUVImproved(stereoUVOtherEye, inverseViewIndex);
+    }
+    
 
     float stride = min(hbaoData.pixelRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
@@ -79,15 +117,31 @@ void main()
 
         vec2 direction = RotateDirection(vec2(cos(angle), sin(angle)), rand.xy);
         vec2 rayPixels = rand.zw * stride + 1.0f;
-        float topOcclusion = hbaoData.angleBias;
+        float topOcclusion1 = hbaoData.angleBias;
+        float topOcclusion2 = hbaoData.angleBias;
 
         for(int stepIndex = 0; stepIndex < hbaoData.stepCount; stepIndex++) {
-            vec2 SnappedUV = round(rayPixels * direction) * camera.pixelSize.zw + stereoUV; // calculate the pixel position in screen space
+            vec2 SnappedUV = round(rayPixels * direction) * camera.stereoPixelSize.zw + stereoUV; // calculate the pixel position in stereo space [0, 1]
             vec3 sampleViewPos = StereoViewSpacePosAtScreenUV(SnappedUV, viewIndex);
 
-            rayPixels += stride;
+            if(centerMask == 0) {
+                vec2 SnappedScreenUV = ConvertStereoUVToScreenUV(SnappedUV, viewIndex);
+                int sampleMask = GetMask(SnappedScreenUV);
+                
+                vec2 OtherEyeSnappedScreenUV = GetOtherEyeUV(SnappedScreenUV);
+                vec2 OtherEyeSnappedUV = vec2(OtherEyeSnappedScreenUV.x * 2.0f - float(inverseViewIndex), OtherEyeSnappedScreenUV.y);
 
-            totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion);
+                vec3 sampleOtherEyeViewPos = StereoViewSpacePosAtScreenUV(OtherEyeSnappedUV, inverseViewIndex);
+
+                float occlusionCurEye = ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion1);
+                float occlusionOtherEye = ComputeAO(viewPositionOtherEye, viewNormalOtherEye, sampleOtherEyeViewPos, topOcclusion2);
+
+                totalOcclusion += (sampleMask == 1) ? max(occlusionCurEye, occlusionOtherEye) : ((occlusionCurEye + occlusionOtherEye) / 2.0f);
+            }
+
+            if(centerMask == 1) totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion1);
+
+            rayPixels += stride;
         }
     }
     float weight = 1.0f / hbaoData.numRays;

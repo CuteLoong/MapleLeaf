@@ -6,7 +6,7 @@ namespace MapleLeaf {
 StereoMaskSubrender::StereoMaskSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
     , pipeline(PipelineGraphics(pipelineStage, {"Shader/StereoMask/StereoMask.vert", "Shader/StereoMask/StereoMask.frag"}, {}, {},
-                                PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
+                                PipelineGraphics::Mode::MRT, PipelineGraphics::Depth::None))
 {}
 
 void StereoMaskSubrender::PreRender(const CommandBuffer& commandBuffer) {}
@@ -14,11 +14,9 @@ void StereoMaskSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 void StereoMaskSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
-    uniformScene.Push("projection", camera->GetStereoProjectionMatrix());
-    uniformScene.Push("view", camera->GetStereoViewMatrix());
-    uniformScene.Push("zBufferParams", camera->GetZBufferParams());
+    camera->PushUniforms(uniformCamera);
 
-    descriptorSet.Push("UniformScene", uniformScene);
+    descriptorSet.Push("UniformCamera", uniformCamera);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
 

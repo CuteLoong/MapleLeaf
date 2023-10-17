@@ -70,4 +70,30 @@ vec3 StereoViewNormalAtScreenUV(vec2 uv, int viewIndex)
     return viewNormal;
 }
 
+vec3 StereoViewNormalAtScreenUVImproved(vec2 uv, int viewIndex)
+{
+    // get current pixel's view space position
+    vec3 viewSpacePos_c = StereoViewSpacePosAtScreenUV(uv + vec2(0.0f, 0.0f), viewIndex);
+
+    // get view space position at 1 pixel offsets in each major direction
+    vec3 viewSpacePos_l = StereoViewSpacePosAtScreenUV(uv - vec2(camera.pixelSize.z, 0.0f), viewIndex);
+    vec3 viewSpacePos_r = StereoViewSpacePosAtScreenUV(uv + vec2(camera.pixelSize.z, 0.0f), viewIndex);
+    vec3 viewSpacePos_u = StereoViewSpacePosAtScreenUV(uv - vec2(0.0f, camera.pixelSize.w), viewIndex);
+    vec3 viewSpacePos_d = StereoViewSpacePosAtScreenUV(uv + vec2(0.0f, camera.pixelSize.w), viewIndex);
+
+    // get the difference between the current and each offset position
+    vec3 l = viewSpacePos_c - viewSpacePos_l;
+    vec3 r = viewSpacePos_r - viewSpacePos_c;
+    vec3 d = viewSpacePos_c - viewSpacePos_d;
+    vec3 u = viewSpacePos_u - viewSpacePos_c;
+
+    vec3 hDeriv = abs(l.z) < abs(r.z) ? l : r;
+    vec3 vDeriv = abs(d.z) < abs(u.z) ? d : u;
+
+    // get view space normal from the cross product of the diffs
+    vec3 viewNormal = normalize(cross(vDeriv, hDeriv));
+
+    return viewNormal;
+}
+
 #endif

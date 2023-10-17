@@ -39,6 +39,7 @@ void HBAOStereoAwareSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.Push("UniformHBAOData", uniformHBAOData);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("inStereoMask", Graphics::Get()->GetAttachment("StereoMask"));
+    descriptorSet.Push("inStereoMV", Graphics::Get()->GetAttachment("StereoMV"));
     descriptorSet.Push("hbaoNoise", *hbaoNoise);
 
     if (!descriptorSet.Update(pipeline)) return;
