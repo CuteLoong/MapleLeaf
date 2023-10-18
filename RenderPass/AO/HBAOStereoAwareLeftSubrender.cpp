@@ -1,4 +1,4 @@
-#include "HBAOStereoAwareSubrender.hpp"
+#include "HBAOStereoAwareLeftSubrender.hpp"
 
 #include "Devices.hpp"
 #include "Maths.hpp"
@@ -7,19 +7,19 @@
 #include "glm/gtc/random.hpp"
 
 namespace MapleLeaf {
-HBAOStereoAwareSubrender::HBAOStereoAwareSubrender(const Pipeline::Stage& pipelineStage, HBAOData hbaoData)
+HBAOStereoAwareLeftSubrender::HBAOStereoAwareLeftSubrender(const Pipeline::Stage& pipelineStage, HBAOData hbaoData)
     : Subrender(pipelineStage)
     , hbaoData(hbaoData)
-    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/HBAOStereoAware.vert", "Shader/AO/HBAOStereoAware.frag"}, {}, {},
+    , pipeline(PipelineGraphics(pipelineStage, {"Shader/AO/HBAOStereoAwareLeft.vert", "Shader/AO/HBAOStereoAwareLeft.frag"}, {}, {},
                                 PipelineGraphics::Mode::Polygon, PipelineGraphics::Depth::None))
 {
     noiseSize = Devices::Get()->GetWindow()->GetSize() / hbaoData.noiseScale;
     hbaoNoise = (Resources::Get()->GetThreadPool().Enqueue(ComputeNoise, noiseSize.x, noiseSize.y, hbaoData.numRays));
 }
 
-void HBAOStereoAwareSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+void HBAOStereoAwareLeftSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 
-void HBAOStereoAwareSubrender::Render(const CommandBuffer& commandBuffer)
+void HBAOStereoAwareLeftSubrender::Render(const CommandBuffer& commandBuffer)
 {
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCamera);
@@ -52,9 +52,9 @@ void HBAOStereoAwareSubrender::Render(const CommandBuffer& commandBuffer)
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void HBAOStereoAwareSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+void HBAOStereoAwareLeftSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 
-std::shared_ptr<Image2d> HBAOStereoAwareSubrender::ComputeNoise(uint32_t width, uint32_t height, uint32_t numRays)
+std::shared_ptr<Image2d> HBAOStereoAwareLeftSubrender::ComputeNoise(uint32_t width, uint32_t height, uint32_t numRays)
 {
     std::vector<glm::vec4> hbaoNoise(width * height);
 

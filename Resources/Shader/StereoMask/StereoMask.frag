@@ -37,9 +37,9 @@ void main()
 
     float otherEyeDepth = texture(inDepth, otherEyeUV).r;
 
-    int mask = abs(Linear01Depth(otherEyeDepth) - Linear01Depth(otherEyeProj.z)) > 0.001 ? 1 : 0;
+    int mask = abs(LinearEyeDepth(otherEyeDepth) - LinearEyeDepth(otherEyeProj.z)) > 0.1f ? 1 : 0;
 
-    vec2 motionVector = (otherEyeUV - uv); // in same texture space
+    vec2 motionVector = vec2(ivec2(otherEyeUV * camera.pixelSize.xy) - ivec2(uv * camera.pixelSize.xy)) * camera.pixelSize.zw; // in same texture space
     outColour = vec4(mask, mask, mask, 1.0f);
     outMV = vec4(motionVector, 1.0f, 1.0f);
 }

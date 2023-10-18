@@ -2,6 +2,7 @@
 #include "Graphics.hpp"
 #include "Log.hpp"
 #include "PhysicalDevice.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
 const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -126,6 +127,11 @@ void LogicalDevice::CreateLogicalDevice()
         enabledFeatures.multiViewport = VK_TRUE;
     else
         Log::Warning("Selected GPU does not support multiple viewport!\n");
+
+    if (physicalDeviceFeatures.fragmentStoresAndAtomics)
+        enabledFeatures.fragmentStoresAndAtomics = VK_TRUE;
+    else
+        Log::Warning("Selected GPU does not support fragmentStoresAndAtomics!\n");
 
     // add bindless feature
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};

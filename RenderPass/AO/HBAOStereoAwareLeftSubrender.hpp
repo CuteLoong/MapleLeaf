@@ -7,7 +7,7 @@
 #include "UniformHandler.hpp"
 
 namespace MapleLeaf {
-class HBAOStereoSubrender : public Subrender
+class HBAOStereoAwareLeftSubrender : public Subrender
 {
 public:
     struct HBAOData
@@ -32,7 +32,7 @@ public:
         {}
     };
 
-    explicit HBAOStereoSubrender(const Pipeline::Stage& pipelineStage, HBAOData hbaoData = HBAOData());
+    explicit HBAOStereoAwareLeftSubrender(const Pipeline::Stage& pipelineStage, HBAOData hbaoData = HBAOData());
 
     void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;

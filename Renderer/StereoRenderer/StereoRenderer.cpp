@@ -4,6 +4,7 @@
 #include "GaussianBlurSubrender.hpp"
 #include "GaussianBlurXYSubrender.hpp"
 #include "Graphics.hpp"
+#include "HBAOStereoAwareLeftSubrender.hpp"
 #include "HBAOStereoAwareSubrender.hpp"
 #include "HBAOStereoSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
@@ -16,13 +17,12 @@
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
 
-
-
 namespace Test {
 StereoRenderer::StereoRenderer()
 {
     std::vector<NonRTAttachment> globalAttachments = {{"gaussianX", NonRTAttachment::Type::Image2d, false},
-                                                      {"gaussianY", NonRTAttachment::Type::Image2d, false}};
+                                                      {"gaussianY", NonRTAttachment::Type::Image2d, false},
+                                                      {"HBAOLeft", NonRTAttachment::Type::Image2d, false}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -59,7 +59,7 @@ StereoRenderer::StereoRenderer()
 
     std::vector<Attachment> renderpassAttachments3{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {0}}};
+    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {}}, {1, {}, {0}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments3, renderpassSubpasses3));
 
@@ -85,8 +85,10 @@ void StereoRenderer::Start()
 
     AddSubrender<StereoMaskSubrender>({2, 0});
 
-    AddSubrender<HBAOStereoSubrender>({3, 0});
-    // AddSubrender<HBAOStereoAwareSubrender>({3, 0});
+    // AddSubrender<HBAOStereoSubrender>({3, 1});
+    AddSubrender<HBAOStereoAwareLeftSubrender>({3, 0});
+    AddSubrender<HBAOStereoAwareSubrender>({3, 1});
+
 
     AddSubrender<GaussianBlurSubrender>({4, 0}, "AOMap");
     // AddSubrender<GaussianBlurXYSubrender>({4, 0}, "AOMap");
