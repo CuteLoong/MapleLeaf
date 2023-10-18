@@ -42,10 +42,12 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
     }
 
     // Update uniforms
-    uniformScene.Push("view", camera->GetViewMatrix());
+    // uniformScene.Push("view", camera->GetViewMatrix());
+    // uniformScene.Push("cameraPosition", camera->GetPosition());
+    camera->PushUniforms(uniformCamera);
+
     if (auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>())
         uniformScene.Push("shadowMatrix", shadows->GetShadowCascade().GetLightProjectionViewMatrix());
-    uniformScene.Push("cameraPosition", camera->GetPosition());
     uniformScene.Push("pointLightsCount", pointLights.size() - 1);
     uniformScene.Push("directionalLightsCount", directionalLights.size() - 1);
 
@@ -55,6 +57,7 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
 
     // Updates storage buffers.
     descriptorSet.Push("UniformScene", uniformScene);
+    descriptorSet.Push("UniformCamera", uniformCamera);
     descriptorSet.Push("BufferPointLights", storagePointLights);
     descriptorSet.Push("BufferDirectionalLights", storageDirectionalLights);
 
@@ -64,6 +67,7 @@ void DeferredSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
 
     descriptorSet.Push("inShadowMap", Graphics::Get()->GetAttachment("shadows"));
+    descriptorSet.Push("inAOMap", Graphics::Get()->GetAttachment("AOMapFilter"));
 
     if (!descriptorSet.Update(pipeline)) return;
 

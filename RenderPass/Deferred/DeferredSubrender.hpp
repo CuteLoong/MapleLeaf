@@ -35,6 +35,7 @@ private:
 
     DescriptorsHandler descriptorSet;
     UniformHandler     uniformScene;
+    UniformHandler     uniformCamera;
     StorageHandler     storagePointLights;
     StorageHandler     storageDirectionalLights;
 };
