@@ -52,6 +52,9 @@ void GPUScene::Start()
 
     SetIndices(GPUInstance::indicesArray);
     SetVertices(GPUInstance::verticesArray);
+
+    instancesBuffer = std::make_unique<StorageBuffer>(sizeof(InstanceData) * instancesData.size(), instancesData.data());
+    materialsBuffer = std::make_unique<StorageBuffer>(sizeof(MaterialData) * materialsData.size(), materialsData.data());
 }
 
 void GPUScene::Update()
@@ -104,8 +107,10 @@ void GPUScene::Update()
     // instancesHandler.Push(instancesData.data(), sizeof(InstanceData) * instancesData.size());
     // materialsHandler.Push(materialsData.data(), sizeof(MaterialData) * materialsData.size());
 
-    instancesBuffer = std::make_unique<StorageBuffer>(sizeof(InstanceData) * instancesData.size(), instancesData.data());
-    materialsBuffer = std::make_unique<StorageBuffer>(sizeof(MaterialData) * materialsData.size(), materialsData.data());
+    if (UpdateGPUScene) {
+        instancesBuffer = std::make_unique<StorageBuffer>(sizeof(InstanceData) * instancesData.size(), instancesData.data());
+        materialsBuffer = std::make_unique<StorageBuffer>(sizeof(MaterialData) * materialsData.size(), materialsData.data());
+    }
 
 #ifdef MAPLELEAF_GPUSCENE_DEBUG
     Log::Out("Update StorageBuffer Data costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
