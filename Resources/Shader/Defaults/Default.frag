@@ -44,7 +44,7 @@ void main()
 
 #if MATERIAL_MAPPING
 	vec4 textureMaterial = texture(samplerMaterial, inUV);
-	material.x *= textureMaterial.r;
+	material.x *= textureMaterial.b;
 	material.y *= textureMaterial.g;
 
 	if (textureMaterial.b > 0.5f) {

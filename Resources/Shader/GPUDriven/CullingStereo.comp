@@ -73,7 +73,7 @@ void main() {
     GPUInstanceData instance = instanceDatas.instanceData[idx];
     IndirectCommand cmd;
     cmd.indexCount = instance.indexCount;
-    cmd.instanceCount = IsVisible(instance) ? 1 : 0;
+    cmd.instanceCount = 1;
     cmd.firstIndex = instance.indexOffset;
     cmd.vertexOffset = int(instance.vertexOffset);
     cmd.firstInstance = instance.instanceID;

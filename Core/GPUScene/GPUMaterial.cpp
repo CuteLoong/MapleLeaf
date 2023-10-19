@@ -45,7 +45,7 @@ GPUMaterial::GPUMaterial(const std::shared_ptr<Material>& material)
             }
         }
 
-        if (const auto& materialImage = defaultMaterial->GetImageNormal()) {
+        if (const auto& materialImage = defaultMaterial->GetImageMaterial()) {
             if (const auto& it = std::find(images.begin(), images.end(), materialImage); it != images.end()) {
                 materialTex = static_cast<int32_t>(std::distance(images.begin(), it));
             }
