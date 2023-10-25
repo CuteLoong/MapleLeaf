@@ -11,12 +11,17 @@
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
 #include "SSAOSubrender.hpp"
+#include "SSRSubrender.hpp"
 #include "ShadowSubrender.hpp"
 
 
 namespace Test {
 GPURenderer::GPURenderer()
 {
+    std::vector<NonRTAttachment> globalAttachments = {{"SSRHitsMap", NonRTAttachment::Type::Image2d, false}};
+
+    CreateGlobalAttachmentsHanlder(globalAttachments);
+
     std::vector<Attachment> renderpassAttachments0 = {{0, "shadows", Attachment::Type::Depth, false}};
 
     std::vector<SubpassType> renderpassSubpasses0 = {{0, {}, {0}}};
@@ -43,7 +48,7 @@ GPURenderer::GPURenderer()
 
     std::vector<Attachment> renderpassAttachments2{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {0}}};
+    std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {0}}, {1, {}, {}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments2, renderpassSubpasses2));
 
@@ -70,6 +75,7 @@ void GPURenderer::Start()
     // AddSubrender<HiZDrawSubrender>({1, 0});
 
     AddSubrender<HBAOSubrender>({2, 0});
+    AddSubrender<SSRSubrender>({2, 1});
     AddSubrender<GaussianBlurSubrender>({3, 0}, "AOMap");
     AddSubrender<DeferredSubrender>({4, 0});
     AddSubrender<ImguiSubrender>({4, 0});
@@ -78,5 +84,6 @@ void GPURenderer::Start()
 void GPURenderer::Update()
 {
     // std::cout << "Main Renderer Update" << std::endl;
+    GetNonRTAttachmentsHandler()->Update();
 }
 }   // namespace Test

@@ -98,7 +98,7 @@ void main()
     }
     
 
-    float stride = min(hbaoData.pixelRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
+    float stride = min(hbaoData.pixelRadius / -viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
     if(stride < 1.0f) {
         imageStore(HBAOLeft, ivec2(inUV * imageSize(HBAOLeft)), vec4(1.0f));

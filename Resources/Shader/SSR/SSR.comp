@@ -1,0 +1,122 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+layout(set=0, binding=1) uniform UniformSSRData {
+	float maxRayLength;
+    float maxSteps;
+    float zThickness;
+    float fadeValue;
+} ssrData;
+
+layout(set=0, binding=2) uniform sampler2D inDepth;
+layout(set=0, binding=3) uniform sampler2D inNormal;
+
+layout(set=0, binding=4, rgba8) writeonly uniform image2D SSRHitsMap;
+
+#include <Misc/Camera.glsl>
+#include <Misc/Utils.glsl>
+
+bool intersectsDepthBuffer(float sceneZMax, float sceneZMin, float rayZ)
+{
+    return (rayZ >= sceneZMin) && (rayZ <= sceneZMax);
+}
+
+bool rayMarch3D(vec3 originVS, vec3 reflectDirVS, inout float iterations, inout vec3 hitPointSS)
+{
+    originVS = originVS + reflectDirVS * 0.01f;
+
+    float sceneZMax = 1.0f;
+    float sceneZMin = 0.0f;
+
+    float deltaT = ssrData.maxRayLength / ssrData.maxSteps;
+    float t = 0.0f;
+    vec3 raySS = vec3(-1.0f, -1.0f, camera.projectionParams.z);
+    bool outOfBounds = false;
+
+    for(float i = 0.0f; i < ssrData.maxSteps; i++) {
+        iterations++;
+        t += deltaT;
+        vec3 rayVS = originVS + reflectDirVS * t;
+
+        vec4 rayHS = camera.projection * vec4(rayVS, 1.0f);
+        raySS = rayHS.xyz / rayHS.w;
+        raySS.xy = raySS.xy * 0.5f + 0.5f;
+        raySS.z = Linear01Depth(raySS.z); // linear depth
+
+        sceneZMin = Linear01Depth(texture(inDepth, raySS.xy).x);
+        outOfBounds = (sceneZMin == 1.0f);
+
+        if(outOfBounds) break;
+
+        sceneZMax = sceneZMin + ssrData.zThickness;
+
+        if(intersectsDepthBuffer(sceneZMax, sceneZMin, raySS.z)) {
+            break;
+        }
+    }
+    hitPointSS = vec3(raySS.xy, sceneZMax);
+
+    return (sceneZMin > raySS.z) || (raySS.z > sceneZMax); // return true if we missed
+}
+
+bool hiZTracing(vec3 pointSS0, vec3 pointSS1, inout float iterations, inout vec3 hitPointSS)
+{
+    return true;
+}
+
+float calculateFadeAmount(vec2 positionUV){
+    float borderDist = min(1.0f - max(positionUV.x, positionUV.y), min(positionUV.x, positionUV.y));
+    return clamp(borderDist > ssrData.fadeValue ? 1.0f : borderDist / ssrData.fadeValue, 0.0f, 1.0f);
+}
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if(pixel.x >= camera.pixelSize.x || pixel.y >= camera.pixelSize.y)
+        return;
+
+    vec3 pointSS0;
+    pointSS0.xy = vec2(pixel) * vec2(camera.pixelSize.z, camera.pixelSize.w);
+    pointSS0.z = texture(inDepth, pointSS0.xy).x;
+
+    vec3 normalVS = normalize(mat3(camera.view) * texture(inNormal, pointSS0.xy).xyz);
+
+    vec3 originVS = ViewSpacePosAtScreenUV(pointSS0.xy);
+    vec3 viewRayVS = normalize(originVS);
+
+    vec3 reflectDirVS = normalize(reflect(viewRayVS, normalVS));
+    vec3 endPointVS = originVS + reflectDirVS * ssrData.maxRayLength;
+
+    vec4 pointHS1 = camera.projection * vec4(endPointVS, 1.0f);
+    vec3 pointSS1 = pointHS1.xyz / pointHS1.w; // depth is hyperbolic depth
+    pointSS1.xy = pointSS1.xy * 0.5f + 0.5f;
+
+    vec3 hitPointSS = vec3(-1.0f);
+    bool missed = true;
+    float iterations = 0.0f;
+
+    // camera is looking down -z
+    if(reflectDirVS.z < 0.0f) {
+        #if defined(TRAVERSAL_SCHEME_RAY_MARCH_3D)
+            missed = rayMarch3D(originVS, reflectDirVS, iterations, hitPointSS);
+        #elif defined(TRAVERSAL_SCHEME_MIN_HI_Z) || defined(TRAVERSAL_SCHEME_MIN_MAX_HI_Z)
+            missed = hiZTracing(pointSS0, pointSS1, iterations, hitPointSS);
+        #else 
+            #error "Traversal scheme not defined"
+        #endif
+    }
+
+    float alphaBlend = 0.0f;
+    if(missed) {
+        hitPointSS.xy = vec2(-1.0f);
+    }
+    else {
+        alphaBlend = calculateFadeAmount(hitPointSS.xy);
+    }
+
+    imageStore(SSRHitsMap, pixel, vec4(hitPointSS, alphaBlend));
+}
