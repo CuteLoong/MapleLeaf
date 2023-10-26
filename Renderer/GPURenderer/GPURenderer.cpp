@@ -57,19 +57,11 @@ GPURenderer::GPURenderer()
                                                           4,
                                                       }}};
 
-<<<<<<< HEAD
-    == == == = AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments1, renderpassSubpasses1));
-
-    std::vector<Attachment> renderpassAttachments2{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
-
-    std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {0}}, {1, {}, {}}};
-
->>>>>>> 7a4ecceb994ff2b18dbcb1496e64f029426c11f4
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments2, renderpassSubpasses2));
 
     std::vector<Attachment> renderpassAttachments3{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {0}}};
+    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {0}}, {1, {}, {}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments3, renderpassSubpasses3));
 
@@ -96,17 +88,11 @@ void GPURenderer::Start()
     AddSubrender<HiZDrawSubrender>({1, 0});
     AddSubrender<IndirectDrawSubrender>({2, 0});
 
-<<<<<<< HEAD
     AddSubrender<HBAOSubrender>({3, 0});
+    AddSubrender<SSRSubrender>({3, 1});
     AddSubrender<GaussianBlurSubrender>({4, 0}, "AOMap");
     AddSubrender<DeferredSubrender>({5, 0});
     AddSubrender<ImguiSubrender>({5, 0});
-    == == == = AddSubrender<HBAOSubrender>({2, 0});
-    AddSubrender<SSRSubrender>({2, 1});
-    AddSubrender<GaussianBlurSubrender>({3, 0}, "AOMap");
-    AddSubrender<DeferredSubrender>({4, 0});
-    AddSubrender<ImguiSubrender>({4, 0});
->>>>>>> 7a4ecceb994ff2b18dbcb1496e64f029426c11f4
 }
 
 void GPURenderer::Update()
