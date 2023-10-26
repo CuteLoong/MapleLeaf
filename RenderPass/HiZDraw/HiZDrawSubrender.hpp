@@ -4,7 +4,11 @@
 #include "Image2d.hpp"
 #include "ImageHierarchyZ.hpp"
 #include "PipelineCompute.hpp"
+#include "PipelineGraphics.hpp"
+#include "PushHandler.hpp"
 #include "Subrender.hpp"
+#include <memory>
+#include <vector>
 
 namespace MapleLeaf {
 class HiZDrawSubrender : public Subrender
@@ -17,12 +21,25 @@ public:
     void PostRender(const CommandBuffer& commandBuffer) override;
 
 private:
-    PipelineCompute pipeline;
+    PipelineCompute  pipelineCompute1;
+    PipelineCompute  pipelineCompute2;
+    PipelineGraphics PipelineGraphics;
 
-    DescriptorsHandler descriptorSet;
-    PushHandler        pushHandler;
+    DescriptorsHandler              descriptorSetGraphics;
+    DescriptorsHandler              descriptorSetCompute1;
+    std::vector<DescriptorsHandler> descriptorSetsCompute;
 
-    std::unique_ptr<ImageHierarchyZ> hiz;
-    std::unique_ptr<Image2d>         hierarchyDepth;
+    PushHandler              pushHandler1;
+    PushHandler              pushHandler2;
+    PushHandler              pushHandler3;
+    std::vector<PushHandler> pushHandlers;
+
+    UniformHandler uniformCamera;
+    UniformHandler uniformCameraCompute;
+
+    // std::unique_ptr<ImageHierarchyZ> hiz;
+    std::unique_ptr<Image2d> hierarchyDepth;
+
+    std::vector<std::unique_ptr<Image2d>> HiDepths;
 };
 }   // namespace MapleLeaf

@@ -14,29 +14,29 @@ IndirectDrawSubrender::IndirectDrawSubrender(const Pipeline::Stage& pipelineStag
 
 void IndirectDrawSubrender::PreRender(const CommandBuffer& commandBuffer)
 {
-    const auto gpuScene = Scenes::Get()->GetScene()->GetGpuScene();
-    if (!gpuScene) return;
-    if (!gpuScene->GetIndirectBuffer()) return;
+    // const auto gpuScene = Scenes::Get()->GetScene()->GetGpuScene();
+    // if (!gpuScene) return;
+    // if (!gpuScene->GetIndirectBuffer()) return;
 
-    auto camera = Scenes::Get()->GetScene()->GetCamera();
-    camera->PushUniforms(uniformCameraCompute);
+    // auto camera = Scenes::Get()->GetScene()->GetCamera();
+    // camera->PushUniforms(uniformCameraCompute);
 
-    uint32_t instanceCount = gpuScene->GetInstanceCount();
+    // uint32_t instanceCount = gpuScene->GetInstanceCount();
 
-    pushHandler.Push("instanceCount", instanceCount);
+    // pushHandler.Push("instanceCount", instanceCount);
 
-    descriptorSetCompute.Push("InstanceDatas", gpuScene->GetInstanceDatasHandler());
-    descriptorSetCompute.Push("DrawCommandBuffer", gpuScene->GetIndirectBuffer());
-    descriptorSetCompute.Push("UniformCamera", uniformCameraCompute);
-    descriptorSetCompute.Push("PushObject", pushHandler);
+    // descriptorSetCompute.Push("InstanceDatas", gpuScene->GetInstanceDatasHandler());
+    // descriptorSetCompute.Push("DrawCommandBuffer", gpuScene->GetIndirectBuffer());
+    // descriptorSetCompute.Push("UniformCamera", uniformCameraCompute);
+    // descriptorSetCompute.Push("PushObject", pushHandler);
 
-    if (!descriptorSetCompute.Update(compute)) return;
-    compute.BindPipeline(commandBuffer);
-    descriptorSetCompute.BindDescriptor(commandBuffer, compute);
-    pushHandler.BindPush(commandBuffer, compute);
-    compute.CmdRender(commandBuffer, glm::uvec2(instanceCount, 1));
+    // if (!descriptorSetCompute.Update(compute)) return;
+    // compute.BindPipeline(commandBuffer);
+    // descriptorSetCompute.BindDescriptor(commandBuffer, compute);
+    // pushHandler.BindPush(commandBuffer, compute);
+    // compute.CmdRender(commandBuffer, glm::uvec2(instanceCount, 1));
 
-    gpuScene->GetIndirectBuffer()->IndirectBufferPipelineBarrier(commandBuffer);
+    // gpuScene->GetIndirectBuffer()->IndirectBufferPipelineBarrier(commandBuffer);
 }
 
 void IndirectDrawSubrender::Render(const CommandBuffer& commandBuffer)

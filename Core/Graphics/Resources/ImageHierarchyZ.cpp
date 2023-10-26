@@ -1,12 +1,16 @@
 #include "ImageHierarchyZ.hpp"
 
 #include "Graphics.hpp"
+#include "Image.hpp"
+#include "vulkan/vulkan_core.h"
+#include <cmath>
+#include <stdint.h>
 
 namespace MapleLeaf {
 ImageHierarchyZ::ImageHierarchyZ(const glm::uvec2& extent, VkSampleCountFlagBits samples)
     : Image(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samples, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_FORMAT_R32_SFLOAT, GetMipLevels(extent), 1,
-            {extent.x, extent.y, 1})
+            VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_FORMAT_R32_SFLOAT,
+            GetMipLevels(extent), 1, {extent.x, extent.y, 1})
 {
     VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
@@ -70,18 +74,20 @@ void ImageHierarchyZ::AddHierarchicalDepth(const CommandBuffer& commandBuffer, c
 
     if (supportsBlit) {
         // Define the region to blit (we will blit the whole swapchain image).
-        VkOffset3D blitSize = {static_cast<int32_t>(extent.width), static_cast<int32_t>(extent.height), static_cast<int32_t>(extent.depth)};
+        VkOffset3D blitSize = {static_cast<int32_t>(depthExtent.width), static_cast<int32_t>(depthExtent.height), static_cast<int32_t>(1)};
 
         VkImageBlit imageBlitRegion                   = {};
         imageBlitRegion.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         imageBlitRegion.srcSubresource.mipLevel       = 0;
         imageBlitRegion.srcSubresource.baseArrayLayer = 0;
         imageBlitRegion.srcSubresource.layerCount     = 1;
+        imageBlitRegion.srcOffsets[0]                 = {0, 0, 0};
         imageBlitRegion.srcOffsets[1]                 = blitSize;
         imageBlitRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         imageBlitRegion.dstSubresource.mipLevel       = hizMipLevel;
         imageBlitRegion.dstSubresource.baseArrayLayer = hizArrayLayer;
         imageBlitRegion.dstSubresource.layerCount     = 1;
+        imageBlitRegion.dstOffsets[0]                 = {0, 0, 0};
         imageBlitRegion.dstOffsets[1]                 = blitSize;
         vkCmdBlitImage(commandBuffer,
                        depth,
@@ -142,6 +148,26 @@ void ImageHierarchyZ::AddHierarchicalDepth(const CommandBuffer& commandBuffer, c
 
 uint32_t ImageHierarchyZ::GetMipLevels(const glm::uvec2& extent)
 {
-    return std::floor(log(std::max(extent.x, extent.y)));
+    return std::floor(log2(std::max(extent.x, extent.y)));
 }
+
+VkExtent2D ImageHierarchyZ::GetExtentByMipLevel(uint32_t mipLevel)
+{
+    VkExtent2D result;
+    uint32_t   maxMipLevels = ImageHierarchyZ::GetMipLevels(glm::vec2(extent.width, extent.height));
+    if (mipLevel > maxMipLevels) {
+        result.width  = 0;
+        result.height = 0;
+        return result;
+    }
+
+    mipLevel = std::pow(2, mipLevel);
+
+    result.width  = extent.width / mipLevel;
+    result.height = extent.height / mipLevel;
+
+    return result;
+}
+
+
 }   // namespace MapleLeaf
