@@ -13,6 +13,8 @@ public:
 
     static uint32_t GetMipLevels(const glm::uvec2& extent);
 
+    VkExtent2D GetExtentByMipLevel(uint32_t mipLevel);
+
 private:
 };
 }   // namespace MapleLeaf
