@@ -53,6 +53,10 @@ void main() {
     int idx = int(gl_GlobalInvocationID.x);
     if (idx >= int(object.instanceCount)) return;
 
+    //visibility test
+    IndirectCommand preFrame = drawCommandBuffer.commands[idx];
+    uint visible = preFrame.instanceCount;
+
     GPUInstanceData instance = instanceDatas.instanceData[idx];
     IndirectCommand cmd;
     cmd.indexCount = instance.indexCount;
@@ -62,6 +66,7 @@ void main() {
     cmd.firstInstance = instance.instanceID;
 
 
+    //frustum culling
     vec4[6] planes = GetFrustumPlanes();
 
     mat4 M = instance.modelMatrix;
