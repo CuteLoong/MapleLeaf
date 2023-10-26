@@ -29,9 +29,7 @@ private:
     DescriptorsHandler              descriptorSetCompute1;
     std::vector<DescriptorsHandler> descriptorSetsCompute;
 
-    PushHandler              pushHandler1;
-    PushHandler              pushHandler2;
-    PushHandler              pushHandler3;
+    PushHandler              pushHandlerFirstDraw;
     std::vector<PushHandler> pushHandlers;
 
     UniformHandler uniformCamera;
@@ -41,5 +39,7 @@ private:
     std::unique_ptr<Image2d> hierarchyDepth;
 
     std::vector<std::unique_ptr<Image2d>> HiDepths;
+
+    void RecreateHiDepths();
 };
 }   // namespace MapleLeaf

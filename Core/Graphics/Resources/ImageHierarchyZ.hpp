@@ -15,6 +15,10 @@ public:
 
     VkExtent2D GetExtentByMipLevel(uint32_t mipLevel);
 
+    void ImageHierarchyZPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const;
+    void ImageHierarchyZPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const;
+    void ImageHierarchyZPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer) const;
+
 private:
 };
 }   // namespace MapleLeaf

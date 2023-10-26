@@ -27,6 +27,8 @@ ImageHierarchyZ::ImageHierarchyZ(const glm::uvec2& extent, VkSampleCountFlagBits
                 VK_IMAGE_TYPE_2D);
     CreateImageSampler(sampler, filter, addressMode, false, GetMipLevels(extent));
     CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_COLOR_BIT, GetMipLevels(extent), 0, 1, 0);
+
+    TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, layout, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
 }
 
 void ImageHierarchyZ::AddHierarchicalDepth(const CommandBuffer& commandBuffer, const VkImage& depth, const VkExtent3D& depthExtent,
@@ -169,5 +171,52 @@ VkExtent2D ImageHierarchyZ::GetExtentByMipLevel(uint32_t mipLevel)
     return result;
 }
 
-
+void ImageHierarchyZ::ImageHierarchyZPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const
+{
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_SHADER_READ_BIT,
+                             layout,
+                             layout,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             mipLevels,
+                             0,
+                             1,
+                             0);
+}
+void ImageHierarchyZ::ImageHierarchyZPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const
+{
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_SHADER_READ_BIT,
+                             layout,
+                             layout,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             mipLevels,
+                             0,
+                             1,
+                             0);
+}
+void ImageHierarchyZ::ImageHierarchyZPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer) const
+{
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_SHADER_READ_BIT,
+                             layout,
+                             layout,
+                             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             mipLevels,
+                             0,
+                             1,
+                             0);
+}
 }   // namespace MapleLeaf

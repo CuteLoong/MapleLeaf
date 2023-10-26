@@ -163,7 +163,7 @@ void Graphics::ResetRenderStages()
 
 void Graphics::RecreateSwapchain()
 {
-    vkDeviceWaitIdle(*logicalDevice);
+    CheckVk(vkDeviceWaitIdle(*logicalDevice));
     VkExtent2D displayExtent = {Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y};
 #ifdef MAPLELEAF_GRAPHIC_DEBUG
     if (swapchain) {

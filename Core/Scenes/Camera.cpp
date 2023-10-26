@@ -93,10 +93,10 @@ void Camera::UpdateCameraInfo()
     float     farPlaneHalfVertical = farPlane * std::tan(fieldOfView / 2.0f);
     float     farPlaneHalfHorizon  = farPlaneHalfVertical * aspectRatio;
 
-    glm::vec3 leftTop     = glm::vec3(farPlaneCenter.x - farPlaneHalfHorizon, farPlaneCenter.y + farPlaneHalfVertical, farPlaneCenter.z);
-    glm::vec3 rightTop    = glm::vec3(farPlaneCenter.x + farPlaneHalfHorizon, farPlaneCenter.y + farPlaneHalfVertical, farPlaneCenter.z);
-    glm::vec3 leftBottom  = glm::vec3(farPlaneCenter.x - farPlaneHalfHorizon, farPlaneCenter.y - farPlaneHalfVertical, farPlaneCenter.z);
-    glm::vec3 rightBottom = glm::vec3(farPlaneCenter.x + farPlaneHalfHorizon, farPlaneCenter.y - farPlaneHalfVertical, farPlaneCenter.z);
+    glm::vec3 leftTop     = farPlaneCenter - farPlaneHalfHorizon * right + farPlaneHalfVertical * up;
+    glm::vec3 rightTop    = farPlaneCenter + farPlaneHalfHorizon * right + farPlaneHalfVertical * up;
+    glm::vec3 leftBottom  = farPlaneCenter - farPlaneHalfHorizon * right - farPlaneHalfVertical * up;
+    glm::vec3 rightBottom = farPlaneCenter + farPlaneHalfHorizon * right - farPlaneHalfVertical * up;
 
     frustumVector[0] = glm::normalize(glm::vec4(leftTop - position, 0.0f));
     frustumVector[1] = glm::normalize(glm::vec4(rightTop - position, 0.0f));
@@ -141,10 +141,10 @@ void Camera::UpdateStereoCameraInfo()
         glm::vec3        farPlaneCenter  = curEyePosition + forward * farPlane;
         glm::vec3        nearPlaneCenter = curEyePosition + forward * nearPlane;
 
-        glm::vec3 leftTop     = glm::vec3(farPlaneCenter.x - farPlaneHalfHorizon, farPlaneCenter.y + farPlaneHalfVertical, farPlaneCenter.z);
-        glm::vec3 rightTop    = glm::vec3(farPlaneCenter.x + farPlaneHalfHorizon, farPlaneCenter.y + farPlaneHalfVertical, farPlaneCenter.z);
-        glm::vec3 leftBottom  = glm::vec3(farPlaneCenter.x - farPlaneHalfHorizon, farPlaneCenter.y - farPlaneHalfVertical, farPlaneCenter.z);
-        glm::vec3 rightBottom = glm::vec3(farPlaneCenter.x + farPlaneHalfHorizon, farPlaneCenter.y - farPlaneHalfVertical, farPlaneCenter.z);
+        glm::vec3 leftTop     = farPlaneCenter - farPlaneHalfHorizon * right + farPlaneHalfVertical * up;
+        glm::vec3 rightTop    = farPlaneCenter + farPlaneHalfHorizon * right + farPlaneHalfVertical * up;
+        glm::vec3 leftBottom  = farPlaneCenter - farPlaneHalfHorizon * right - farPlaneHalfVertical * up;
+        glm::vec3 rightBottom = farPlaneCenter + farPlaneHalfHorizon * right - farPlaneHalfVertical * up;
 
         stereoFrustumVector[i][0] = glm::normalize(glm::vec4(leftTop - curEyePosition, 0.0f));
         stereoFrustumVector[i][1] = glm::normalize(glm::vec4(rightTop - curEyePosition, 0.0f));
