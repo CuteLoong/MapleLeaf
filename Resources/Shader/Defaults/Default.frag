@@ -36,7 +36,6 @@ void main()
     vec4 diffuse = object.baseDiffuse;
 	vec3 normal = normalize(inNormal);
 	vec3 material = vec3(object.metallic, object.roughness, 0.0f);
-	float glowing = 0.0f;
 
 #if DIFFUSE_MAPPING
 	diffuse = texture(samplerDiffuse, inUV);
@@ -46,10 +45,6 @@ void main()
 	vec4 textureMaterial = texture(samplerMaterial, inUV);
 	material.x *= textureMaterial.b;
 	material.y *= textureMaterial.g;
-
-	if (textureMaterial.b > 0.5f) {
-		glowing = 1.0f;
-	}
 #endif
 
 #if NORMAL_MAPPING

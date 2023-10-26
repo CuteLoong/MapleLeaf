@@ -15,14 +15,14 @@ float LinearEyeDepth(float z) {
 // then multiplies that ray by the linear 01 depth
 vec3 ViewSpacePosAtScreenUV(vec2 uv)
 {
-    vec3 viewSpaceRay = vec3(camera.invProjection * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, 1.0f, -1.0f) * camera.projectionParams.z)); // left hand to right hand
+    vec3 viewSpaceRay = vec3(camera.invProjection * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, -1.0f, 1.0f) * camera.projectionParams.z));
     float rawDepth = texture(inDepth, uv).r;
     return viewSpaceRay * Linear01Depth(rawDepth);
 }
 
 vec3 StereoViewSpacePosAtScreenUV(vec2 uv, int viewIndex)
 {
-    vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, 1.0f, -1.0f) * camera.projectionParams.z)); // left hand to right hand
+    vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, -1.0f, 1.0f) * camera.projectionParams.z));
 
     float viewOffset = float(viewIndex) * 0.5f;
     float uvx = clamp(uv.x / 2.0f + viewOffset, viewOffset + camera.pixelSize.z, 0.5f + viewOffset - camera.pixelSize.z); // clamp to avoid sampling from the other view, and avoid sampling by linear interpolation
@@ -46,7 +46,7 @@ vec3 ViewNormalAtScreenUV(vec2 uv)
     vec3 vDeriv = viewSpacePos_d - viewSpacePos_c;
 
     // get view space normal from the cross product of the diffs
-    vec3 viewNormal = normalize(cross(hDeriv, vDeriv));
+    vec3 viewNormal = normalize(cross(vDeriv, hDeriv));
 
     return viewNormal;
 }
@@ -65,7 +65,7 @@ vec3 StereoViewNormalAtScreenUV(vec2 uv, int viewIndex)
     vec3 vDeriv = viewSpacePos_d - viewSpacePos_c;
 
     // get view space normal from the cross product of the diffs
-    vec3 viewNormal = normalize(cross(hDeriv, vDeriv));
+    vec3 viewNormal = normalize(cross(vDeriv, hDeriv));
 
     return viewNormal;
 }
@@ -91,7 +91,7 @@ vec3 StereoViewNormalAtScreenUVImproved(vec2 uv, int viewIndex)
     vec3 vDeriv = abs(d.z) < abs(u.z) ? d : u;
 
     // get view space normal from the cross product of the diffs
-    vec3 viewNormal = normalize(cross(vDeriv, hDeriv));
+    vec3 viewNormal = normalize(cross(hDeriv, vDeriv));
 
     return viewNormal;
 }

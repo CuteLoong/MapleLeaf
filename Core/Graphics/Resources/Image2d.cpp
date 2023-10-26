@@ -51,7 +51,7 @@ void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
 {
     if (!filename.empty() && !loadBitmap) {
         loadBitmap = std::make_unique<Bitmap>(filename);
-        extent     = {loadBitmap->GetSize().y, loadBitmap->GetSize().y, 1};
+        extent     = {loadBitmap->GetSize().x, loadBitmap->GetSize().y, 1};
         components = loadBitmap->GetBytesPerPixel();
     }
 

@@ -90,7 +90,7 @@ void main()
     vec3 viewPosition = StereoViewSpacePosAtScreenUV(stereoUV, viewIndex);
     vec3 viewNormal = StereoViewNormalAtScreenUVImproved(stereoUV, viewIndex);
     
-    float stride = min(hbaoData.pixelRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
+    float stride = min(hbaoData.pixelRadius / -viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
     if(stride < 1.0f) {
         outColor = vec4(1.0f);

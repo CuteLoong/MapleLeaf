@@ -52,7 +52,7 @@ void main()
     vec3 viewPosition = ViewSpacePosAtScreenUV(uv);
     vec3 viewNormal = ViewNormalAtScreenUV(uv);
 
-    float stride = min(hbaoData.pixelRadius / viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
+    float stride = min(hbaoData.pixelRadius / -viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f); // right hand rule, camera looks down -z
 
     if(stride < 1.0f) {
         outColour = vec4(1.0f);

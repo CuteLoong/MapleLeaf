@@ -12,6 +12,7 @@
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
 #include "SSAOSubrender.hpp"
+#include "SSRSubrender.hpp"
 #include "ShadowSubrender.hpp"
 
 
@@ -19,9 +20,9 @@ namespace Test {
 GPURenderer::GPURenderer()
 {
 
-    std::vector<NonRTAttachment> globalAttachments = {{"Hi-z", NonRTAttachment::Type::ImageHierarchyZ, false}};
+    std::vector<NonRTAttachment> globalAttachments = {{"Hi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"SSRHitsMap", NonRTAttachment::Type::Image2d, false}};
     CreateGlobalAttachmentsHanlder(globalAttachments);
-
 
     std::vector<Attachment> renderpassAttachments0 = {{0, "shadows", Attachment::Type::Depth, false}};
 
@@ -56,6 +57,14 @@ GPURenderer::GPURenderer()
                                                           4,
                                                       }}};
 
+<<<<<<< HEAD
+    == == == = AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments1, renderpassSubpasses1));
+
+    std::vector<Attachment> renderpassAttachments2{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+
+    std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {0}}, {1, {}, {}}};
+
+>>>>>>> 7a4ecceb994ff2b18dbcb1496e64f029426c11f4
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments2, renderpassSubpasses2));
 
     std::vector<Attachment> renderpassAttachments3{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
@@ -87,10 +96,17 @@ void GPURenderer::Start()
     AddSubrender<HiZDrawSubrender>({1, 0});
     AddSubrender<IndirectDrawSubrender>({2, 0});
 
+<<<<<<< HEAD
     AddSubrender<HBAOSubrender>({3, 0});
     AddSubrender<GaussianBlurSubrender>({4, 0}, "AOMap");
     AddSubrender<DeferredSubrender>({5, 0});
     AddSubrender<ImguiSubrender>({5, 0});
+    == == == = AddSubrender<HBAOSubrender>({2, 0});
+    AddSubrender<SSRSubrender>({2, 1});
+    AddSubrender<GaussianBlurSubrender>({3, 0}, "AOMap");
+    AddSubrender<DeferredSubrender>({4, 0});
+    AddSubrender<ImguiSubrender>({4, 0});
+>>>>>>> 7a4ecceb994ff2b18dbcb1496e64f029426c11f4
 }
 
 void GPURenderer::Update()

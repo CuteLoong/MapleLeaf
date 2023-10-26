@@ -66,6 +66,7 @@ void main() {
 
 	vec3 Lo = vec3(0.0f);
 	vec3 F0 = vec3(0.04f);
+	F0 = mix(F0, diffuse, metallic);
 	for(int i = 1; i <= scene.pointLightsCount; i++)
 	{
 		PointLight light = bufferPointLights.lights[i];
