@@ -10,7 +10,7 @@ namespace MapleLeaf {
 ImageHierarchyZ::ImageHierarchyZ(const glm::uvec2& extent, VkSampleCountFlagBits samples)
     : Image(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samples, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_FORMAT_R32_SFLOAT,
-            GetMipLevels(extent), 1, {extent.x, extent.y, 1})
+            Image::GetMipLevels({extent.x, extent.y, 1}), 1, {extent.x, extent.y, 1})
 {
     VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
@@ -22,11 +22,11 @@ ImageHierarchyZ::ImageHierarchyZ(const glm::uvec2& extent, VkSampleCountFlagBits
                 VK_IMAGE_TILING_OPTIMAL,
                 usage,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                GetMipLevels(extent),
+                mipLevels,
                 1,
                 VK_IMAGE_TYPE_2D);
-    CreateImageSampler(sampler, filter, addressMode, false, GetMipLevels(extent));
-    CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_COLOR_BIT, GetMipLevels(extent), 0, 1, 0);
+    CreateImageSampler(sampler, filter, addressMode, false, mipLevels);
+    CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, 1, 0);
 
     TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, layout, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
 }
@@ -147,16 +147,10 @@ void ImageHierarchyZ::AddHierarchicalDepth(const CommandBuffer& commandBuffer, c
                              0);
 }
 
-
-uint32_t ImageHierarchyZ::GetMipLevels(const glm::uvec2& extent)
-{
-    return std::floor(log2(std::max(extent.x, extent.y)));
-}
-
 VkExtent2D ImageHierarchyZ::GetExtentByMipLevel(uint32_t mipLevel)
 {
     VkExtent2D result;
-    uint32_t   maxMipLevels = ImageHierarchyZ::GetMipLevels(glm::vec2(extent.width, extent.height));
+    uint32_t   maxMipLevels = mipLevels;
     if (mipLevel > maxMipLevels) {
         result.width  = 0;
         result.height = 0;

@@ -14,7 +14,7 @@ namespace MapleLeaf {
 HiZDrawSubrender::HiZDrawSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
     , pipelineCompute1("Shader/GPUDriven/culling.comp")
-    , pipelineCompute2("Shader/GPUDriven/HierarchicalDepth.comp")
+    , pipelineCompute2("Shader/GPUDriven/HierarchicalDepth-Max.comp")
     , PipelineGraphics(pipelineStage, {"Shader/GPUDriven/TwoPass.vert", "Shader/GPUDriven/TwoPass.frag"}, {Vertex3D::GetVertexInput()}, {},
                        PipelineGraphics::Mode::MRT)
 {
@@ -73,11 +73,8 @@ void HiZDrawSubrender::Render(const CommandBuffer& commandBuffer)
 void HiZDrawSubrender::PostRender(const CommandBuffer& commandBuffer)
 {
     // fisrt-pass compute pipeline to produce Hi-z
-    uint32_t maxMipLevel =
-        ImageHierarchyZ::GetMipLevels(glm::uvec2(Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y));
+    uint32_t maxMipLevel = Image::GetMipLevels({Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y, 1});
 
-    // descriptorSetsCompute.clear();
-    // pushHandlers.clear();
     descriptorSetsCompute.resize(maxMipLevel + 1);
 
     const auto& hiz        = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("Hi-z"));
@@ -89,7 +86,6 @@ void HiZDrawSubrender::PostRender(const CommandBuffer& commandBuffer)
     currentDimensions       = {Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y};
 
     while (mipLevel < maxMipLevel) {
-
         pushHandlers[mipLevel].Push("previousLevelDimensions", previousLevelDimensions);
         pushHandlers[mipLevel].Push("currentDimensions", currentDimensions);
         pushHandlers[mipLevel].Push("mipLevel", mipLevel);
@@ -135,7 +131,7 @@ void HiZDrawSubrender::RecreateHiDepths()
     glm::uvec2 depthsExtent  = glm::uvec2(Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y);
 
     if (HiDepths.empty() || HiDepths[0]->GetExtent().width != depthsExtent.x || HiDepths[0]->GetExtent().height != depthsExtent.y) {
-        uint32_t maxMipLevel   = ImageHierarchyZ::GetMipLevels(depthsExtent);
+        uint32_t maxMipLevel   = Image::GetMipLevels({Devices::Get()->GetWindow()->GetSize().x, Devices::Get()->GetWindow()->GetSize().y, 1});
         uint32_t mipLevelToDep = 0;
 
         Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));

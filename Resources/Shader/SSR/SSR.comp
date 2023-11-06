@@ -3,6 +3,9 @@
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_GOOGLE_include_directive : require
 
+#define RAY_MARCH_ORIGIN_OFFSET_EPSILON 0.1
+#define HIZ_STEP_EPSILON 0.00001
+
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(set=0, binding=1) uniform UniformSSRData {
@@ -10,10 +13,20 @@ layout(set=0, binding=1) uniform UniformSSRData {
     float maxSteps;
     float zThickness;
     float fadeValue;
+    
+    float hiZStartLevel;
+    float hiZMaxLevel;
 } ssrData;
 
 layout(set=0, binding=2) uniform sampler2D inDepth;
 layout(set=0, binding=3) uniform sampler2D inNormal;
+
+#if (TRAVERSAL_SCHEME_MIN_HI_Z == 1)
+    layout(set=0, binding=5) uniform sampler2D inMinHiZ;
+#elif (TRAVERSAL_SCHEME_MIN_MAX_HI_Z == 1)
+    layout(set=0, binding=5) uniform sampler2D inMinHiZ;
+    layout(set=0, binding=6) uniform sampler2D inMaxHiZ;
+#endif
 
 layout(set=0, binding=4, rgba8) writeonly uniform image2D SSRHitsMap;
 
@@ -25,9 +38,9 @@ bool intersectsDepthBuffer(float sceneZMax, float sceneZMin, float rayZ)
     return (rayZ >= sceneZMin) && (rayZ <= sceneZMax);
 }
 
-bool rayMarch3D(vec3 originVS, vec3 reflectDirVS, inout float iterations, inout vec3 hitPointSS)
+bool rayMarch3D(vec3 originVS, vec3 reflectDirVS, inout vec3 hitPointSS)
 {
-    originVS = originVS + reflectDirVS * 0.01f;
+    originVS = originVS + reflectDirVS * RAY_MARCH_ORIGIN_OFFSET_EPSILON;
 
     float sceneZMax = 1.0f;
     float sceneZMin = 0.0f;
@@ -38,13 +51,12 @@ bool rayMarch3D(vec3 originVS, vec3 reflectDirVS, inout float iterations, inout 
     bool outOfBounds = false;
 
     for(float i = 0.0f; i < ssrData.maxSteps; i++) {
-        iterations++;
         t += deltaT;
         vec3 rayVS = originVS + reflectDirVS * t;
-
         vec4 rayHS = camera.projection * vec4(rayVS, 1.0f);
         raySS = rayHS.xyz / rayHS.w;
         raySS.xy = raySS.xy * 0.5f + 0.5f;
+        raySS.y = 1.0f - raySS.y; // flip y
         raySS.z = Linear01Depth(raySS.z); // linear depth
 
         sceneZMin = Linear01Depth(texture(inDepth, raySS.xy).x);
@@ -63,9 +75,144 @@ bool rayMarch3D(vec3 originVS, vec3 reflectDirVS, inout float iterations, inout 
     return (sceneZMin > raySS.z) || (raySS.z > sceneZMax); // return true if we missed
 }
 
-bool hiZTracing(vec3 pointSS0, vec3 pointSS1, inout float iterations, inout vec3 hitPointSS)
+vec2 GetHiZLevelSize(float mipLevel)
 {
-    return true;
+    return vec2(camera.pixelSize.x / pow(2.0f, mipLevel), camera.pixelSize.y / pow(2.0f, mipLevel));
+}
+
+vec2 GetHizPixel(vec2 pointXY, vec2 levelSize)
+{
+    return vec2(floor(pointXY.x * levelSize.x), floor(pointXY.y * levelSize.y));
+}
+
+#if (TRAVERSAL_SCHEME_MIN_HI_Z == 1)
+
+float GetZMinFromHiZ(vec2 pixel, float mipLevel)
+{
+    return Linear01Depth(texelFetch(inMinHiZ, ivec2(pixel), int(mipLevel)).x);
+}
+
+void minHizTraversalLoop(vec2 step, vec2 stepOffset, vec3 pointSS0, vec3 rayDir, float calcT0, float calcT1, inout float mipLevel, inout float tParameter, inout vec2 tSceneZMinMax)
+{
+    float iterations = 0.0f;
+    while(mipLevel >= 0.0f && iterations < ssrData.maxSteps && tParameter <= 1.0f) {
+        iterations++;
+
+        vec2 maxRayPointXY = pointSS0.xy + rayDir.xy * tParameter;
+
+        vec2 levelSize = GetHiZLevelSize(mipLevel);
+        vec2 pixel = GetHizPixel(maxRayPointXY, levelSize);
+
+        vec2 tPixelXY = ((pixel + step) / levelSize + stepOffset - pointSS0.xy) / rayDir.xy;
+        float tPixel = min(tPixelXY.x, tPixelXY.y);
+
+        vec2 sceneZMinMax;
+        sceneZMinMax.x = GetZMinFromHiZ(pixel, mipLevel);
+        tSceneZMinMax.x = (1.0f / sceneZMinMax.x + calcT0) * calcT1;
+
+        mipLevel--;
+        if(tSceneZMinMax.x <= tPixel) {
+            tParameter = max(tParameter, tSceneZMinMax.x);
+            if(mipLevel == -1.0f) {
+                sceneZMinMax.y = sceneZMinMax.x + ssrData.zThickness;
+                tSceneZMinMax.y = (1.0f / sceneZMinMax.y + calcT0) * calcT1;
+                if(tParameter > tSceneZMinMax.y) {
+                    tParameter = tPixel;
+                    mipLevel = min(ssrData.hiZMaxLevel, mipLevel + 2.0f);
+                }
+            }
+        }
+        else {
+            tParameter = tPixel;
+            mipLevel = min(ssrData.hiZMaxLevel, mipLevel + 2.0f);
+        }
+    } 
+}
+
+#endif
+
+#if (TRAVERSAL_SCHEME_MIN_MAX_HI_Z == 1)
+
+vec2 GetZMinMaxFromHiZ(vec2 pixel, float mipLevel)
+{
+    vec2 zMinMax;
+    zMinMax.x = Linear01Depth(texelFetch(inMinHiZ, ivec2(pixel), int(mipLevel)).x);
+    zMinMax.y = Linear01Depth(texelFetch(inMaxHiZ, ivec2(pixel), int(mipLevel)).x) + ssrData.zThickness;
+    return zMinMax;
+}
+
+void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec3 pointSS0, vec3 rayDir, float calcT0, float calcT1, inout float mipLevel, inout float tParameter, inout vec2 tSceneZMinMax)
+{
+    float iterations = 0.0f;
+    while(mipLevel >= 0.0f && iterations < ssrData.maxSteps && tParameter <= 1.0f) {
+        iterations++;
+
+        vec2 maxRayPointXY = pointSS0.xy + rayDir.xy * tParameter;
+
+        vec2 levelSize = GetHiZLevelSize(mipLevel);
+        vec2 pixel = GetHizPixel(maxRayPointXY, levelSize);
+
+        vec2 tPixelXY = ((pixel + step) / levelSize + stepOffset - pointSS0.xy) / rayDir.xy;
+        float tPixel = min(tPixelXY.x, tPixelXY.y);
+
+        vec2 sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel);
+        tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
+
+        mipLevel--;
+        if(tSceneZMinMax.x <= tPixel && tParameter <= tSceneZMinMax.y) {
+            tParameter = max(tParameter, tSceneZMinMax.x);
+        }
+        else {
+            tParameter = tPixel;
+            mipLevel = min(ssrData.hiZMaxLevel, mipLevel + 2.0f);
+        }
+    }
+}
+
+#endif
+
+bool hiZTracing(vec3 pointSS0, vec3 pointSS1, inout vec3 hitPointSS)
+{
+    pointSS0.z = Linear01Depth(pointSS0.z);
+    pointSS1.z = Linear01Depth(pointSS1.z);
+
+    vec3 rayDir = pointSS1 - pointSS0;
+
+    vec2 stepSign;
+    stepSign.x = (rayDir.x >= 0) ? 1.0f : -1.0f;
+    stepSign.y = (rayDir.y >= 0) ? 1.0f : -1.0f;
+    vec2 stepOffset = HIZ_STEP_EPSILON * stepSign.xy;
+
+    vec2 step = clamp(stepSign.xy, 0.0f, 1.0f); // if rayDir is negative, offset will make it to else pixel
+
+    float pointSS0InvZ = 1.0f / pointSS0.z;
+    float pointSS1InvZ = 1.0f / pointSS1.z;
+
+    float interpPoint = pointSS0InvZ;
+    float interpVec = pointSS1InvZ - pointSS0InvZ;
+
+    // claculate tParameter (1/z - 1/z0) / (1/z1 - 1/z0)
+    float calcT0= -pointSS0InvZ;
+    float calcT1 = 1.0f / (pointSS1InvZ - pointSS0InvZ);
+
+    vec2 levelSize = GetHiZLevelSize(0.0f);
+    vec2 pixel = GetHizPixel(pointSS0.xy, levelSize);
+
+    vec2 tStartPixelXY = ((pixel + step) / levelSize + stepOffset - pointSS0.xy) / rayDir.xy;
+    float tParameter = min(tStartPixelXY.x, tStartPixelXY.y);
+    vec2 tSceneZMinMax = vec2(0.0f, 1.0f);
+    float mipLevel = ssrData.hiZStartLevel; // set to 2
+
+#if (TRAVERSAL_SCHEME_MIN_HI_Z == 1)
+    minHizTraversalLoop(step, stepOffset, pointSS0, rayDir, calcT0, calcT1, mipLevel, tParameter, tSceneZMinMax);
+#elif (TRAVERSAL_SCHEME_MIN_MAX_HI_Z == 1)
+    minMaxHiZTraversalLoop(step, stepOffset, pointSS0, rayDir, calcT0, calcT1, mipLevel, tParameter, tSceneZMinMax);
+#endif
+
+    // hitPointSS = pointSS0 + rayDir * tParameter;
+    hitPointSS = vec3(pointSS0.xy + rayDir.xy * tParameter, 1.0f / (interpPoint + interpVec * tParameter));
+
+    return (mipLevel != -1.0f) || (tParameter < tSceneZMinMax.x) || (tParameter > tSceneZMinMax.y);
 }
 
 float calculateFadeAmount(vec2 positionUV){
@@ -80,10 +227,10 @@ void main()
         return;
 
     vec3 pointSS0;
-    pointSS0.xy = vec2(pixel) * vec2(camera.pixelSize.z, camera.pixelSize.w);
+    pointSS0.xy = vec2(pixel.x + 0.5f, pixel.y + 0.5f) * vec2(camera.pixelSize.z, camera.pixelSize.w);
     pointSS0.z = texture(inDepth, pointSS0.xy).x;
 
-    vec3 normalVS = normalize(mat3(camera.view) * texture(inNormal, pointSS0.xy).xyz);
+    vec3 normalVS = normalize(mat3(transpose(inverse(camera.view))) * texture(inNormal, pointSS0.xy).xyz);
 
     vec3 originVS = ViewSpacePosAtScreenUV(pointSS0.xy);
     vec3 viewRayVS = normalize(originVS);
@@ -94,17 +241,17 @@ void main()
     vec4 pointHS1 = camera.projection * vec4(endPointVS, 1.0f);
     vec3 pointSS1 = pointHS1.xyz / pointHS1.w; // depth is hyperbolic depth
     pointSS1.xy = pointSS1.xy * 0.5f + 0.5f;
+    pointSS1.y = 1.0f - pointSS1.y; // flip y
 
     vec3 hitPointSS = vec3(-1.0f);
     bool missed = true;
-    float iterations = 0.0f;
 
     // camera is looking down -z
     if(reflectDirVS.z < 0.0f) {
-        #if defined(TRAVERSAL_SCHEME_RAY_MARCH_3D)
-            missed = rayMarch3D(originVS, reflectDirVS, iterations, hitPointSS);
-        #elif defined(TRAVERSAL_SCHEME_MIN_HI_Z) || defined(TRAVERSAL_SCHEME_MIN_MAX_HI_Z)
-            missed = hiZTracing(pointSS0, pointSS1, iterations, hitPointSS);
+        #if (TRAVERSAL_SCHEME_RAY_MARCH_3D == 1)
+            missed = rayMarch3D(originVS, reflectDirVS, hitPointSS);
+        #elif (TRAVERSAL_SCHEME_MIN_HI_Z == 1) || (TRAVERSAL_SCHEME_MIN_MAX_HI_Z == 1)
+            missed = hiZTracing(pointSS0, pointSS1, hitPointSS);
         #else 
             #error "Traversal scheme not defined"
         #endif

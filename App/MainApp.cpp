@@ -42,7 +42,6 @@ void MainApp::Start()
     Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
 
-
     std::unique_ptr<SceneBuilder> scene = std::make_unique<SceneBuilder>();
     Scenes::Get()->SetScene(std::move(scene));
 }

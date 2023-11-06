@@ -2,10 +2,12 @@
 #define MISC_Utils_GLSL
 
 float Linear01Depth(float z) {
+    z = z * 0.5 + 0.5; // NDC to [0, 1]
     return 1.0 / (camera.zBufferParams.x * z + camera.zBufferParams.y);
 }
 
 float LinearEyeDepth(float z) {
+    z = z * 0.5 + 0.5; // NDC to [0, 1]
     return 1.0 / (camera.zBufferParams.z * z + camera.zBufferParams.w);
 }
 
@@ -15,14 +17,14 @@ float LinearEyeDepth(float z) {
 // then multiplies that ray by the linear 01 depth
 vec3 ViewSpacePosAtScreenUV(vec2 uv)
 {
-    vec3 viewSpaceRay = vec3(camera.invProjection * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, -1.0f, 1.0f) * camera.projectionParams.z));
+    vec3 viewSpaceRay = vec3(camera.invProjection * (vec4(uv.x * 2.0f - 1.0f, (uv.y * 2.0f - 1.0f) * camera.projectionParams.x, -1.0f, 1.0f) * camera.projectionParams.z));
     float rawDepth = texture(inDepth, uv).r;
     return viewSpaceRay * Linear01Depth(rawDepth);
 }
 
 vec3 StereoViewSpacePosAtScreenUV(vec2 uv, int viewIndex)
 {
-    vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, 1.0f - uv.y * 2.0f, -1.0f, 1.0f) * camera.projectionParams.z));
+    vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, (uv.y * 2.0f - 1.0f) * camera.projectionParams.x, -1.0f, 1.0f) * camera.projectionParams.z));
 
     float viewOffset = float(viewIndex) * 0.5f;
     float uvx = clamp(uv.x / 2.0f + viewOffset, viewOffset + camera.pixelSize.z, 0.5f + viewOffset - camera.pixelSize.z); // clamp to avoid sampling from the other view, and avoid sampling by linear interpolation

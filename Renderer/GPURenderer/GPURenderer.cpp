@@ -19,8 +19,9 @@
 namespace Test {
 GPURenderer::GPURenderer()
 {
-
     std::vector<NonRTAttachment> globalAttachments = {{"Hi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"MinHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"MaxHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
                                                       {"SSRHitsMap", NonRTAttachment::Type::Image2d, false}};
     CreateGlobalAttachmentsHanlder(globalAttachments);
 

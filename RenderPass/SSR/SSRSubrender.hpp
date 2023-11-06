@@ -16,7 +16,7 @@ public:
         float zThickness;
         float fadeValue;
 
-        SSRData(int maxRayLength = 120.0f, float maxSteps = 120.0f, float zThickness = 0.1f, float fadeValue = 0.1f)
+        SSRData(int maxRayLength = 120.0f, float maxSteps = 120.0f, float zThickness = 0.01f, float fadeValue = 0.1f)
             : maxRayLength(maxRayLength)
             , maxSteps(maxSteps)
             , zThickness(zThickness)

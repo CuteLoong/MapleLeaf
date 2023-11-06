@@ -178,7 +178,7 @@ const glm::vec4 Camera::GetZBufferParams() const
 
 const glm::vec4 Camera::GetProjectionParams() const
 {
-    return glm::vec4(1.0f, nearPlane, farPlane, 1.0f / farPlane);
+    return glm::vec4(-1.0f, nearPlane, farPlane, 1.0f / farPlane);
 }
 
 const uint32_t Camera::GetPixelHeight() const
