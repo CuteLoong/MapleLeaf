@@ -446,6 +446,7 @@ void Shader::CreateReflection()
                 Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
             break;
         case 0x8B5E:   // GL_SAMPLER_2D
+        case 0x8DD2:   // GL_USAMPLER_2D
         case 0x904D:   // GL_IMAGE_2D
         case 0x8DC1:   // GL_TEXTURE_2D_ARRAY
         case 0x9108:   // GL_SAMPLER_2D_MULTISAMPLE

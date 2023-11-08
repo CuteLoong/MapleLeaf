@@ -32,6 +32,7 @@ layout(location = 0) out vec3 outPosition;
 layout(location = 1) out vec2 outUV;
 layout(location = 2) out vec3 outNormal;
 layout(location = 3) out flat uint outMaterialId;
+layout(location = 4) out flat uint outInstanceID;
 
 void main()
 {
@@ -54,4 +55,5 @@ void main()
     outUV = inUV;
 	outNormal = normalMatrix * normalize(normal.xyz);
     outMaterialId = materialId;
+    outInstanceID = instanceIndex;
 }

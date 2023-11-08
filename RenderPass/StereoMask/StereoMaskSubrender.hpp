@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DescriptorHandler.hpp"
+#include "PipelineCompute.hpp"
 #include "PipelineGraphics.hpp"
 #include "Subrender.hpp"
 #include "UniformHandler.hpp"
@@ -21,5 +22,9 @@ private:
 
     UniformHandler     uniformCamera;
     DescriptorsHandler descriptorSet;
+
+    PipelineCompute    pipelineGradient;
+    UniformHandler     uniformCameraCompute;
+    DescriptorsHandler descriptorSetCompute;
 };
 }   // namespace MapleLeaf

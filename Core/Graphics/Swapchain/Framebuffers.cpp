@@ -19,7 +19,7 @@ Framebuffers::Framebuffers(const LogicalDevice& logicalDevice, const Swapchain& 
                                           attachment.GetFormat(),
                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
-                                          VK_FILTER_LINEAR,
+                                          attachment.GetFilter(),
                                           VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
                                           attachmentSamples));
             break;

@@ -133,6 +133,11 @@ void LogicalDevice::CreateLogicalDevice()
     else
         Log::Warning("Selected GPU does not support fragmentStoresAndAtomics!\n");
 
+    if (physicalDeviceFeatures.independentBlend)
+        enabledFeatures.independentBlend = VK_TRUE;
+    else
+        Log::Warning("Selected GPU does not support independentBlend!\n");
+
     // add bindless feature
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
     indexingFeatures.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;

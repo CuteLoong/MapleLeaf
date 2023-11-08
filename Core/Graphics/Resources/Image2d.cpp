@@ -137,7 +137,7 @@ void Image2d::Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& comman
 {
     InsertImageMemoryBarrier(commandBuffer,
                              image,
-                             VK_ACCESS_SHADER_WRITE_BIT,
+                             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                              VK_ACCESS_SHADER_READ_BIT,
                              layout,
                              layout,

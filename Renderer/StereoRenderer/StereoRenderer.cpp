@@ -22,7 +22,8 @@ StereoRenderer::StereoRenderer()
 {
     std::vector<NonRTAttachment> globalAttachments = {{"gaussianX", NonRTAttachment::Type::Image2d, false},
                                                       {"gaussianY", NonRTAttachment::Type::Image2d, false},
-                                                      {"HBAOLeft", NonRTAttachment::Type::Image2d, false}};
+                                                      {"HBAOLeft", NonRTAttachment::Type::Image2d, false},
+                                                      {"ThicknessMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -36,21 +37,14 @@ StereoRenderer::StereoRenderer()
                                                    {1, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                    {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+                                                   {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                   {5, "instanceId", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_NEAREST}};
 
-    std::vector<SubpassType> renderpassSubpasses1 = {{0,
-                                                      {},
-                                                      {
-                                                          0,
-                                                          1,
-                                                          2,
-                                                          3,
-                                                          4,
-                                                      }}};
+    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {0, 1, 2, 3, 4, 5}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::STEREO, renderpassAttachments1, renderpassSubpasses1));
 
-    std::vector<Attachment> renderpassAttachments2{{0, "StereoMask", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
+    std::vector<Attachment> renderpassAttachments2{{0, "StereoMask", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM, VK_FILTER_NEAREST},
                                                    {1, "StereoMV", Attachment::Type::Image, false, VK_FORMAT_R16G16_SFLOAT}};
 
     std::vector<SubpassType> renderpassSubpasses2 = {{0, {}, {0, 1}}};

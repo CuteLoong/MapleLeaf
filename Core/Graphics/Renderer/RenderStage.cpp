@@ -11,8 +11,8 @@ RenderStage::RenderStage(Type stageType, std::vector<Attachment> images, std::ve
     , attachments(std::move(images))
     , subpasses(std::move(subpasses))
     , viewport(viewport)
-    , subpassOutputAttachmentCount(this->subpasses.size())
-    , subpassInputAttachmentCount(this->subpasses.size())
+    , subpassOutputAttachmentBindings(this->subpasses.size())
+    , subpassInputAttachmentBindings(this->subpasses.size())
     , subpassMultisampled(this->subpasses.size())
 {
     for (const auto& image : attachments) {
@@ -24,11 +24,11 @@ RenderStage::RenderStage(Type stageType, std::vector<Attachment> images, std::ve
             for (const auto& subpass : this->subpasses) {
                 if (auto subpassBindings = subpass.GetInputAttachmentBindings();
                     std::find(subpassBindings.begin(), subpassBindings.end(), image.GetBinding()) != subpassBindings.end()) {
-                    subpassInputAttachmentCount[subpass.GetBinding()]++;
+                    subpassInputAttachmentBindings[subpass.GetBinding()].push_back(image.GetBinding());
                 }
                 if (auto subpassBindings = subpass.GetOutputAttachmentBindings();
                     std::find(subpassBindings.begin(), subpassBindings.end(), image.GetBinding()) != subpassBindings.end()) {
-                    subpassOutputAttachmentCount[subpass.GetBinding()]++;
+                    subpassOutputAttachmentBindings[subpass.GetBinding()].push_back(image.GetBinding());
 
                     if (image.IsMultisampled()) subpassMultisampled[subpass.GetBinding()] = true;
                 }

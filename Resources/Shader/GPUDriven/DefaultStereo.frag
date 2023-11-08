@@ -24,11 +24,13 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inUV;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in flat uint inMaterialId;
+layout(location = 4) in flat uint inInstanceId;
 
 layout(location = 0) out vec4 outPosition;
 layout(location = 1) out vec4 outDiffuse;
 layout(location = 2) out vec4 outNormal;
 layout(location = 3) out vec4 outMaterial;
+layout(location = 4) out float outInstance;
 
 void main() 
 {	
@@ -70,4 +72,5 @@ void main()
 	outDiffuse = diffuse;
 	outNormal = vec4(normalize(normal), 1.0f);
 	outMaterial = vec4(material, 1.0f);
+	outInstance = float(inInstanceId);
 }

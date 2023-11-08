@@ -6,6 +6,7 @@
 layout(set=0, binding = 1) uniform sampler2D inDepth;
 layout(set=0, binding = 2) uniform sampler2D inPosition;
 
+#include <Misc/Constants.glsl>
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
 
@@ -16,6 +17,7 @@ layout(location = 1) out vec4 outMV;
 
 void main()
 {
+    // float ipd = length(camera.cameraStereoPosition[1] - camera.cameraStereoPosition[0]);
     int viewIndex = inUV.x < 0.5f ? 0 : 1;
     int inverseViewIndex = 1 - viewIndex;
 
@@ -36,8 +38,10 @@ void main()
     otherEyeUV = vec2(otherEyeUV.x / 2.0f + 0.5f * float(inverseViewIndex), otherEyeUV.y);
 
     float otherEyeDepth = texture(inDepth, otherEyeUV).r;
+    float linear01DepthDiff = abs(Linear01Depth(otherEyeDepth) - Linear01Depth(otherEyeProj.z));
 
-    int mask = abs(LinearEyeDepth(otherEyeDepth) - LinearEyeDepth(otherEyeProj.z)) > 0.1f ? 1 : 0;
+    int mask = linear01DepthDiff > 0.002f ? 1 : 0;
+    // float parallax = (mask == 0) ? 2.0f * atan(ipd / (2.0f * LinearEyeDepth(otherEyeProj.z))) : 0.0f;
 
     vec2 motionVector = vec2(ivec2(otherEyeUV * camera.pixelSize.xy) - ivec2(uv * camera.pixelSize.xy)) * camera.pixelSize.zw; // in same texture space
     outColour = vec4(mask, mask, mask, 1.0f);

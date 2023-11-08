@@ -29,12 +29,13 @@ public:
      * @param clearColour The colour to clear to before rendering to it.
      */
     Attachment(uint32_t binding, std::string name, Type type, bool multisampled = false, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM,
-               const Color& clearColour = Color::Black)
+               VkFilter filter = VK_FILTER_LINEAR, const Color& clearColour = Color::Black)
         : binding(binding)
         , name(std::move(name))
         , type(type)
         , multisampled(multisampled)
         , format(format)
+        , filter(filter)
         , clearColour(clearColour)
     {}
 
@@ -43,7 +44,26 @@ public:
     Type               GetType() const { return type; }
     bool               IsMultisampled() const { return multisampled; }
     VkFormat           GetFormat() const { return format; }
+    VkFilter           GetFilter() const { return filter; }
     const Color&       GetClearColour() const { return clearColour; }
+
+    bool EnableBlend() const
+    {
+        switch (format) {
+        case VK_FORMAT_R32_SFLOAT:
+        case VK_FORMAT_R32_UINT: return false; break;
+        default: return true; break;
+        }
+    }
+
+    VkColorComponentFlags GetColorWriteMask() const
+    {
+        switch (format) {
+        case VK_FORMAT_R32_SFLOAT:
+        case VK_FORMAT_R32_UINT: return VK_COLOR_COMPONENT_R_BIT; break;
+        default: return VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT; break;
+        }
+    }
 
 private:
     uint32_t    binding;
@@ -51,6 +71,7 @@ private:
     Type        type;
     bool        multisampled;
     VkFormat    format;
+    VkFilter    filter;
     Color       clearColour;
 };
 
@@ -162,8 +183,8 @@ public:
     const Framebuffers* GetFramebuffers() const { return framebuffers.get(); }
 
     const std::vector<VkClearValue>& GetClearValues() const { return clearValues; }
-    uint32_t                         GetOutputAttachmentCount(uint32_t subpass) const { return subpassOutputAttachmentCount[subpass]; }
-    uint32_t                         GetInputAttachmentCount(uint32_t subpass) const { return subpassInputAttachmentCount[subpass]; }
+    const std::vector<uint32_t>&     GetOutputAttachmentBindings(uint32_t subpass) const { return subpassOutputAttachmentBindings[subpass]; }
+    const std::vector<uint32_t>&     GetInputAttachmentBindings(uint32_t subpass) const { return subpassInputAttachmentBindings[subpass]; }
     bool                             HasDepth() const { return depthAttachment.has_value(); }
     bool                             HasSwapchain() const { return swapchainAttachment.has_value(); }
     bool                             IsMultisampled(uint32_t subpass) const { return subpassMultisampled[subpass]; }
@@ -180,12 +201,12 @@ private:
 
     std::map<std::string, const Descriptor*> descriptors;
 
-    std::vector<VkClearValue> clearValues;
-    std::vector<uint32_t>     subpassOutputAttachmentCount;
-    std::vector<uint32_t>     subpassInputAttachmentCount;
-    std::optional<Attachment> depthAttachment;
-    std::optional<Attachment> swapchainAttachment;
-    std::vector<bool>         subpassMultisampled;
+    std::vector<VkClearValue>          clearValues;
+    std::vector<std::vector<uint32_t>> subpassOutputAttachmentBindings;
+    std::vector<std::vector<uint32_t>> subpassInputAttachmentBindings;
+    std::optional<Attachment>          depthAttachment;
+    std::optional<Attachment>          swapchainAttachment;
+    std::vector<bool>                  subpassMultisampled;
 
     RenderArea renderArea;
 
