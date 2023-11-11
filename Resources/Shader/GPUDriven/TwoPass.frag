@@ -26,10 +26,10 @@ layout(location = 1) in vec2 inUV;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in flat uint inMaterialId;
 
-layout(location = 0) out vec4 outPosition;
-layout(location = 1) out vec4 outDiffuse;
-layout(location = 2) out vec4 outNormal;
-layout(location = 3) out vec4 outMaterial;
+// layout(location = 0) out vec4 outPosition;
+// layout(location = 1) out vec4 outDiffuse;
+// layout(location = 2) out vec4 outNormal;
+// layout(location = 3) out vec4 outMaterial;
 
 void main() 
 {	

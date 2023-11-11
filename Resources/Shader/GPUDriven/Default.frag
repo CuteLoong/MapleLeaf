@@ -31,7 +31,7 @@ layout(location = 0) out vec4 outPosition;
 layout(location = 1) out vec4 outDiffuse;
 layout(location = 2) out vec4 outNormal;
 layout(location = 3) out vec4 outMaterial;
-layout(location = 4) out vec4 outInstanceID;
+layout(location = 4) out float outInstanceID;
 
 void main() 
 {	
@@ -73,5 +73,5 @@ void main()
 	outDiffuse = diffuse;
 	outNormal = vec4(normalize(normal), 1.0f);
 	outMaterial = vec4(material, 1.0f);
-	outInstanceID = vec4(inInstanceID, inInstanceID, inInstanceID, inInstanceID);
+	outInstanceID = float(inInstanceID);
 }

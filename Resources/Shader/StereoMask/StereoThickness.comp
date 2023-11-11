@@ -6,7 +6,7 @@
 layout(local_size_x = 32, local_size_y = 8) in;
 
 layout(set = 0, binding = 1) uniform sampler2D inDepth;
-layout(set = 0, binding = 2) uniform sampler2D inMask;
+layout(set = 0, binding = 2) uniform sampler2D OccluderMap;
 layout(set = 0, binding = 3) uniform sampler2D inMV;
 layout(set = 0, binding = 4) uniform sampler2D inInstanceID;
 
@@ -14,18 +14,6 @@ layout(r32f, set = 0, binding = 5) uniform writeonly image2D thicknessMap;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
-
-vec3 StereoViewSpacePosAtScreenUVPointDepth(vec2 uv, int viewIndex)
-{
-    vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(uv.x * 2.0f - 1.0f, (uv.y * 2.0f - 1.0f) * camera.projectionParams.x, -1.0f, 1.0f) * camera.projectionParams.z));
-
-    float viewOffset = float(viewIndex) * 0.5f;
-    float uvx = clamp(uv.x / 2.0f + viewOffset, viewOffset + camera.pixelSize.z, 0.5f + viewOffset - camera.pixelSize.z); // clamp to avoid sampling from the other view, and avoid sampling by linear interpolation
-    vec2 screenUV = vec2(uvx, uv.y); // uv is in [0, 1] range, so we need to offset it by half the view index
-
-    float rawDepth = texelFetch(inDepth, ivec2(screenUV * camera.pixelSize.xy), 0).r; 
-    return viewSpaceRay * Linear01Depth(rawDepth);
-}
 
 void main()
 {
@@ -35,62 +23,82 @@ void main()
 
     int viewIndex = pixel.x < (camera.pixelSize.x / 2) ? 0 : 1;
 
-    vec2 curEyeUV = (pixel + vec2(0.5f)) * camera.pixelSize.zw;
-    int curEyeMask = int(texture(inMask, curEyeUV).r);
+    vec2 occluderUV = (pixel + vec2(0.5f)) * camera.pixelSize.zw; // current eyes occluder uv
+    vec2 occluderUV2 = occluderUV + texelFetch(inMV, pixel, 0).xy; 
 
-    if(curEyeMask == 0) return; // Find out which point the other eye is occluded by
+    vec2 occludedUV = texelFetch(OccluderMap, pixel, 0).xy; // another eye's space,current eye occluded position,but just can be see at another eye
+
+    if(occludedUV.x == 0.0f && occludedUV.y == 0.0f) return; // return if this is not a occluder
+
+    vec2 occludedUV2 = texelFetch(OccluderMap, ivec2(occluderUV2 * camera.pixelSize.xy), 0).xy; // current eye's space, current eye occlude another eye.
+
+    // occluder's info, view space
+    vec3 occluderPos = StereoViewSpacePosAtScreenUV(occluderUV, viewIndex); // O3 in current eye's space
+    vec3 occluderPos2 = StereoViewSpacePosAtScreenUV(occluderUV2, 1 - viewIndex); // O3 in another eye's space
+    float OccluderDistance = length(occluderPos); // E1 To O3 Distance in current eye's space
+    float OccluderDistance2 = length(occluderPos2); // E2 To O3 Distance in another eye's space
+
+    // occluded's info, view space
+    vec3 occludedPos = StereoViewSpacePosAtScreenUV(occludedUV, 1 - viewIndex); // O1 in another eye's space
+    vec3 occludedPos2 = vec3(0.0f); // O2 in another eye's space
+
+    float occluderToOccludedDistance = length(occludedPos - occluderPos2); // O3 To O1 Distance in another eye's space
     
-    vec2 otherEyeUV = curEyeUV + texelFetch(inMV, pixel, 0).xy;
-    int otherEyeMask = int(texture(inMask, otherEyeUV).r);
+    // calc occludedPos2
+    vec3 cameraDirVS = vec3(camera.cameraStereoPosition[viewIndex] - camera.cameraStereoPosition[1 - viewIndex]);
+    float O1ToO2Distance = occluderToOccludedDistance * length(cameraDirVS) / OccluderDistance;
+    occludedPos2 = normalize(cameraDirVS) * O1ToO2Distance + occludedPos;
 
-    if(otherEyeMask == 1) return; // occlude point must can be see by both eyes
-    ivec2 otherEyePixel = ivec2(otherEyeUV * camera.pixelSize.xy);
+    // calc trace ray's direction
+    vec3 O2InEye1 = mat3(camera.stereoView[viewIndex]) * mat3(camera.invStereoView[1 - viewIndex]) * vec3(occludedPos2.x, occluderPos2.y, occludedPos2.z); // O2 in current eye's space
+    vec4 O2InHSS1 = camera.stereoProjection[viewIndex] * vec4(O2InEye1, 1.0f); // O2 in current eye's homogeneous space
+    vec3 O2InSS1 = O2InHSS1.xyz / O2InHSS1.w; // O2 in current eye's screen space
+    O2InSS1.xy = vec2(O2InSS1.x * 0.5f + 0.5f, 0.5f - O2InSS1.y * 0.5f);
+    O2InSS1.xy = StereoUVToScreenUV(O2InSS1.xy, viewIndex); // O2 in global screen space, eye1 region
+    vec2 traceRayEye1 = O2InSS1.xy - occluderUV; // trace ray's direction(O3->O2) in global screen space, eye1 region
 
-    vec2 curEyeOccluderPointUV = otherEyeUV + texelFetch(inMV, otherEyePixel, 0).xy;
-    vec2 occlusionRaySS = curEyeOccluderPointUV - curEyeUV;
+    vec4 O1InHSS2 = camera.stereoProjection[1 - viewIndex] * vec4(occludedPos, 1.0f); // O1 in another eye's homogeneous space
+    vec3 O1InSS2 = O1InHSS2.xyz / O1InHSS2.w; // O1 in another eye's screen space
+    O1InSS2.xy = vec2(O1InSS2.x * 0.5f + 0.5f, 0.5f - O1InSS2.y * 0.5f);
+    O1InSS2.xy = StereoUVToScreenUV(O1InSS2.xy, 1 - viewIndex); // O1 in global screen space, eye2 region
+    vec2 traceRayEye2 = O1InSS2.xy - occluderUV2; // trace ray's direction(O3->O1) in global screen space, eye2 region
 
-    vec3 viewOccluderPosition = StereoViewSpacePosAtScreenUV(vec2(curEyeOccluderPointUV.x * 2.0f - float(viewIndex), curEyeOccluderPointUV.y), viewIndex);
-    vec3 viewOccludedPosition = StereoViewSpacePosAtScreenUV(vec2(curEyeUV.x * 2.0f - float(viewIndex), curEyeUV.y), viewIndex);
-    vec3 occlusionRayVS = viewOccluderPosition - viewOccludedPosition;
+    // trace ray
+    float t1InEye1 = 0.0f, t2InEye1 = 1.0f;
+    float t1InEye2 = 0.0f, t2InEye2 = 1.0f;
 
-    uint occluderInstanceId = uint(texelFetch(inInstanceID, ivec2(curEyeOccluderPointUV * camera.pixelSize.xy), 0));
-    uint occludedInstanceId = uint(texelFetch(inInstanceID, ivec2(curEyeUV * camera.pixelSize.xy), 0));
+    uint instanceIdT1InEye1 = uint(texelFetch(inInstanceID, ivec2(occluderUV * camera.pixelSize.xy), 0).r);
+    uint instanceIdT2InEye1 = uint(texelFetch(inInstanceID, ivec2(O2InSS1.xy * camera.pixelSize.xy), 0).r);
+    uint instanceIdT1InEye2 = uint(texelFetch(inInstanceID, ivec2(occluderUV2 * camera.pixelSize.xy), 0).r);
+    uint instanceIdT2InEye2 = uint(texelFetch(inInstanceID, ivec2(O1InSS2.xy * camera.pixelSize.xy), 0).r);
 
-    if(occluderInstanceId == occludedInstanceId) {
-        vec2 stereoOccluderUV =  vec2(curEyeOccluderPointUV.x * 2.0f - float(viewIndex), curEyeOccluderPointUV.y);
-        vec2 stereoOccludedUV =  vec2(curEyeUV.x * 2.0f - float(viewIndex), curEyeUV.y);
+    if(instanceIdT1InEye1 != instanceIdT1InEye2) return;
 
-        float thickness = length(StereoViewSpacePosAtScreenUV(stereoOccluderUV, viewIndex) - StereoViewSpacePosAtScreenUV(stereoOccludedUV, viewIndex));
-        imageStore(thicknessMap, otherEyePixel, vec4(thickness, 0.0f, 0.0f, 0.0f));
-
-        return;
-    }
-
-    float tOccluder = 1.0f;
-    float tOccluded = 0.0f;
     float iteration = 0.0f;
-
-    while(iteration < 10.0f) // wait optimization
-    {
+    while(iteration <= 10.0f) {
         iteration++;
-        float t = (tOccluder + tOccluded) * 0.5f;
-        vec2 curSampleUV = curEyeUV + occlusionRaySS * t;
-        uint curSampleInstanceId = uint(texelFetch(inInstanceID, ivec2(curSampleUV * camera.pixelSize.xy), 0));
+        float st1 = (t1InEye1 + t2InEye1) * 0.5f;
+        float st2 = (t1InEye2 + t2InEye2) * 0.5f;
+        vec2 sampleUVEye1 = occluderUV + traceRayEye1 * st1;
+        vec2 sampleUVEye2 = occluderUV2 + traceRayEye2 * st2;
+        uint sampleInstanceIdEye1 = uint(texelFetch(inInstanceID, ivec2(sampleUVEye1 * camera.pixelSize.xy), 0).r);
+        uint sampleInstanceIdEye2 = uint(texelFetch(inInstanceID, ivec2(sampleUVEye2 * camera.pixelSize.xy), 0).r);
 
-        if(curSampleInstanceId == occluderInstanceId)
-        {
-            tOccluder = t;
-        }
-        else
-        {
-            tOccluded = t;
-        }
+        if(sampleInstanceIdEye1 == instanceIdT1InEye1) t1InEye1 = st1;
+        else t2InEye1 = st1;
+
+        if(sampleInstanceIdEye2 == instanceIdT1InEye2) t1InEye2 = st2;
+        else t2InEye2 = st2;
     }
-    vec3 viewOccluderEdgePosition = viewOccludedPosition + occlusionRayVS * tOccluder;
-    vec2 stereoOccluderEdgeUV =  curEyeUV + occlusionRaySS * tOccluder;
 
-    vec3 tmp = StereoViewSpacePosAtScreenUVPointDepth(vec2(stereoOccluderEdgeUV.x * 2.0f - float(viewIndex), stereoOccluderEdgeUV.y), viewIndex);
+    vec2 edgeInEye1 = occluderUV + traceRayEye1 * t1InEye1;
+    vec2 edgeInEye2 = occluderUV2 + traceRayEye2 * t1InEye2;
 
-    float thickness = length(viewOccluderPosition - viewOccluderEdgePosition);
-    imageStore(thicknessMap, otherEyePixel, vec4(thickness, 0.0f, 0.0f, 0.0f));
+    float depthInEye1 = LinearEyeDepth(texelFetch(inDepth, ivec2(edgeInEye1 * camera.pixelSize.xy), 0).r);
+    float depthInEye2 = LinearEyeDepth(texelFetch(inDepth, ivec2(edgeInEye2 * camera.pixelSize.xy), 0).r);
+    float depthOccluder = LinearEyeDepth(texelFetch(inDepth, pixel, 0).r);
+
+    float thickness = max(max(depthInEye1 - depthOccluder, depthInEye2 - depthOccluder), 0.0f);
+
+    imageStore(thicknessMap, pixel, vec4(thickness, 0.0f, 0.0f, 0.0f));
 }

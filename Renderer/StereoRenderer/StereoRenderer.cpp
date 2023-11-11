@@ -7,6 +7,7 @@
 #include "HBAOStereoAwareLeftSubrender.hpp"
 #include "HBAOStereoAwareSubrender.hpp"
 #include "HBAOStereoSubrender.hpp"
+#include "HBAOStereoWithThickSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
@@ -23,6 +24,7 @@ StereoRenderer::StereoRenderer()
     std::vector<NonRTAttachment> globalAttachments = {{"gaussianX", NonRTAttachment::Type::Image2d, false},
                                                       {"gaussianY", NonRTAttachment::Type::Image2d, false},
                                                       {"HBAOLeft", NonRTAttachment::Type::Image2d, false},
+                                                      {"OccluderMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16_SFLOAT},
                                                       {"ThicknessMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
@@ -80,8 +82,9 @@ void StereoRenderer::Start()
     AddSubrender<StereoMaskSubrender>({2, 0});
 
     // AddSubrender<HBAOStereoSubrender>({3, 1});
-    AddSubrender<HBAOStereoAwareLeftSubrender>({3, 0});
-    AddSubrender<HBAOStereoAwareSubrender>({3, 1});
+    AddSubrender<HBAOStereoWithThickSubrender>({3, 1});
+    // AddSubrender<HBAOStereoAwareLeftSubrender>({3, 0});
+    // AddSubrender<HBAOStereoAwareSubrender>({3, 1});
 
 
     AddSubrender<GaussianBlurSubrender>({4, 0}, "AOMap");

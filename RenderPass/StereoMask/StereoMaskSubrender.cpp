@@ -22,6 +22,7 @@ void StereoMaskSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.Push("UniformCamera", uniformCamera);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
+    descriptorSet.Push("OccluderMap", Graphics::Get()->GetNonRTAttachment("OccluderMap"));
 
     if (!descriptorSet.Update(pipeline)) return;
 
@@ -37,9 +38,11 @@ void StereoMaskSubrender::PostRender(const CommandBuffer& commandBuffer)
     const auto& stereoMask   = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("StereoMask"));
     const auto& stereoMV     = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("StereoMV"));
     const auto& thicknessMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ThicknessMap"));
+    const auto& occluderMap  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("OccluderMap"));
 
     stereoMask->Image2dPipelineBarrierGraphicToCompute(commandBuffer);
     stereoMV->Image2dPipelineBarrierGraphicToCompute(commandBuffer);
+    occluderMap->Image2dPipelineBarrierGraphicToCompute(commandBuffer);
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCameraCompute);
@@ -50,6 +53,7 @@ void StereoMaskSubrender::PostRender(const CommandBuffer& commandBuffer)
     descriptorSetCompute.Push("inMask", stereoMask);
     descriptorSetCompute.Push("inMV", stereoMV);
     descriptorSetCompute.Push("thicknessMap", thicknessMap);
+    descriptorSetCompute.Push("OccluderMap", occluderMap);
 
     if (!descriptorSetCompute.Update(pipelineGradient)) return;
 

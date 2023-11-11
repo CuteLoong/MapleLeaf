@@ -15,10 +15,8 @@ layout(set=0, binding=1) uniform UniformHBAOData {
 } hbaoData;
 
 layout(set=0, binding = 2) uniform sampler2D inDepth;
-layout(set=0, binding = 3) uniform sampler2D inStereoMask;
-layout(set=0, binding = 4) uniform sampler2D inStereoMV;
-layout(set=0, binding = 5) uniform sampler2D hbaoNoise;
-layout(set=0, binding = 6) uniform sampler2D HBAOLeft;
+layout(set=0, binding = 3) uniform sampler2D hbaoNoise;
+layout(set=0, binding = 4) uniform sampler2D thicknessMap;
 
 #include <Misc/Constants.glsl>
 #include <Misc/Camera.glsl>
@@ -26,6 +24,20 @@ layout(set=0, binding = 6) uniform sampler2D HBAOLeft;
 
 layout(location = 0) in vec2 inUV;
 layout(location = 0) out vec4 outColor;
+
+vec3 CalcNearestPoint(vec3 Point, vec3 A, vec3 B) // A and B are the end points of the line segment, startpoint endpoint
+{
+    vec3 AB = B - A;
+    vec3 AP = Point - A;
+    vec3 BP = Point - B;
+
+    float t = dot(AP, AB) / dot(AB, AB);
+    vec3 Project = A + AB * t;
+
+    if(t <= 0.0f) return A;
+    else if(t >= 1.0f) return B;
+    else return Project;
+}
 
 vec2 RotateDirection(vec2 dir, vec2 cosSin)
 {
@@ -48,48 +60,16 @@ float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, inout fl
     return diff * distanceFactor;
 }
 
-vec2 ConvertStereoUVToScreenUV(vec2 stereoUV, int viewIndex)
-{
-    vec2 screenUV;
-    screenUV.x = stereoUV.x / 2.0f + float(viewIndex) * 0.5f;
-    screenUV.y = stereoUV.y;
-    return screenUV;
-}
-
-vec2 GetOtherEyeUV(vec2 screenUV)
-{
-    vec2 otherEyeUV = screenUV + texture(inStereoMV, screenUV).xy;
-    return otherEyeUV;
-}
-
-int GetMask(vec2 screenUV)
-{
-    return int(texture(inStereoMask, screenUV).x);
-}
-
 void main()
 {
     int viewIndex = inUV.x < 0.5f ? 0 : 1;
-    int inverseViewIndex = 1 - viewIndex;
     
     vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
-
-    if(viewIndex == 0) {
-        outColor = texture(HBAOLeft, uv).rgba;
-        return;
-    }
-
-    if(viewIndex == 1 && GetMask(uv) == 0) {
-        vec2 otherEyeUV = GetOtherEyeUV(uv);
-        outColor = texture(HBAOLeft, otherEyeUV).rgba;
-        return;
-    }
-
-    vec2 stereoUV =  vec2(uv.x * 2.0f - float(viewIndex), uv.y); // [0, 0.5] -> [0, 1] or [0.5, 1.0] -> [0, 1]
+    vec2 stereoUV = ScreenUVToStereoUV(uv, viewIndex); // [0, 0.5] -> [0, 1] or [0.5, 1.0] -> [0, 1]
 
     vec3 viewPosition = StereoViewSpacePosAtStereoUV(stereoUV, viewIndex);
     vec3 viewNormal = StereoViewNormalAtStereoUVImproved(stereoUV, viewIndex);
-    
+
     float stride = min(hbaoData.pixelRadius / -viewPosition.z, hbaoData.maxRadiusPixels) / (hbaoData.stepCount + 1.0f);
 
     if(stride < 1.0f) {
@@ -110,12 +90,17 @@ void main()
         float topOcclusion = hbaoData.angleBias;
 
         for(int stepIndex = 0; stepIndex < hbaoData.stepCount; stepIndex++) {
-            vec2 SnappedUV = round(rayPixels * direction) * camera.stereoPixelSize.zw + stereoUV; // calculate the pixel position in stereo space [0, 1]
+            vec2 SnappedUV = round(rayPixels * direction) * camera.stereoPixelSize.zw + stereoUV; // calculate the pixel position in screen space
             vec3 sampleViewPos = StereoViewSpacePosAtStereoUV(SnappedUV, viewIndex);
+            vec3 sampleViewNormal = StereoViewNormalAtStereoUVImproved(SnappedUV, viewIndex);
+
+            vec2 sampleSS = StereoUVToScreenUV(SnappedUV, viewIndex);
+            float thickness = texture(thicknessMap, sampleSS).r;
+            if(thickness > 0.001f) sampleViewPos = CalcNearestPoint(viewPosition, sampleViewPos, sampleViewPos - vec3(0.0f, 0.0f, 1.0f) * thickness * 2.0f);
+            
+            rayPixels += stride;
 
             totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion);
-
-            rayPixels += stride;
         }
     }
     float weight = 1.0f / hbaoData.numRays;

@@ -5,6 +5,7 @@
 
 layout(set=0, binding = 1) uniform sampler2D inDepth;
 layout(set=0, binding = 2) uniform sampler2D inPosition;
+layout(set=0, binding = 3) uniform writeonly image2D OccluderMap;
 
 #include <Misc/Constants.glsl>
 #include <Misc/Camera.glsl>
@@ -35,7 +36,7 @@ void main()
     }
 
     vec2 otherEyeUV = vec2(otherEyeProj.x, -otherEyeProj.y) * 0.5f + 0.5f; 
-    otherEyeUV = vec2(otherEyeUV.x / 2.0f + 0.5f * float(inverseViewIndex), otherEyeUV.y);
+    otherEyeUV = StereoUVToScreenUV(otherEyeUV, inverseViewIndex);
 
     float otherEyeDepth = texture(inDepth, otherEyeUV).r;
     float linear01DepthDiff = abs(Linear01Depth(otherEyeDepth) - Linear01Depth(otherEyeProj.z));
@@ -46,4 +47,7 @@ void main()
     vec2 motionVector = vec2(ivec2(otherEyeUV * camera.pixelSize.xy) - ivec2(uv * camera.pixelSize.xy)) * camera.pixelSize.zw; // in same texture space
     outColour = vec4(mask, mask, mask, 1.0f);
     outMV = vec4(motionVector, 1.0f, 1.0f);
+    if(mask == 1) {
+        imageStore(OccluderMap, ivec2(otherEyeUV * camera.pixelSize.xy), vec4(uv.x, uv.y, 0.0f, 0.0f));
+    }
 }

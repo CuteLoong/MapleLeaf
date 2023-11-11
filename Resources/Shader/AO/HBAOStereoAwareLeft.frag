@@ -77,11 +77,11 @@ void main()
     }
     
     vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
-    vec2 stereoUV =  vec2(uv.x * 2.0f - float(viewIndex), uv.y); // [0, 0.5] -> [0, 1] or [0.5, 1.0] -> [0, 1]
+    vec2 stereoUV = ScreenUVToStereoUV(uv, viewIndex); // [0, 0.5] -> [0, 1] or [0.5, 1.0] -> [0, 1]
     int centerMask = GetMask(uv);
 
-    vec3 viewPosition = StereoViewSpacePosAtScreenUV(stereoUV, viewIndex);
-    vec3 viewNormal = StereoViewNormalAtScreenUVImproved(stereoUV, viewIndex);
+    vec3 viewPosition = StereoViewSpacePosAtStereoUV(stereoUV, viewIndex);
+    vec3 viewNormal = StereoViewNormalAtStereoUVImproved(stereoUV, viewIndex);
 
     vec2 otherEyeUV;
     vec2 stereoUVOtherEye;
@@ -91,10 +91,10 @@ void main()
 
     if(centerMask == 0) {
         otherEyeUV = GetOtherEyeUV(uv);
-        stereoUVOtherEye = vec2(otherEyeUV.x * 2.0f - float(inverseViewIndex), otherEyeUV.y);
+        stereoUVOtherEye = ScreenUVToStereoUV(otherEyeUV, inverseViewIndex);
 
-        viewPositionOtherEye = StereoViewSpacePosAtScreenUV(stereoUVOtherEye, inverseViewIndex);
-        viewNormalOtherEye = StereoViewNormalAtScreenUVImproved(stereoUVOtherEye, inverseViewIndex);
+        viewPositionOtherEye = StereoViewSpacePosAtStereoUV(stereoUVOtherEye, inverseViewIndex);
+        viewNormalOtherEye = StereoViewNormalAtStereoUVImproved(stereoUVOtherEye, inverseViewIndex);
     }
     
 
@@ -120,16 +120,16 @@ void main()
 
         for(int stepIndex = 0; stepIndex < hbaoData.stepCount; stepIndex++) {
             vec2 SnappedUV = round(rayPixels * direction) * camera.stereoPixelSize.zw + stereoUV; // calculate the pixel position in stereo space [0, 1]
-            vec3 sampleViewPos = StereoViewSpacePosAtScreenUV(SnappedUV, viewIndex);
+            vec3 sampleViewPos = StereoViewSpacePosAtStereoUV(SnappedUV, viewIndex);
 
             if(centerMask == 0) {
-                vec2 SnappedScreenUV = ConvertStereoUVToScreenUV(SnappedUV, viewIndex);
+                vec2 SnappedScreenUV = StereoUVToScreenUV(SnappedUV, viewIndex);
                 int sampleMask = GetMask(SnappedScreenUV);
                 
                 vec2 OtherEyeSnappedScreenUV = GetOtherEyeUV(SnappedScreenUV);
-                vec2 OtherEyeSnappedUV = vec2(OtherEyeSnappedScreenUV.x * 2.0f - float(inverseViewIndex), OtherEyeSnappedScreenUV.y);
+                vec2 OtherEyeSnappedUV = ScreenUVToStereoUV(OtherEyeSnappedScreenUV, inverseViewIndex);
 
-                vec3 sampleOtherEyeViewPos = StereoViewSpacePosAtScreenUV(OtherEyeSnappedUV, inverseViewIndex);
+                vec3 sampleOtherEyeViewPos = StereoViewSpacePosAtStereoUV(OtherEyeSnappedUV, inverseViewIndex);
 
                 float occlusionCurEye = ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion1);
                 float occlusionOtherEye = ComputeAO(viewPositionOtherEye, viewNormalOtherEye, sampleOtherEyeViewPos, topOcclusion2);
