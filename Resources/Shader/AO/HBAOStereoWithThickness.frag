@@ -44,9 +44,12 @@ vec2 RotateDirection(vec2 dir, vec2 cosSin)
   return vec2(dir.x*cosSin.x - dir.y*cosSin.y, dir.x*cosSin.y + dir.y*cosSin.x);
 }
 
-float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, inout float topOcclusion)
+float ComputeAO(vec3 viewPosition, vec3 viewNormal, vec3 sampleViewPos, float thickness, inout float topOcclusion)
 {
     vec3 horizonVector = sampleViewPos - viewPosition;
+    float nearestPoint = 1.0f - dot(vec3(0.0f, 0.0f, -1.0f), -normalize(horizonVector)) * thickness;
+    horizonVector = horizonVector * nearestPoint;
+
     float horizonVectorLength = length(horizonVector);
 
     float occlusion = dot(viewNormal, horizonVector) / horizonVectorLength;
@@ -96,11 +99,11 @@ void main()
 
             vec2 sampleSS = StereoUVToScreenUV(SnappedUV, viewIndex);
             float thickness = texture(thicknessMap, sampleSS).r;
-            if(thickness > 0.001f) sampleViewPos = CalcNearestPoint(viewPosition, sampleViewPos, sampleViewPos - vec3(0.0f, 0.0f, 1.0f) * thickness * 2.0f);
+            // if(thickness > 0.001f) sampleViewPos = CalcNearestPoint(viewPosition, sampleViewPos, sampleViewPos - vec3(0.0f, 0.0f, 1.0f) * thickness);
             
             rayPixels += stride;
 
-            totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, topOcclusion);
+            totalOcclusion += ComputeAO(viewPosition, viewNormal, sampleViewPos, thickness, topOcclusion);
         }
     }
     float weight = 1.0f / hbaoData.numRays;

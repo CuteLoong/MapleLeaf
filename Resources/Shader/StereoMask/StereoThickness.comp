@@ -50,22 +50,16 @@ void main()
     occludedPos2 = normalize(cameraDirVS) * O1ToO2Distance + occludedPos;
 
     // calc trace ray's direction
-    vec3 O2InEye1 = mat3(camera.stereoView[viewIndex]) * mat3(camera.invStereoView[1 - viewIndex]) * vec3(occludedPos2.x, occluderPos2.y, occludedPos2.z); // O2 in current eye's space
+    vec3 O2InEye1 = vec3(camera.stereoView[viewIndex] * camera.invStereoView[1 - viewIndex] * vec4(occludedPos2.x, occluderPos2.y, occludedPos2.z, 1.0f)); // O2 in current eye's space
     vec4 O2InHSS1 = camera.stereoProjection[viewIndex] * vec4(O2InEye1, 1.0f); // O2 in current eye's homogeneous space
     vec3 O2InSS1 = O2InHSS1.xyz / O2InHSS1.w; // O2 in current eye's screen space
     O2InSS1.xy = vec2(O2InSS1.x * 0.5f + 0.5f, 0.5f - O2InSS1.y * 0.5f);
     O2InSS1.xy = StereoUVToScreenUV(O2InSS1.xy, viewIndex); // O2 in global screen space, eye1 region
-    vec2 traceRayEye1 = O2InSS1.xy - occluderUV; // trace ray's direction(O3->O2) in global screen space, eye1 region
 
     vec4 O1InHSS2 = camera.stereoProjection[1 - viewIndex] * vec4(occludedPos, 1.0f); // O1 in another eye's homogeneous space
     vec3 O1InSS2 = O1InHSS2.xyz / O1InHSS2.w; // O1 in another eye's screen space
     O1InSS2.xy = vec2(O1InSS2.x * 0.5f + 0.5f, 0.5f - O1InSS2.y * 0.5f);
     O1InSS2.xy = StereoUVToScreenUV(O1InSS2.xy, 1 - viewIndex); // O1 in global screen space, eye2 region
-    vec2 traceRayEye2 = O1InSS2.xy - occluderUV2; // trace ray's direction(O3->O1) in global screen space, eye2 region
-
-    // trace ray
-    float t1InEye1 = 0.0f, t2InEye1 = 1.0f;
-    float t1InEye2 = 0.0f, t2InEye2 = 1.0f;
 
     uint instanceIdT1InEye1 = uint(texelFetch(inInstanceID, ivec2(occluderUV * camera.pixelSize.xy), 0).r);
     uint instanceIdT2InEye1 = uint(texelFetch(inInstanceID, ivec2(O2InSS1.xy * camera.pixelSize.xy), 0).r);
@@ -73,6 +67,16 @@ void main()
     uint instanceIdT2InEye2 = uint(texelFetch(inInstanceID, ivec2(O1InSS2.xy * camera.pixelSize.xy), 0).r);
 
     if(instanceIdT1InEye1 != instanceIdT1InEye2) return;
+    if(instanceIdT2InEye1 == instanceIdT1InEye1) {
+        O2InSS1.x = viewIndex == 0 ? 0.0f : 1.0f;
+        O2InSS1.y = occluderUV.y;
+    }
+
+    // trace ray
+    float t1InEye1 = 0.0f, t2InEye1 = 1.0f;
+    float t1InEye2 = 0.0f, t2InEye2 = 1.0f;
+    vec2 traceRayEye1 = O2InSS1.xy - occluderUV; // trace ray's direction(O3->O2) in global screen space, eye1 region
+    vec2 traceRayEye2 = O1InSS2.xy - occluderUV2; // trace ray's direction(O3->O1) in global screen space, eye2 region
 
     float iteration = 0.0f;
     while(iteration <= 10.0f) {
