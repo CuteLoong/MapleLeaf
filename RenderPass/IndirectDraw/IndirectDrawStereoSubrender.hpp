@@ -29,5 +29,19 @@ private:
     PushHandler    pushHandler;
     UniformHandler uniformCamera;
     UniformHandler uniformCameraCompute;
+
+    // HiZ Draw Data
+    PipelineCompute pipelineComputeHiZMin;
+    PipelineCompute pipelineComputeHiZMax;
+
+    std::vector<PushHandler> pushHandlers;
+
+    std::vector<DescriptorsHandler> descriptorSetComputeHiZMin;
+    std::vector<DescriptorsHandler> descriptorSetComputeHiZMax;
+
+    std::vector<std::unique_ptr<Image2d>> minHiDepths;
+    std::vector<std::unique_ptr<Image2d>> maxHiDepths;
+
+    void RecreateHiDepths();
 };
 }   // namespace MapleLeaf

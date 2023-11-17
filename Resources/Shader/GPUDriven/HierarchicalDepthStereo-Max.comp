@@ -1,0 +1,89 @@
+#version 450 compatibility
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(r32f, set = 0, binding = 0) uniform writeonly image2D HiZ;
+layout(push_constant) uniform PushObject {
+    ivec2 previousLevelMonoDimensions;
+    ivec2 currentMonoDimensions;
+    int mipLevel;
+} object;
+
+layout(set = 0, binding = 1) uniform sampler2D depthBuffer;
+
+ivec2 clampTexelCoord(ivec2 texelCoord) {
+    return clamp(texelCoord, ivec2(0), ivec2(object.previousLevelMonoDimensions.x * 2 - 1, object.previousLevelMonoDimensions.y));
+}
+
+void main() {
+    ivec2 thisLevelTexelCoord = ivec2(gl_GlobalInvocationID.xy);
+    if (thisLevelTexelCoord.x > object.currentMonoDimensions.x * 2 || thisLevelTexelCoord.y > object.currentMonoDimensions.y)
+        return;
+    if (object.mipLevel == 0) {
+        float depth = texelFetch(depthBuffer, thisLevelTexelCoord, object.mipLevel).r;
+        imageStore(HiZ, thisLevelTexelCoord, vec4(depth));
+        return;
+    }
+
+    ivec2 previousLevelBaseTexelCoord = 2 * thisLevelTexelCoord;
+    int previousLevel = object.mipLevel - 1;
+    // int viewIndex = thisLevelTexelCoord.x < object.currentMonoDimensions ? 0 : 1;
+
+    vec4 depthTexelValues;
+    depthTexelValues.x = texelFetch(depthBuffer,
+                                    clampTexelCoord(previousLevelBaseTexelCoord),
+                                    previousLevel)
+                             .r;
+    depthTexelValues.y = texelFetch(depthBuffer,
+                                    clampTexelCoord(previousLevelBaseTexelCoord + ivec2(1, 0)),
+                                    previousLevel)
+                             .r;
+    depthTexelValues.z = texelFetch(depthBuffer,
+                                    clampTexelCoord(previousLevelBaseTexelCoord + ivec2(1, 1)),
+                                    previousLevel)
+                             .r;
+    depthTexelValues.w = texelFetch(depthBuffer,
+                                    clampTexelCoord(previousLevelBaseTexelCoord + ivec2(0, 1)),
+                                    previousLevel)
+                             .r;
+
+    float maxDepth = max(max(depthTexelValues.x, depthTexelValues.y),
+                         max(depthTexelValues.z, depthTexelValues.w));
+
+    bool shouldIncludeExtraColumnFromPreviousLevel = ((object.previousLevelMonoDimensions.x & 1) != 0);
+    bool shouldIncludeExtraRowFromPreviousLevel = ((object.previousLevelMonoDimensions.y & 1) != 0);
+    if (shouldIncludeExtraColumnFromPreviousLevel) {
+        vec2 extraColumnTexelValues;
+        extraColumnTexelValues.x = texelFetch(depthBuffer,
+                                              clampTexelCoord(previousLevelBaseTexelCoord + ivec2(2, 0)),
+                                              previousLevel)
+                                       .r;
+        extraColumnTexelValues.y = texelFetch(depthBuffer,
+                                              clampTexelCoord(previousLevelBaseTexelCoord + ivec2(2, 1)),
+                                              previousLevel)
+                                       .r;
+
+        if (shouldIncludeExtraRowFromPreviousLevel) {
+            float cornerTexelValue = texelFetch(depthBuffer,
+                                                clampTexelCoord(previousLevelBaseTexelCoord + ivec2(2, 2)),
+                                                previousLevel)
+                                         .r;
+            maxDepth = max(maxDepth, cornerTexelValue);
+        }
+        maxDepth = max(maxDepth, max(extraColumnTexelValues.x, extraColumnTexelValues.y));
+    }
+    if (shouldIncludeExtraRowFromPreviousLevel) {
+        vec2 extraRowTexelValues;
+        extraRowTexelValues.x = texelFetch(depthBuffer,
+                                           clampTexelCoord(previousLevelBaseTexelCoord + ivec2(0, 2)),
+                                           previousLevel)
+                                    .r;
+        extraRowTexelValues.y = texelFetch(depthBuffer,
+                                           clampTexelCoord(previousLevelBaseTexelCoord + ivec2(1, 2)),
+                                           previousLevel)
+                                    .r;
+        maxDepth = max(maxDepth, max(extraRowTexelValues.x, extraRowTexelValues.y));
+    }
+
+    imageStore(HiZ, thisLevelTexelCoord, vec4(maxDepth));
+}

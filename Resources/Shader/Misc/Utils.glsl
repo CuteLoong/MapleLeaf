@@ -14,16 +14,23 @@ float LinearEyeDepth(float z) {
 vec2 ScreenUVToStereoUV(vec2 uv, int viewIndex)
 {
     int pixelOffset = int(camera.stereoPixelSize.x * viewIndex);
-    int pixelX = int(uv.x * camera.pixelSize.x) - pixelOffset;
-    vec2 stereoUV = vec2((pixelX + 0.5f) * camera.stereoPixelSize.z, uv.y);
+    float rawX = uv.x * camera.pixelSize.x;
+    float jitterX = rawX - int(rawX);
+
+    int pixelX = int(rawX) - pixelOffset;
+    vec2 stereoUV = vec2((pixelX + jitterX) * camera.stereoPixelSize.z, uv.y);
     return stereoUV;
 }
 
 vec2 StereoUVToScreenUV(vec2 stereoUV, int viewIndex)
 {
+    stereoUV.x = clamp(stereoUV.x, 0.0f, 1.0f);
     int pixelOffset = int(camera.stereoPixelSize.x * viewIndex);
-    int pixelX = int(stereoUV.x * camera.stereoPixelSize.x) + pixelOffset;
-    vec2 uv = vec2((pixelX + 0.5f) * camera.pixelSize.z, stereoUV.y);
+    float rawX = stereoUV.x * camera.stereoPixelSize.x;
+    float jitterX = int(rawX) == 0 ? 0.5f : rawX - int(rawX);
+
+    int pixelX = int(rawX) + pixelOffset;
+    vec2 uv = vec2((pixelX + jitterX) * camera.pixelSize.z, stereoUV.y);
     return uv;
 }
 

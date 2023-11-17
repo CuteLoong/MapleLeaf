@@ -15,6 +15,7 @@
 #include "NonRTAttachmentsHandler.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
+#include "SSRStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
 
@@ -25,7 +26,11 @@ StereoRenderer::StereoRenderer()
                                                       {"gaussianY", NonRTAttachment::Type::Image2d, false},
                                                       {"HBAOLeft", NonRTAttachment::Type::Image2d, false},
                                                       {"OccluderMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16_SFLOAT},
-                                                      {"ThicknessMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT}};
+                                                      {"ThicknessMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
+                                                      {"Hi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"MinHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"MaxHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"SSRHitsMap", NonRTAttachment::Type::Image2d, false}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -55,7 +60,7 @@ StereoRenderer::StereoRenderer()
 
     std::vector<Attachment> renderpassAttachments3{{0, "AOMap", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
-    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {}}, {1, {}, {0}}};
+    std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {}}, {1, {}, {0}}, {2, {}, {}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments3, renderpassSubpasses3));
 
@@ -83,6 +88,7 @@ void StereoRenderer::Start()
 
     // AddSubrender<HBAOStereoSubrender>({3, 1});
     AddSubrender<HBAOStereoWithThickSubrender>({3, 1});
+    AddSubrender<SSRStereoSubrender>({3, 2});
     // AddSubrender<HBAOStereoAwareLeftSubrender>({3, 0});
     // AddSubrender<HBAOStereoAwareSubrender>({3, 1});
 
