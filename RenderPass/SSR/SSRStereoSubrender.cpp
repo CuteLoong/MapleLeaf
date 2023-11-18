@@ -9,7 +9,7 @@ namespace MapleLeaf {
 SSRStereoSubrender::SSRStereoSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData)
     : Subrender(pipelineStage)
     , ssrData(ssrData)
-    , pipelineCompute("Shader/SSR/SSRStereo.comp", {SSRStereoSubrender::GetDefines()}, false)
+    , pipelineCompute("Shader/SSR/SSRStereoComplement.comp", {SSRStereoSubrender::GetDefines()}, false)
 {}
 
 void SSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer) {}
@@ -59,7 +59,7 @@ void SSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
 std::vector<Shader::Define> SSRStereoSubrender::GetDefines()
 {
     return {{"TRAVERSAL_SCHEME_RAY_MARCH_3D", std::to_string(0)},
-            {"TRAVERSAL_SCHEME_MIN_HI_Z", std::to_string(0)},
-            {"TRAVERSAL_SCHEME_MIN_MAX_HI_Z", std::to_string(1)}};
+            {"TRAVERSAL_SCHEME_MIN_HI_Z", std::to_string(1)},
+            {"TRAVERSAL_SCHEME_MIN_MAX_HI_Z", std::to_string(0)}};
 }
 }   // namespace MapleLeaf
