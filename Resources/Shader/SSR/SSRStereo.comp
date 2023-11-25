@@ -256,7 +256,7 @@ void main()
     vec3 viewRayVS = normalize(originVS);
 
     vec3 reflectDirVS = normalize(reflect(viewRayVS, normalVS));
-    float maxRayLength = min((camera.projectionParams.z - originVS.z) / reflectDirVS.z, ssrData.maxRayLength);
+    float maxRayLength = min((camera.projectionParams.z * camera.projectionParams.x - originVS.z) / reflectDirVS.z, ssrData.maxRayLength);
     vec3 endPointVS = originVS + reflectDirVS * maxRayLength;
 
     vec4 pointHS1 = camera.stereoProjection[viewIndex] * vec4(endPointVS, 1.0f);

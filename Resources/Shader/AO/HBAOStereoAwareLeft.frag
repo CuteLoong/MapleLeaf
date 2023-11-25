@@ -126,8 +126,8 @@ void main()
                 vec2 SnappedScreenUV = StereoUVToScreenUV(SnappedUV, viewIndex);
                 int sampleMask = GetMask(SnappedScreenUV);
                 
-                vec2 OtherEyeSnappedScreenUV = GetOtherEyeUV(SnappedScreenUV);
-                vec2 OtherEyeSnappedUV = ScreenUVToStereoUV(OtherEyeSnappedScreenUV, inverseViewIndex);
+                // vec2 OtherEyeSnappedScreenUV = GetOtherEyeUV(SnappedScreenUV);
+                vec2 OtherEyeSnappedUV = round(rayPixels * direction) * camera.stereoPixelSize.zw + stereoUVOtherEye;
 
                 vec3 sampleOtherEyeViewPos = StereoViewSpacePosAtStereoUV(OtherEyeSnappedUV, inverseViewIndex);
 

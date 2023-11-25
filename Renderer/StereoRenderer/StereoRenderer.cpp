@@ -7,6 +7,7 @@
 #include "HBAOStereoAwareLeftSubrender.hpp"
 #include "HBAOStereoAwareSubrender.hpp"
 #include "HBAOStereoSubrender.hpp"
+#include "HBAOStereoWithOcclusionInfoSubrender.hpp"
 #include "HBAOStereoWithThickSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
@@ -15,9 +16,11 @@
 #include "NonRTAttachmentsHandler.hpp"
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
+#include "ResolvedSubrender.hpp"
 #include "SSRStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
+#include "ToneMapingSubrender.hpp"
 
 namespace Test {
 StereoRenderer::StereoRenderer()
@@ -70,13 +73,18 @@ StereoRenderer::StereoRenderer()
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments4, renderpassSubpasses4));
 
-    std::vector<Attachment> renderpassAttachments5{
-        {0, "swapchain", Attachment::Type::Swapchain, false},
-    };
+    std::vector<Attachment> renderpassAttachments5{{0, "lighting", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
     std::vector<SubpassType> renderpassSubpasses5 = {{0, {}, {0}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments5, renderpassSubpasses5));
+
+    std::vector<Attachment> renderpassAttachments6{
+        {{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}, {1, "swapchain", Attachment::Type::Swapchain, false}}};
+
+    std::vector<SubpassType> renderpassSubpasses6 = {{0, {}, {0}}, {1, {0}, {1}}};
+
+    AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments6, renderpassSubpasses6));
 }
 
 void StereoRenderer::Start()
@@ -87,17 +95,20 @@ void StereoRenderer::Start()
     AddSubrender<StereoMaskSubrender>({2, 0});
 
     // AddSubrender<HBAOStereoSubrender>({3, 1});
-    AddSubrender<HBAOStereoWithThickSubrender>({3, 1});
-    AddSubrender<SSRStereoSubrender>({3, 2});
-    // AddSubrender<HBAOStereoAwareLeftSubrender>({3, 0});
-    // AddSubrender<HBAOStereoAwareSubrender>({3, 1});
+    // AddSubrender<HBAOStereoWithThickSubrender>({3, 1});
+    // AddSubrender<HBAOStereoWithOcclusionInfoSubrender>({3, 1});
 
+    AddSubrender<HBAOStereoAwareLeftSubrender>({3, 0});
+    AddSubrender<HBAOStereoAwareSubrender>({3, 1});
+    AddSubrender<SSRStereoSubrender>({3, 2});
 
     AddSubrender<GaussianBlurSubrender>({4, 0}, "AOMap");
     // AddSubrender<GaussianBlurXYSubrender>({4, 0}, "AOMap");
 
     AddSubrender<DeferredSubrender>({5, 0});
-    AddSubrender<ImguiSubrender>({5, 0});
+    AddSubrender<ResolvedSubrender>({6, 0});
+    AddSubrender<ToneMapingSubrender>({6, 1});
+    AddSubrender<ImguiSubrender>({6, 1});
 }
 
 void StereoRenderer::Update()
