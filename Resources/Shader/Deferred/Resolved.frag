@@ -17,5 +17,6 @@ void main()
     vec4 lighting = texture(LightingMap, uv);
     vec2 ssrHits = texture(SSRHitsMap, uv).xy;
 
-    outColor = vec4(lighting.xyz, 1.0f);
+    // outColor = vec4(lighting.xyz, 1.0f);
+    outColor = vec4(texture(LightingMap, ssrHits).xyz, 1.0f);
 }

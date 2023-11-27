@@ -10,10 +10,10 @@
 #include "UniformHandler.hpp"
 
 namespace MapleLeaf {
-class IndirectDrawStereoSubrender : public Subrender
+class IndirectDrawStereoBackSubrender : public Subrender
 {
 public:
-    explicit IndirectDrawStereoSubrender(const Pipeline::Stage& pipelineStage);
+    explicit IndirectDrawStereoBackSubrender(const Pipeline::Stage& pipelineStage);
 
     void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
@@ -21,23 +21,17 @@ public:
 
 private:
     PipelineGraphics pipeline;
-    PipelineCompute  compute;
 
-    DescriptorsHandler descriptorSetCompute;
     DescriptorsHandler descriptorSetGraphics;
-
-    PushHandler    pushHandler;
-    UniformHandler uniformCamera;
-    UniformHandler uniformCameraCompute;
+    PushHandler        pushHandler;
+    UniformHandler     uniformCamera;
 
     // HiZ Draw Data
-    PipelineCompute pipelineComputeHiZMin;
-
+    PipelineCompute          pipelineComputeHiZMax;
     std::vector<PushHandler> pushHandlers;
 
-    std::vector<DescriptorsHandler> descriptorSetComputeHiZMin;
-
-    std::vector<std::unique_ptr<Image2d>> minHiDepths;
+    std::vector<DescriptorsHandler>       descriptorSetComputeHiZMax;
+    std::vector<std::unique_ptr<Image2d>> maxHiDepths;
 
     void RecreateHiDepths();
 };
