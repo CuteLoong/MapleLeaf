@@ -62,7 +62,8 @@ add_includedirs(
 "Core/Bitmaps",
 "Core/Inputs",
 "Core/GPUScene",
-"Core/Imgui"
+"Core/Imgui",
+"Core/Utils/SampleGenerators"
 )
 
 add_includedirs(
@@ -125,7 +126,8 @@ target("Core")
     "Core/Bitmaps/*.cpp",
     "Core/Inputs/*.cpp",
     "Core/GPUScene/*.cpp",
-    "Core/Imgui/*.cpp"
+    "Core/Imgui/*.cpp",
+    "Core/Utils/SampleGenerators/*.cpp"
     )
 target_end()
 
