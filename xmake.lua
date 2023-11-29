@@ -75,7 +75,8 @@ add_includedirs(
 "RenderPass/Mesh",
 "RenderPass/StereoMask",
 "RenderPass/Blur",
-"RenderPass/SSR"
+"RenderPass/SSR",
+"RenderPass/Skybox"
 )
 
 target("RenderPass")
@@ -90,7 +91,8 @@ target("RenderPass")
     "RenderPass/Mesh/*.cpp",
     "RenderPass/StereoMask/*.cpp",
     "RenderPass/Blur/*.cpp",
-    "RenderPass/SSR/*.cpp"
+    "RenderPass/SSR/*.cpp",
+    "RenderPass/Skybox/*.cpp"
     )
 target_end()
 

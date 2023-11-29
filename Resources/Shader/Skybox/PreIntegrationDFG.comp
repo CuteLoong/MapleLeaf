@@ -1,0 +1,135 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) uniform writeonly image2D preIntegratedDFG;
+
+#include <Sampling/LowDiscrepancy/HammersleySequence.glsl>
+#include <Materials/Fresnel.glsl>
+#include <Misc/Constants.glsl>
+
+void generateBasis(vec3 N, out vec3 up, out vec3 right, out vec3 forward)
+{
+    up = abs(N.z) < 0.999999f ? vec3(0, 0, 1) : vec3(1, 0, 0);
+    right = normalize(cross(up, N));
+    forward = cross(N, right);
+}
+
+vec3 importanceSampleCosDir(vec2 u, vec3 N)
+{
+    vec3 up, right, forward;
+    generateBasis(N, up, right, forward);
+
+    float u1 = u.x;
+    float u2 = u.y;
+
+    float r = sqrt(u1);
+    float phi = u2 * M_2PI;
+
+    vec3 L = vec3(r * cos(phi),
+                      r * sin(phi),
+                      sqrt(max(0.0f, 1.0f - u1)));
+
+    return normalize(right * L.y + forward * L.x + N * L.z);
+}
+
+vec3 importanceSampleGGX(vec2 u, vec3 N, float roughness)
+{
+    float a = roughness * roughness;
+
+    float phi = M_2PI * u.x;
+    float cosTheta = sqrt((1 - u.y) / (1 + (a * a - 1) * u.y));
+    float sinTheta = sqrt(1 - cosTheta * cosTheta);
+
+    // Tangent space H
+    vec3 tH;
+    tH.x = sinTheta * cos(phi);
+    tH.y = sinTheta * sin(phi);
+    tH.z = cosTheta;
+
+    vec3 up, right, forward;
+    generateBasis(N, up, right, forward);
+
+    // World space H
+    return normalize(right * tH.x + forward * tH.y + N * tH.z);
+}
+
+float smithGGX(float NdotL, float NdotV, float roughness)
+{
+    float k = ((roughness) * (roughness)) / 2;
+    float g1 = NdotL / (NdotL * (1 - k) + k);
+    float g2 = NdotV / (NdotV * (1 - k) + k);
+    return g1 * g2;
+}
+
+vec4 integrateDFG(vec3 N, vec3 V, float roughness)
+{
+    float NdotV = dot(N, V);
+    vec3 accumulation = vec3(0.0f);
+
+    uint gSampleCount = 2048;
+
+    for(uint i = 0; i < gSampleCount; i++)
+    {
+        vec2 u = getHammersley(i, gSampleCount, uvec2(HaltonSequence(i, 3)));
+
+        // Specular GGX DFG integration (stored in RG)
+        vec3 H = importanceSampleGGX(u, N, roughness);
+        vec3 L = reflect(-V, H);
+        float NdotH = clamp(dot(N, H), 0.0f, 1.0f);
+        float LdotH = clamp(dot(L, H), 0.0f, 1.0f);
+        float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
+
+        float G = smithGGX(NdotL, NdotV, roughness);
+        if(NdotL > 0 && G > 0)
+        {
+            float GVis = (G * LdotH) / (NdotV * NdotH);
+            float Fc = evalFresnelSchlick(0, 1, LdotH);
+            accumulation.r += (1 - Fc) * GVis;
+            accumulation.g += Fc * GVis;
+        }
+
+        // Disney Diffuse integration (stored in B)
+        u = fract(u + 0.5);
+        L = importanceSampleCosDir(u, N);
+        NdotL = clamp(dot(N, L), 0.0f, 1.0f);
+        if(NdotL > 0)
+        {
+            LdotH = clamp(dot(L, normalize(V + L)), 0.0f, 1.0f);
+            NdotV = clamp(dot(N, V), 0.0f, 1.0f);
+            accumulation.b += disneyDiffuseFresnel(NdotV, NdotL, LdotH, sqrt(roughness));
+        }
+    }
+
+    return vec4(accumulation / float(gSampleCount), 1.0f);
+}
+
+// DFG texture will be sampled using
+// texC.x = NdotV
+// texC.y = roughness
+
+// Output:
+// RG - Specular DFG
+// B  - Disney Diffuse DFG
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(preIntegratedDFG);
+
+    if(pixel.x >= size.x || pixel.y >= size.y)
+        return;
+
+    vec2 texC = vec2((pixel + 0.5f) / size);
+    texC.y = 1.0f - texC.y;
+    const vec3 N = vec3(0, 0, 1);
+
+    float theta = acos(texC.x);
+    const vec3 V = vec3(sin(theta), 0, cos(theta));
+
+    vec4 dfg = integrateDFG(N, V, texC.y);
+
+    imageStore(preIntegratedDFG, pixel, dfg);
+}

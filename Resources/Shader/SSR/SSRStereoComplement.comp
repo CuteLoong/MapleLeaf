@@ -29,6 +29,7 @@ layout(set=0, binding=3) uniform sampler2D inNormal;
 #endif
 
 layout(set=0, binding=4, rgba8) writeonly uniform image2D SSRHitsMap;
+layout(set=0, binding=7) uniform sampler2D preIntegratedDFG;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
@@ -300,6 +301,8 @@ void main()
     int viewIndex = pixel.x < (camera.pixelSize.x / 2) ? 0 : 1;
     vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
 
+    texture(preIntegratedDFG, vec2(0.0f)); // force preIntegratedDFG to be used (otherwise it will be optimized out
+
     vec3 pointSS0 = vec3(ScreenUVToStereoUV(screenUV, viewIndex), texture(inDepth, screenUV).x);
 
     vec3 normalVS = normalize(mat3(transpose(inverse(camera.stereoView[viewIndex]))) * texture(inNormal, screenUV).xyz);
@@ -343,8 +346,8 @@ void main()
         hitPointSS.xy = vec2(-1.0f);
     }
     else {
-        hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, viewIndex);
         alphaBlend = calculateFadeAmount(hitPointSS.xy);
+        hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, viewIndex);
     }
 
     imageStore(SSRHitsMap, pixel, vec4(hitPointSS, alphaBlend));
