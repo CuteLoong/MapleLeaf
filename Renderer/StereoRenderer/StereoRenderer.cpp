@@ -21,6 +21,7 @@
 #include "SSRStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
+#include "StochasticSSRStereoSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
 
 namespace Test {
@@ -34,7 +35,8 @@ StereoRenderer::StereoRenderer()
                                                       {"Hi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
                                                       {"MinHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
                                                       {"MaxHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
-                                                      {"SSRHitsMap", NonRTAttachment::Type::Image2d, false}};
+                                                      {"SSRHitsMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                      {"SSRMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -106,7 +108,8 @@ void StereoRenderer::Start()
 
     AddSubrender<HBAOStereoAwareLeftSubrender>({4, 0});
     AddSubrender<HBAOStereoAwareSubrender>({4, 1});
-    AddSubrender<SSRStereoSubrender>({4, 2});
+    // AddSubrender<SSRStereoSubrender>({4, 2});
+    AddSubrender<StochasticSSRStereoSubrender>({4, 2});
 
     AddSubrender<GaussianBlurSubrender>({5, 0}, "AOMap");
     // AddSubrender<GaussianBlurXYSubrender>({5, 0}, "AOMap");

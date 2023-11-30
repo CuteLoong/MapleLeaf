@@ -18,5 +18,7 @@ void main()
     vec2 ssrHits = texture(SSRHitsMap, uv).xy;
 
     // outColor = vec4(lighting.xyz, 1.0f);
-    outColor = vec4(texture(LightingMap, ssrHits).xyz, 1.0f);
+    vec3 ssrColor = ssrHits != vec2(0.0f) ? texture(LightingMap, ssrHits).xyz : vec3(0.0f, 0.0f, 0.0f);
+
+    outColor = vec4(ssrColor, 1.0f);
 }

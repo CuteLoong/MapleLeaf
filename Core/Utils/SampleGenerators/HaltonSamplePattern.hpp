@@ -15,7 +15,10 @@ public:
      * @param sampleCount The pattern repeats every 'sampleCount' samples. Zero means no repeating.
      * @return New object, or throws an exception on error.
      */
-    static std::shared_ptr<HaltonSamplePattern> Create(uint32_t sampleCount = 0) { return std::make_shared<HaltonSamplePattern>(sampleCount); }
+    static std::shared_ptr<HaltonSamplePattern> Create(uint32_t sampleCount = 0)
+    {
+        return std::shared_ptr<HaltonSamplePattern>(new HaltonSamplePattern(sampleCount));
+    }
 
     uint32_t  getSampleCount() const override { return sampleCount; }
     void      reset(uint32_t startID = 0) override { curSample = 0; }

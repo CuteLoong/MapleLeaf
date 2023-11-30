@@ -31,16 +31,17 @@ void Bitmap::Load(const std::filesystem::path& filename)
     auto pathStr = filename.string();
     std::replace(pathStr.begin(), pathStr.end(), '\\', '/');
 
-    if (!Files::ExistsInPath(pathStr)) {
+    auto exisitPath = Files::Get()->GetExistPath(pathStr);
+    if (!exisitPath) {
         Log::Error("Bitmap could not be loaded: ", filename, '\n');
         return;
     }
 
-    data          = std::unique_ptr<uint8_t[]>(stbi_load(pathStr.c_str(),
-                                                        reinterpret_cast<int32_t*>(&size.x),
-                                                        reinterpret_cast<int32_t*>(&size.y),
-                                                        reinterpret_cast<int32_t*>(&bytesPerPixel),
-                                                        STBI_rgb_alpha));
+    data          = std::unique_ptr<uint8_t[]>(stbi_load(exisitPath->string().c_str(),
+                                                reinterpret_cast<int32_t*>(&size.x),
+                                                reinterpret_cast<int32_t*>(&size.y),
+                                                reinterpret_cast<int32_t*>(&bytesPerPixel),
+                                                STBI_rgb_alpha));
     bytesPerPixel = 4;
 }
 
