@@ -15,7 +15,6 @@ struct IndirectCommand {
     uint firstInstance;
 };
 
-
 layout(set = 0, binding = 1) buffer DrawCommandBuffer 
 {
     IndirectCommand commands[];

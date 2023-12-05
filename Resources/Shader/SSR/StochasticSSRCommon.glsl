@@ -15,6 +15,17 @@ float evalGGX(float ggxAlpha, float NdotH)
     return a2 / (M_PI * d * d);
 }
 
+// UE4 GGX-Smith Correlated Joint Approximate
+// Note: V = G / (4 * NdotL * NdotV)
+// [Heitz 2014, "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"]
+float Vis_SmithJointApprox(float NdotL, float NdotV, float roughness)
+{
+    float a = roughness * roughness;
+    float Vis_SmithV = NdotL * (NdotV * (1 - a) + a);
+    float Vis_SmithL = NdotV * (NdotL * (1 - a) + a);
+    return 0.5 / (Vis_SmithV + Vis_SmithL);
+}
+
 vec3 ImportanceSampleGGX(vec2 u, vec3 N, float roughness)
 {
     float a = roughness * roughness;

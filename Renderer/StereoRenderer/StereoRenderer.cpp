@@ -87,9 +87,9 @@ StereoRenderer::StereoRenderer()
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments6, renderpassSubpasses6));
 
     std::vector<Attachment> renderpassAttachments7{
-        {{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}, {1, "swapchain", Attachment::Type::Swapchain, false}}};
+        {{0, "reflectanceColor", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}, {1, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}, {2, "swapchain", Attachment::Type::Swapchain, false}}};
 
-    std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {0}}, {1, {0}, {1}}};
+    std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {0}}, {1, {}, {1}}, {2, {1}, {2}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments7, renderpassSubpasses7));
 }
@@ -115,9 +115,9 @@ void StereoRenderer::Start()
     // AddSubrender<GaussianBlurXYSubrender>({5, 0}, "AOMap");
 
     AddSubrender<DeferredSubrender>({6, 0});
-    AddSubrender<ResolvedSubrender>({7, 0});
-    AddSubrender<ToneMapingSubrender>({7, 1});
-    AddSubrender<ImguiSubrender>({7, 1});
+    AddSubrender<ResolvedSubrender>({7, 1});
+    AddSubrender<ToneMapingSubrender>({7, 2});
+    AddSubrender<ImguiSubrender>({7, 2});
 }
 
 void StereoRenderer::Update()

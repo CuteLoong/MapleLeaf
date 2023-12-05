@@ -33,13 +33,13 @@ void main()
     vec2 occludedUV2 = texelFetch(OccluderMap, ivec2(occluderUV2 * camera.pixelSize.xy), 0).xy; // current eye's space, current eye occlude another eye.
 
     // occluder's info, view space
-    vec3 occluderPos = StereoViewSpacePosAtScreenUV(occluderUV, viewIndex); // O3 in current eye's space
-    vec3 occluderPos2 = StereoViewSpacePosAtScreenUV(occluderUV2, 1 - viewIndex); // O3 in another eye's space
+    vec3 occluderPos = StereoViewSpacePosAtScreenUV(occluderUV); // O3 in current eye's space
+    vec3 occluderPos2 = StereoViewSpacePosAtScreenUV(occluderUV2); // O3 in another eye's space
     float OccluderDistance = length(occluderPos); // E1 To O3 Distance in current eye's space
     float OccluderDistance2 = length(occluderPos2); // E2 To O3 Distance in another eye's space
 
     // occluded's info, view space
-    vec3 occludedPos = StereoViewSpacePosAtScreenUV(occludedUV, 1 - viewIndex); // O1 in another eye's space
+    vec3 occludedPos = StereoViewSpacePosAtScreenUV(occludedUV); // O1 in another eye's space
     vec3 occludedPos2 = vec3(0.0f); // O2 in another eye's space
 
     float occluderToOccludedDistance = length(occludedPos - occluderPos2); // O3 To O1 Distance in another eye's space

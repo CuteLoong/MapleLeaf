@@ -45,13 +45,21 @@ vec3 ViewSpacePosAtScreenUV(vec2 uv)
     return viewSpaceRay * Linear01Depth(rawDepth);
 }
 
-vec3 StereoViewSpacePosAtScreenUV(vec2 uv, int viewIndex)
+vec3 StereoViewSpacePosAtScreenUV(vec2 uv)
 {
+    int viewIndex = uv.x > 0.5f ? 1 : 0;
     vec2 stereoUV = ScreenUVToStereoUV(uv, viewIndex);
     vec3 viewSpaceRay = vec3(camera.invStereoProjection[viewIndex] * (vec4(stereoUV.x * 2.0f - 1.0f, (stereoUV.y * 2.0f - 1.0f) * camera.projectionParams.x, -1.0f, 1.0f) * camera.projectionParams.z));
 
     float rawDepth = texture(inDepth, uv).r;
     return viewSpaceRay * Linear01Depth(rawDepth);
+}
+
+vec3 StereoWorldSpacePosAtScreenUV(vec2 uv) 
+{
+    int viewIndex = uv.x > 0.5f ? 1 : 0;
+    vec3 viewSpacePos = StereoViewSpacePosAtScreenUV(uv);
+    return (camera.invView[viewIndex] * vec4(viewSpacePos, 1.0f)).xyz;
 }
 
 vec3 StereoViewSpacePosAtStereoUV(vec2 uv, int viewIndex)
