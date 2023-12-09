@@ -80,7 +80,7 @@ void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
         bool outOfBounds1 = (maxRayPointXY.x < 0.0f) || (maxRayPointXY.x > 1.0f) || (maxRayPointXY.y > 1.0f || maxRayPointXY.y < 0.0f);
         bool outOfBounds2 = (maxRayPointXY2.x < 0.0f) || (maxRayPointXY2.x > 1.0f) || (maxRayPointXY2.y > 1.0f || maxRayPointXY2.y < 0.0f);
 
-        if(outOfBounds1 ) {
+        if(outOfBounds1 && outOfBounds2) {
             tParameter = 1.0f;
             break;
         }
@@ -95,16 +95,16 @@ void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
         tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
 
         // use another eyes info
-        // if(tSceneZMinMax.y < tParameter || (outOfBounds1 && !outOfBounds2)) {
-        //     curViewIndex = 1 - curViewIndex;
-        //     maxRayPointXY = pointSS0Eye2XY + rayDirEye2XY * tParameter;
-        //     pixel = GetHizPixel(maxRayPointXY, levelSize);
+        if(tSceneZMinMax.y < tParameter || (outOfBounds1 && !outOfBounds2)) {
+            curViewIndex = 1 - curViewIndex;
+            maxRayPointXY = pointSS0Eye2XY + rayDirEye2XY * tParameter;
+            pixel = GetHizPixel(maxRayPointXY, levelSize);
 
-        //     tPixelXY = ((pixel + stepEye2) / levelSize + stepOffsetEye2 - pointSS0Eye2XY) / rayDirEye2XY;
-        //     tPixel = min(tPixelXY.x, tPixelXY.y);
-        //     sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, curViewIndex);
-        //     tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
-        // }
+            tPixelXY = ((pixel + stepEye2) / levelSize + stepOffsetEye2 - pointSS0Eye2XY) / rayDirEye2XY;
+            tPixel = min(tPixelXY.x, tPixelXY.y);
+            sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, curViewIndex);
+            tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
+        }
 
         mipLevel--;
         if(tSceneZMinMax.x <= tPixel && tParameter <= tSceneZMinMax.y) {

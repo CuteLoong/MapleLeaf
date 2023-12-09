@@ -92,7 +92,7 @@ void main()
         float brdf = max(0.0f, evalGGX(roughness, NdotH) * Vis_SmithJointApprox(NdotL, NdotV, roughness));
         float pdf = max(1e-5, hitInfo.w);
 
-        float weight = brdf / pdf;
+        float weight = brdf * NdotL / pdf;
         vec4 sampleColor = vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, hitInfo.xy).x);
         sampleColor.rgb /= 1 + Luminance(sampleColor.rgb);
 
