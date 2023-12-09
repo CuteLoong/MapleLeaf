@@ -31,6 +31,7 @@ MainApp::MainApp()
     Log::Out("Working Directory: ", std::filesystem::current_path(), '\n');
     Files::Get()->AddSearchPath("Resources");
     Files::Get()->AddSearchPath("Resources/Shader");
+    Files::Get()->AddSearchPath("Resources/Skybox");
 }
 
 MainApp::~MainApp() {}

@@ -8,6 +8,7 @@
 #include "Scenes.hpp"
 #include "ShadowRender.hpp"
 #include "ShadowSystem.hpp"
+#include "Skybox/Skybox.hpp"
 #include "Transform.hpp"
 
 namespace MapleLeaf {
@@ -25,6 +26,7 @@ public:
     {
         assimpImporter.Import(path, builder);
 
+        auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>();
         for (const auto& node : builder.sceneGraph) {
             auto entity = CreateEntity();
             entity->SetName(node.name);
@@ -36,10 +38,15 @@ public:
                     this->SetExtents(builder.meshes[node.meshes[i]]->GetModel()->GetMaxExtents(),
                                      builder.meshes[node.meshes[i]]->GetModel()->GetMinExtents(),
                                      node.transform->GetWorldMatrix());
-                    entity->AddComponent<ShadowRender>();
+                    if (shadows) entity->AddComponent<ShadowRender>();
                 }
             }
         }
+
+        // Create Skybox entity
+        auto skyboxEntity = CreateEntity();
+        skyboxEntity->SetName("skybox");
+        skyboxEntity->AddComponent<Skybox>();
 
         if (builder.cameras.empty()) Log::Error("No camera can't rendering!");
 
@@ -49,8 +56,6 @@ public:
         }
 
         SetCamera(Scenes::Get()->GetScene()->GetComponent<Camera>());
-
-        auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>();
 
         for (auto& light : builder.lights) {
             auto entity = Scenes::Get()->GetScene()->GetEntity(light->GetName());
