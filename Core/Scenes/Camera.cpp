@@ -10,7 +10,7 @@ Camera::Camera()
     : nearPlane(0.1f)
     , farPlane(100.0f)
     , fieldOfView(glm::radians(60.0f))
-    , eyeSeparation(5.0f)
+    , eyeSeparation(0.02f)
     , up(glm::vec3(0.0f, 1.0f, 0.0f))
     , forward(glm::vec3(0.0f, 0.0f, -1.0f))   // rotation(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f))
     , position(glm::vec3(0.0f, 0.0f, 2.0f))
@@ -125,8 +125,8 @@ void Camera::UpdateStereoCameraInfo()
 
     stereoViewMatrix[0]       = glm::lookAt(glm::vec3(stereoViewPosition[0]), glm::vec3(stereoViewPosition[0]) + forward, up);
     stereoViewMatrix[1]       = glm::lookAt(glm::vec3(stereoViewPosition[1]), glm::vec3(stereoViewPosition[1]) + forward, up);
-    stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
-    stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio / 2, nearPlane, farPlane);
+    stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio / 2.0f, nearPlane, farPlane);
+    stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio / 2.0f, nearPlane, farPlane);
 
     invStereoViewMatrix[0]       = glm::inverse(stereoViewMatrix[0]);
     invStereoViewMatrix[1]       = glm::inverse(stereoViewMatrix[1]);

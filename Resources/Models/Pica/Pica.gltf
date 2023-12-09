@@ -12363,7 +12363,7 @@
 					0.4019777774810791,
 					1
 				],
-				"metallicFactor":0,
+				"metallicFactor":1.0,
 				"roughnessFactor":0.6000000238418579
 			}
 		},

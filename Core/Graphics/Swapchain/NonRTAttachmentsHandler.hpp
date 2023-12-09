@@ -18,7 +18,8 @@ public:
     {
         Image2d,
         ImageCube,
-        ImageHierarchyZ
+        ImageHierarchyZ,
+        StereoImageHierarchyZ
     };
 
     NonRTAttachment(std::string name, Type type, bool multisampled = false, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM,

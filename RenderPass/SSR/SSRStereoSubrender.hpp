@@ -41,8 +41,6 @@ private:
 
     SSRData ssrData;
 
-    Future<std::unique_ptr<Image2d>>   brdf;
-    static std::unique_ptr<Image2d>    ComputeBRDF(uint32_t size);
     static std::vector<Shader::Define> GetDefines();
 };
 }   // namespace MapleLeaf

@@ -65,5 +65,5 @@ float shadowFactor(vec4 shadowCoords)
 		return 0.0f;
 	}
 
-    return shadowValue;
+    return 1.0f;
 }

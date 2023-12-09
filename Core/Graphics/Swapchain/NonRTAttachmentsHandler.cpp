@@ -55,6 +55,9 @@ void NonRTAttachmentsHandler::RecreateAttachments()
         case NonRTAttachment::Type::ImageHierarchyZ:
             NonRTImages.emplace(nonRTAttachment.GetName(), std::make_unique<ImageHierarchyZ>(frameAttachmentSize));
             break;
+        case NonRTAttachment::Type::StereoImageHierarchyZ:
+            NonRTImages.emplace(nonRTAttachment.GetName(), std::make_unique<ImageHierarchyZ>(Devices::Get()->GetWindow()->GetStereoSize()));
+            break;
         }
     }
 }

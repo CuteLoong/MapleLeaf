@@ -369,8 +369,10 @@ void AssimpImporter<T>::CreateCameras(ImporterData& data, ImportMode importMode)
         camera->SetPosition(AiCast(pAiCamera->mPosition));
         camera->SetUpVector(AiCast(pAiCamera->mUp));
 
-        float aspectRatio = pAiCamera->mAspect != 0.f ? pAiCamera->mAspect : Devices::Get()->GetWindow()->GetAspectRatio();
-        float fieldOfView = importMode == ImportMode::GLTF2 ? 2 * atan(tan(pAiCamera->mHorizontalFOV / 2) / aspectRatio) : glm::radians(30.0f);
+        // float aspectRatio = pAiCamera->mAspect != 0.f ? pAiCamera->mAspect : Devices::Get()->GetWindow()->GetAspectRatio();
+        float aspectRatio = Devices::Get()->GetWindow()->GetAspectRatio();
+        // float fieldOfView = importMode == ImportMode::GLTF2 ? 2 * atan(tan(pAiCamera->mHorizontalFOV / 2) / aspectRatio) : glm::radians(30.0f);
+        float fieldOfView = glm::radians(30.0f);
         camera->SetFieldOfView(fieldOfView);
         camera->SetAspectRatio(aspectRatio);
         camera->SetNearPlane(pAiCamera->mClipPlaneNear);

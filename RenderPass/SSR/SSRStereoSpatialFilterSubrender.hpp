@@ -21,7 +21,7 @@ public:
 private:
     PipelineCompute pipelineCompute;
 
-    UniformHandler     uniformSSRData;
+    UniformHandler     uniformFilterData;
     UniformHandler     uniformJitterData;
     UniformHandler     uniformCamera;
     DescriptorsHandler descriptorSet;

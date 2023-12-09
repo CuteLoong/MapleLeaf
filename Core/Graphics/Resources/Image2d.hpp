@@ -11,7 +11,7 @@ class Image2d : public Image
 public:
     static std::shared_ptr<Image2d> Create(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR,
                                            VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, bool anisotropic = true,
-                                           bool mipmap = false);
+                                           bool mipmap = true);
 
     /**
      * Creates a new 2D image.

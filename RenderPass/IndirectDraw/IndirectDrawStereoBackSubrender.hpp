@@ -30,8 +30,10 @@ private:
     PipelineCompute          pipelineComputeHiZMax;
     std::vector<PushHandler> pushHandlers;
 
-    std::vector<DescriptorsHandler>       descriptorSetComputeHiZMax;
-    std::vector<std::unique_ptr<Image2d>> maxHiDepths;
+    std::vector<DescriptorsHandler> descriptorSetComputeHiZMax;
+
+    std::vector<std::unique_ptr<Image2d>> maxHiDepthsLeft;
+    std::vector<std::unique_ptr<Image2d>> maxHiDepthsRight;
 
     void RecreateHiDepths();
 };

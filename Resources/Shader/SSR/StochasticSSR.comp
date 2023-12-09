@@ -28,12 +28,16 @@ layout(set = 0, binding = 2) uniform UniformJitterData {
 layout(set=0, binding=3) uniform sampler2D inDepth;
 layout(set=0, binding=4) uniform sampler2D inNormal;
 layout(set=0, binding=5) uniform sampler2D inMaterial;
-layout(set=0, binding=6) uniform sampler2D inMinHiZ;
-layout(set=0, binding=7) uniform sampler2D inMaxHiZ;
-layout(set=0, binding=8) uniform sampler2D preIntegratedDFG;
-layout(set=0, binding=9) uniform sampler2D blueNoise;
-layout(set=0, binding=10) writeonly uniform image2D SSRHitsMap;
-layout(set=0, binding=11) writeonly uniform image2D SSRMask;
+
+layout(set=0, binding=6) uniform sampler2D inMinHiZLeft;
+layout(set=0, binding=7) uniform sampler2D inMinHiZRight;
+
+layout(set=0, binding=8) uniform sampler2D inMaxHiZLeft;
+layout(set=0, binding=9) uniform sampler2D inMaxHiZRight;
+
+layout(set=0, binding=10) uniform sampler2D blueNoise;
+layout(set=0, binding=11) writeonly uniform image2D SSRHitsMap;
+layout(set=0, binding=12) writeonly uniform image2D SSRMask;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>

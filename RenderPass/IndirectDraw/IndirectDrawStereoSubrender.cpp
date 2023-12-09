@@ -61,7 +61,8 @@ void IndirectDrawStereoSubrender::Render(const CommandBuffer& commandBuffer)
 
 void IndirectDrawStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
 {
-    const auto& minHiZ = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("MinHi-z"));
+    const auto& leftMinHiZ  = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("LeftMinHi-z"));
+    const auto& RightMinHiZ = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("RightMinHi-z"));
 
     const auto& depth = dynamic_cast<const Image*>(Graphics::Get()->GetAttachment("depth"));
 
@@ -75,17 +76,27 @@ void IndirectDrawStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
     currentDimensions       = Devices::Get()->GetWindow()->GetStereoSize();
 
     while (mipLevel < maxMipLevel) {
-        pushHandlers[mipLevel].Push("previousLevelMonoDimensions", previousLevelDimensions);
-        pushHandlers[mipLevel].Push("currentMonoDimensions", currentDimensions);
+        if (mipLevel == 0) {
+            pushHandlers[mipLevel].Push("previousLevelDimensions", Devices::Get()->GetWindow()->GetSize());
+            pushHandlers[mipLevel].Push("currentDimensions", Devices::Get()->GetWindow()->GetSize());
+        }
+        else {
+            pushHandlers[mipLevel].Push("previousLevelDimensions", previousLevelDimensions);
+            pushHandlers[mipLevel].Push("currentDimensions", currentDimensions);
+        }
         pushHandlers[mipLevel].Push("mipLevel", mipLevel);
 
-        if (mipLevel == 0)
-            descriptorSetComputeHiZMin[mipLevel].Push("depthBuffer", depth);
-        else
-            descriptorSetComputeHiZMin[mipLevel].Push("depthBuffer", minHiZ);
+        if (mipLevel == 0) {
+            descriptorSetComputeHiZMin[mipLevel].Push("LeftDepthBuffer", depth);
+            descriptorSetComputeHiZMin[mipLevel].Push("RightDepthBuffer", depth);
+        }
+        else {
+            descriptorSetComputeHiZMin[mipLevel].Push("LeftDepthBuffer", leftMinHiZ);
+            descriptorSetComputeHiZMin[mipLevel].Push("RightDepthBuffer", RightMinHiZ);
+        }
 
-
-        descriptorSetComputeHiZMin[mipLevel].Push("HiZ", minHiDepths[mipLevel]);
+        descriptorSetComputeHiZMin[mipLevel].Push("LeftHiZ", minHiDepthsLeft[mipLevel]);
+        descriptorSetComputeHiZMin[mipLevel].Push("RightHiZ", minHiDepthsRight[mipLevel]);
 
         descriptorSetComputeHiZMin[mipLevel].Push("PushObject", pushHandlers[mipLevel]);
 
@@ -94,17 +105,29 @@ void IndirectDrawStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
         pipelineComputeHiZMin.BindPipeline(commandBuffer);
         descriptorSetComputeHiZMin[mipLevel].BindDescriptor(commandBuffer, pipelineComputeHiZMin);
         pushHandlers[mipLevel].BindPush(commandBuffer, pipelineComputeHiZMin);
-        pipelineComputeHiZMin.CmdRender(commandBuffer, glm::uvec2(currentDimensions.x * 2u, currentDimensions.y));
+        if (mipLevel == 0)
+            pipelineComputeHiZMin.CmdRender(commandBuffer, glm::uvec2(currentDimensions.x * 2u, currentDimensions.y));
+        else
+            pipelineComputeHiZMin.CmdRender(commandBuffer, glm::uvec2(currentDimensions.x, currentDimensions.y));
 
-        minHiZ->AddHierarchicalDepth(commandBuffer,
-                                     minHiDepths[mipLevel]->GetImage(),
-                                     {currentDimensions.x * 2u, currentDimensions.y, 0},
-                                     VK_FORMAT_R32_SFLOAT,
-                                     VK_IMAGE_LAYOUT_GENERAL,
-                                     mipLevel,
-                                     0);
+        leftMinHiZ->AddHierarchicalDepth(commandBuffer,
+                                         minHiDepthsLeft[mipLevel]->GetImage(),
+                                         {currentDimensions.x, currentDimensions.y, 0},
+                                         VK_FORMAT_R32_SFLOAT,
+                                         VK_IMAGE_LAYOUT_GENERAL,
+                                         mipLevel,
+                                         0);
 
-        minHiDepths[mipLevel]->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+        RightMinHiZ->AddHierarchicalDepth(commandBuffer,
+                                          minHiDepthsRight[mipLevel]->GetImage(),
+                                          {currentDimensions.x, currentDimensions.y, 0},
+                                          VK_FORMAT_R32_SFLOAT,
+                                          VK_IMAGE_LAYOUT_GENERAL,
+                                          mipLevel,
+                                          0);
+
+        minHiDepthsLeft[mipLevel]->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+        minHiDepthsRight[mipLevel]->Image2dPipelineBarrierComputeToCompute(commandBuffer);
 
         previousLevelDimensions = currentDimensions;
         currentDimensions.x     = currentDimensions.x == 1 ? 1 : currentDimensions.x / 2u;
@@ -119,17 +142,25 @@ void IndirectDrawStereoSubrender::RecreateHiDepths()
     auto       graphicsQueue = logicalDevice->GetGraphicsQueue();
     glm::uvec2 depthsExtent  = glm::uvec2(Devices::Get()->GetWindow()->GetStereoSize());
 
-    if (minHiDepths.empty() || minHiDepths[0]->GetExtent().width != depthsExtent.x * 2u || minHiDepths[0]->GetExtent().height != depthsExtent.y) {
-        uint32_t maxMipLevel   = Image::GetMipLevels({depthsExtent.x, depthsExtent.y, 1}) - 1;
+    if (minHiDepthsLeft.empty() || minHiDepthsLeft[0]->GetExtent().width != depthsExtent.x ||
+        minHiDepthsLeft[0]->GetExtent().height != depthsExtent.y) {
+        uint32_t maxMipLevel   = Image::GetMipLevels({depthsExtent.x, depthsExtent.y, 1});
         uint32_t mipLevelToDep = 0;
 
-        Graphics::CheckVk(vkQueueWaitIdle(graphicsQueue));
-        minHiDepths.clear();
+        minHiDepthsLeft.clear();
+        minHiDepthsRight.clear();
 
         while (mipLevelToDep < maxMipLevel) {
-            // if (depthsExtent.x == 1 || depthsExtent.y == 1) break;
-            minHiDepths.push_back(
-                std::make_unique<Image2d>(glm::uvec2(depthsExtent.x * 2u, depthsExtent.y),
+            minHiDepthsLeft.push_back(
+                std::make_unique<Image2d>(glm::uvec2(depthsExtent.x, depthsExtent.y),
+                                          VK_FORMAT_R32_SFLOAT,
+                                          VK_IMAGE_LAYOUT_GENERAL,
+                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+                                          VK_FILTER_LINEAR,
+                                          VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                                          VK_SAMPLE_COUNT_1_BIT));
+            minHiDepthsRight.push_back(
+                std::make_unique<Image2d>(glm::uvec2(depthsExtent.x, depthsExtent.y),
                                           VK_FORMAT_R32_SFLOAT,
                                           VK_IMAGE_LAYOUT_GENERAL,
                                           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,

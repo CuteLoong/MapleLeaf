@@ -1,6 +1,6 @@
 #include "StereoRenderer.hpp"
 
-#include "DeferredSubrender.hpp"
+#include "DeferredStereoSubrender.hpp"
 #include "GaussianBlurSubrender.hpp"
 #include "GaussianBlurXYSubrender.hpp"
 #include "Graphics.hpp"
@@ -18,11 +18,13 @@
 #include "PipelineGraphics.hpp"
 #include "RenderStage.hpp"
 #include "ResolvedSubrender.hpp"
+#include "SSRStereoSpatialFilterSubrender.hpp"
 #include "SSRStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
 #include "StochasticSSRStereoSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
+
 
 namespace Test {
 StereoRenderer::StereoRenderer()
@@ -35,8 +37,13 @@ StereoRenderer::StereoRenderer()
                                                       {"Hi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
                                                       {"MinHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
                                                       {"MaxHi-z", NonRTAttachment::Type::ImageHierarchyZ, false},
+                                                      {"LeftMinHi-z", NonRTAttachment::Type::StereoImageHierarchyZ, false},
+                                                      {"RightMinHi-z", NonRTAttachment::Type::StereoImageHierarchyZ, false},
+                                                      {"LeftMaxHi-z", NonRTAttachment::Type::StereoImageHierarchyZ, false},
+                                                      {"RightMaxHi-z", NonRTAttachment::Type::StereoImageHierarchyZ, false},
                                                       {"SSRHitsMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                      {"SSRMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
+                                                      {"SSRMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                      {"ReflectionMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -80,16 +87,16 @@ StereoRenderer::StereoRenderer()
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments5, renderpassSubpasses5));
 
-    std::vector<Attachment> renderpassAttachments6{{0, "lighting", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+    std::vector<Attachment> renderpassAttachments6{{0, "lighting", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_UNORM}};
 
     std::vector<SubpassType> renderpassSubpasses6 = {{0, {}, {0}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments6, renderpassSubpasses6));
 
-    std::vector<Attachment> renderpassAttachments7{
-        {{0, "reflectanceColor", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}, {1, "resolved", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}, {2, "swapchain", Attachment::Type::Swapchain, false}}};
+    std::vector<Attachment> renderpassAttachments7{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_UNORM},
+                                                   {1, "swapchain", Attachment::Type::Swapchain, false}};
 
-    std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {0}}, {1, {}, {1}}, {2, {1}, {2}}};
+    std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {}}, {1, {}, {0}}, {2, {0}, {1}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments7, renderpassSubpasses7));
 }
@@ -114,7 +121,9 @@ void StereoRenderer::Start()
     AddSubrender<GaussianBlurSubrender>({5, 0}, "AOMap");
     // AddSubrender<GaussianBlurXYSubrender>({5, 0}, "AOMap");
 
-    AddSubrender<DeferredSubrender>({6, 0});
+    AddSubrender<DeferredStereoSubrender>({6, 0});
+
+    AddSubrender<SSRStereoSpatialFilterSubrender>({7, 0});
     AddSubrender<ResolvedSubrender>({7, 1});
     AddSubrender<ToneMapingSubrender>({7, 2});
     AddSubrender<ImguiSubrender>({7, 2});

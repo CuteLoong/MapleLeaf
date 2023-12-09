@@ -26,6 +26,23 @@ layout(set=0, binding=10) uniform sampler2D blueNoise;
 layout(set=0, binding=11) writeonly uniform image2D ReflectionColorMap;
 
 #include <Misc/Camera.glsl>
+#include <Misc/Utils.glsl>
+#include <Misc/Constants.glsl>
+
+float evalGGX(float ggxAlpha, float NdotH)
+{
+    float a2 = ggxAlpha * ggxAlpha;
+    float d = ((NdotH * a2 - NdotH) * NdotH + 1.0f);
+    return a2 / (M_PI * d * d);
+}
+
+float Vis_SmithJointApprox(float NdotL, float NdotV, float roughness)
+{
+    float a = roughness * roughness;
+    float Vis_SmithV = NdotL * (NdotV * (1 - a) + a);
+    float Vis_SmithL = NdotV * (NdotL * (1 - a) + a);
+    return 0.5 / (Vis_SmithV + Vis_SmithL);
+}
 
 float Luminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
@@ -58,32 +75,37 @@ void main()
 
     for(int i = 0; i < NUM_FILTER; i++) {
         vec2 offsetUV = rotation * offset[i] * camera.pixelSize.zw;
-        vec2 sampleUV = screenUV + offsetUV;
+        vec2 sampleUV = screenUV;
 
         vec4 hitInfo = texture(SSRHitsMap, sampleUV); // xy: hitUV, z: hitDepth, w: pdf
         vec3 hitPosWS = StereoWorldSpacePosAtScreenUV(hitInfo.xy);
 
+        if(hitInfo.xy == vec2(-1.0f)) continue;
+
         vec3 reflectRayWS = hitPosWS - originWS;
 
         vec3 H = normalize(eyeRayWS + reflectRayWS);
-        float NdotH = max(dot(normalWS, H), 0.0f);
-        float NdotV = max(dot(normalWS, eyeRayWS), 0.0f);
-        float NdotL = max(dot(normalWS, reflectRayWS), 0.0f);
+        float NdotH = clamp(dot(normalWS, H), 0.0f, 1.0f);
+        float NdotV = clamp(dot(normalWS, eyeRayWS), 0.0f, 1.0f);
+        float NdotL = clamp(dot(normalWS, reflectRayWS), 0.0f, 1.0f);
 
-        float brdf = max(0.0f, evalGGX(NdotH, roughness) * Vis_SmithJointApprox(NdotL, NdotV, roughness));
+        float brdf = max(0.0f, evalGGX(roughness, NdotH) * Vis_SmithJointApprox(NdotL, NdotV, roughness));
         float pdf = max(1e-5, hitInfo.w);
 
         float weight = brdf / pdf;
         vec4 sampleColor = vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, hitInfo.xy).x);
         sampleColor.rgb /= 1 + Luminance(sampleColor.rgb);
 
-        ReflectionColor += sampleColor * NdotL * weight;
+        ReflectionColor += sampleColor * weight;
         totalWeight += weight;
     }
 
+    // vec4 hitInfo = texture(SSRHitsMap, screenUV);
+    // ReflectionColor = hitInfo.xy == vec2(-1.0f) ? vec4(0.0f) : vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, hitInfo.xy).x);
+
     ReflectionColor /= totalWeight;
     ReflectionColor.rgb /= 1 - Luminance(ReflectionColor.rgb);
-    ReflectionColor.rgb = max(1e-5, ReflectionColor.rgb);
+    ReflectionColor.rgb = max(vec3(1e-5), ReflectionColor.rgb);
 
     imageStore(ReflectionColorMap, pixel, ReflectionColor);
 }

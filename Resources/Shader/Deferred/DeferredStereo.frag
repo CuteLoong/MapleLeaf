@@ -49,9 +49,9 @@ layout(location = 0) out vec4 outColour;
 
 void main() {
 	vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
+    int viewIndex = inUV.x < 0.5f ? 0 : 1;
 
 	vec3 worldPosition = texture(inPosition, uv).rgb;
-	vec4 screenPosition = camera.view * vec4(worldPosition, 1.0f);
 	vec4 shadowCoords = scene.shadowMatrix * vec4(worldPosition, 1.0f);
 
 	vec3 diffuse = texture(inDiffuse, uv).rgb;
@@ -63,7 +63,7 @@ void main() {
 	float roughness = material.g;
 	
 	vec3 N = normalize(normal);
-	vec3 V = normalize(camera.cameraPosition.xyz - worldPosition);
+	vec3 V = normalize(camera.cameraStereoPosition[viewIndex].xyz - worldPosition);
 
 	vec3 Lo = vec3(0.0f);
 	vec3 F0 = vec3(0.04f);
@@ -77,21 +77,9 @@ void main() {
 		vec3 H = normalize(V + L);
 		vec3 radiance = calcAttenuation(d, light.attenuation) * light.color.rgb;
 
-		// float NDF = DistributionGGX(N, H, roughness);
-		// float G = GeometrySmith(N, V, L, roughness);
-		// vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
-
-		// vec3 nominator = NDF * G * F;
-		// float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);
-		// vec3 specular = nominator / max(denominator, 0.001f);
-
-		// vec3 kS = F;
-		// vec3 kD = vec3(1.0f) - kS;
-		// kD *= 1.0f - metallic;
 		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
-		float NdotL = max(dot(N, L), 0.0f);
-		// Lo += (kD * diffuse / M_PI + specular) * radiance * NdotL;
+		float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
 		Lo += brdf * radiance * NdotL;
 	}
 
@@ -102,27 +90,15 @@ void main() {
 		vec3 H = normalize(V + L);
 		vec3 radiance = light.color.rgb;
 
-		// float NDF = DistributionGGX(N, H, roughness);
-		// float G = GeometrySmith(N, V, L, roughness);
-		// vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
-
-		// vec3 nominator = NDF * G * F;
-		// float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);
-		// vec3 specular = nominator / max(denominator, 0.001f);
-
-		// vec3 kS = F;
-		// vec3 kD = vec3(1.0f) - kS;
-		// kD *= 1.0f - metallic;
 		vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
 		float shadowValue = shadowFactor(shadowCoords);
 
-		float NdotL = max(dot(N, L), 0.0f);
-		// Lo += (kD * diffuse / M_PI + specular) * radiance * NdotL * shadowValue;
-		Lo += brdf * radiance * NdotL * shadowValue;
+		float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
+		Lo += brdf * radiance * NdotL;
 	}
 
-	vec3 ambient = vec3(0.1f) * diffuse * ao;
+	vec3 ambient = vec3(0.01f) * diffuse * ao;
 	Lo += ambient;
 	
 	outColour = vec4(Lo, 1.0f);

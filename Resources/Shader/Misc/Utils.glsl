@@ -59,7 +59,7 @@ vec3 StereoWorldSpacePosAtScreenUV(vec2 uv)
 {
     int viewIndex = uv.x > 0.5f ? 1 : 0;
     vec3 viewSpacePos = StereoViewSpacePosAtScreenUV(uv);
-    return (camera.invView[viewIndex] * vec4(viewSpacePos, 1.0f)).xyz;
+    return (camera.invStereoView[viewIndex] * vec4(viewSpacePos, 1.0f)).xyz;
 }
 
 vec3 StereoViewSpacePosAtStereoUV(vec2 uv, int viewIndex)

@@ -37,7 +37,8 @@ private:
 
     std::vector<DescriptorsHandler> descriptorSetComputeHiZMin;
 
-    std::vector<std::unique_ptr<Image2d>> minHiDepths;
+    std::vector<std::unique_ptr<Image2d>> minHiDepthsLeft;
+    std::vector<std::unique_ptr<Image2d>> minHiDepthsRight;
 
     void RecreateHiDepths();
 };

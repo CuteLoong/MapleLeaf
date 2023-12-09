@@ -44,9 +44,7 @@ private:
     SSRData ssrData;
 
     std::shared_ptr<HaltonSamplePattern> haltonSampler;
-    Future<std::unique_ptr<Image2d>>     brdf;
     Future<std::shared_ptr<Image2d>>     blueNoise;
-    static std::unique_ptr<Image2d>      ComputeBRDF(uint32_t size);
     static std::shared_ptr<Image2d>      LoadBlueNoise();
 };
 }   // namespace MapleLeaf
