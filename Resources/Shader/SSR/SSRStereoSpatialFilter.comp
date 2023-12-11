@@ -93,15 +93,12 @@ void main()
         float pdf = max(1e-5, hitInfo.w);
 
         float weight = brdf * NdotL / pdf;
-        vec4 sampleColor = vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, hitInfo.xy).x);
+        vec4 sampleColor = vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, sampleUV).x);
         sampleColor.rgb /= 1 + Luminance(sampleColor.rgb);
 
         ReflectionColor += sampleColor * weight;
         totalWeight += weight;
     }
-
-    // vec4 hitInfo = texture(SSRHitsMap, screenUV);
-    // ReflectionColor = hitInfo.xy == vec2(-1.0f) ? vec4(0.0f) : vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, hitInfo.xy).x);
 
     ReflectionColor /= totalWeight;
     ReflectionColor.rgb /= 1 - Luminance(ReflectionColor.rgb);

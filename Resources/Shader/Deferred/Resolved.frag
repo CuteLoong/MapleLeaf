@@ -46,8 +46,7 @@ void main()
 
     vec3 dfg = F0 * brdf.x + brdf.y;
 
-    float mask = ssrColor.w == 0.0f ? 0.0f : 1.0f;
-    vec3 reflectionColor = ssrColor.xyz * dfg;
+    vec3 reflectionColor = ssrColor.xyz * dfg * ssrColor.w;
 
     vec3 lighting = texture(LightingMap, uv).xyz;
 
