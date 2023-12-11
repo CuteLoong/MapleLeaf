@@ -67,3 +67,12 @@ float shadowFactor(vec4 shadowCoords)
 
     return 1.0f;
 }
+
+vec3 prefilteredReflection(vec3 R, float roughness, samplerCube prefiltered) {
+	float lod = roughness * float(textureQueryLevels(prefiltered));
+	float lodf = floor(lod);
+	float lodc = ceil(lod);
+	vec3 a = textureLod(prefiltered, R, lodf).rgb;
+	vec3 b = textureLod(prefiltered, R, lodc).rgb;
+	return mix(a, b, lod - lodf);
+}

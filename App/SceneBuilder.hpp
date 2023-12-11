@@ -8,7 +8,7 @@
 #include "Scenes.hpp"
 #include "ShadowRender.hpp"
 #include "ShadowSystem.hpp"
-#include "Skybox/Skybox.hpp"
+#include "Skybox.hpp"
 #include "Transform.hpp"
 
 namespace MapleLeaf {
@@ -46,7 +46,8 @@ public:
         // Create Skybox entity
         auto skyboxEntity = CreateEntity();
         skyboxEntity->SetName("skybox");
-        skyboxEntity->AddComponent<Skybox>();
+        skyboxEntity->AddComponent<Transform>();
+        skyboxEntity->AddComponent<Skybox>("SkyboxClouds", false);
 
         if (builder.cameras.empty()) Log::Error("No camera can't rendering!");
 

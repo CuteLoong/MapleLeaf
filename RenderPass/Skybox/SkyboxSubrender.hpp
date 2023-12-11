@@ -21,6 +21,9 @@ public:
 private:
     PipelineGraphics pipelineGraphics;
 
+    UniformHandler uniformCamera;
+    UniformHandler uniformSkybox;
+
     DescriptorsHandler descriptorSet;
 
     Future<std::unique_ptr<Image2d>> brdf;

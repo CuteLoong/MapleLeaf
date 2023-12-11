@@ -1,0 +1,52 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(set = 0, binding = 0, rgba32f) uniform writeonly imageCube outColour;
+
+layout(set = 0, binding = 1) uniform samplerCube samplerColour;
+
+const float PI = 3.1415926535897932384626433832795f;
+const float deltaPhi = (2.0f * PI) / 180.0f;
+const float deltaTheta = (0.5f * PI) / 64.0f;
+
+vec3 cubeDir(vec2 texCoord, uint side) {
+	vec2 tex = texCoord * 2.0f - 1.0f;
+	if(side == 0) return vec3(1.0f, -tex.y, -tex.x); // Front
+	if(side == 1) return vec3(-1.0f, -tex.y, tex.x); // Back
+	if(side == 2) return vec3(tex.x, 1.0f, tex.y); // Right
+	if(side == 3) return vec3(tex.x, -1.0f, -tex.y); // Left
+	if(side == 4) return vec3(tex.x, -tex.y, 1.0f); // Top
+	if(side == 5) return vec3(-tex.x, -tex.y, -1.0f); // Bottom
+	return vec3(1.0);
+}
+
+void main() {
+	vec2 uv = (gl_GlobalInvocationID.xy + vec2(0.5f)) / vec2(imageSize(outColour).xy);
+
+	for (uint i = 0; i != 6; ++i) {
+		vec3 N = normalize(cubeDir(uv, i));
+		vec3 up = vec3(0.0f, 1.0f, 0.0f);
+		vec3 right = normalize(cross(up, N));
+		up = cross(N, right);
+
+		const float TWO_PI = PI * 2.0f;
+		const float HALF_PI = PI * 0.5f;
+
+		vec3 colour = vec3(0.0f);
+		uint sampleCount = 0u;
+
+		for (float phi = 0.0f; phi < TWO_PI; phi += deltaPhi) {
+			for (float theta = 0.0f; theta < HALF_PI; theta += deltaTheta) {
+				vec3 tempVec = cos(phi) * right + sin(phi) * up;
+				vec3 sampleVector = cos(theta) * N + sin(theta) * tempVec;
+				colour += texture(samplerColour, sampleVector).rgb * cos(theta) * sin(theta);
+				sampleCount++;
+			}
+		}
+
+		imageStore(outColour, ivec3(gl_GlobalInvocationID.xy, i), vec4(PI * colour / float(sampleCount), 1.0f));
+	}
+}

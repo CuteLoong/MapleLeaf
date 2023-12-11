@@ -107,7 +107,8 @@ public:
                 it->second.erase(it->second.begin() + descriptorArrayIndex.value());
             }
             else {
-                if (it->second[0].descriptor == to_address(descriptor)) return;
+                if (it->second[0].descriptor == to_address(descriptor) && to_address(it->second[0].writeDescriptor) == to_address(writeDescriptorSet))
+                    return;
                 it->second.clear();
             }
             // descriptors.erase(it);

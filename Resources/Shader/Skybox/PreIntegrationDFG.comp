@@ -100,7 +100,7 @@ vec4 integrateDFG(vec3 N, vec3 V, float roughness)
         {
             LdotH = clamp(dot(L, normalize(V + L)), 0.0f, 1.0f);
             NdotV = clamp(dot(N, V), 0.0f, 1.0f);
-            accumulation.b += disneyDiffuseFresnel(NdotV, NdotL, LdotH, sqrt(roughness));
+            accumulation.b += disneyDiffuseFresnel(NdotV, NdotL, LdotH, roughness);
         }
     }
 

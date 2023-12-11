@@ -38,6 +38,10 @@ layout(set=0, binding = 7) uniform sampler2D inMaterial;
 layout(set=0, binding = 8) uniform sampler2D inShadowMap;
 layout(set=0, binding = 9) uniform sampler2D inAOMap;
 
+layout(set=0, binding = 10) uniform sampler2D samplerBRDF;
+layout(set=0, binding = 11) uniform samplerCube samplerIrradiance;
+layout(set=0, binding = 12) uniform samplerCube samplerPrefiltered;
+
 layout(location = 0) in vec2 inUV;
 
 layout(location = 0) out vec4 outColour;
@@ -61,45 +65,60 @@ void main() {
 
 	float metallic = material.r;
 	float roughness = material.g;
-	
-	vec3 N = normalize(normal);
-	vec3 V = normalize(camera.cameraStereoPosition[viewIndex].xyz - worldPosition);
 
 	vec3 Lo = vec3(0.0f);
-	vec3 F0 = vec3(0.04f);
-	F0 = mix(F0, diffuse, metallic);
-	for(int i = 1; i <= scene.pointLightsCount; i++)
-	{
-		PointLight light = bufferPointLights.lights[i];
-		vec3 L = light.position - worldPosition;
-		float d = length(L);
-		L = normalize(L);
-		vec3 H = normalize(V + L);
-		vec3 radiance = calcAttenuation(d, light.attenuation) * light.color.rgb;
+	
+	if(normal != vec3(0.0f)) {
+		vec3 N = normalize(normal);
+		vec3 V = normalize(camera.cameraStereoPosition[viewIndex].xyz - worldPosition);
+		vec3 R = reflect(-V, N); 
 
-		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
+		float NdotV = clamp(dot(N, V), 0.0f, 1.0f);
 
-		float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
-		Lo += brdf * radiance * NdotL;
+		vec3 F0 = vec3(0.04f);
+		F0 = mix(F0, diffuse, metallic);
+		for(int i = 1; i <= scene.pointLightsCount; i++)
+		{
+			PointLight light = bufferPointLights.lights[i];
+			vec3 L = light.position - worldPosition;
+			float d = length(L);
+			L = normalize(L);
+			vec3 H = normalize(V + L);
+			vec3 radiance = calcAttenuation(d, light.attenuation) * light.color.rgb;
+
+			vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
+
+			float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
+			Lo += brdf * radiance * NdotL;
+		}
+
+		for(int i = 1; i <= scene.directionalLightsCount; i++)
+		{
+			DirectionalLight light = bufferDirectionalLights.lights[i];
+			vec3 L = normalize(-light.direction);
+			vec3 H = normalize(V + L);
+			vec3 radiance = light.color.rgb;
+
+			vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
+
+			float shadowValue = shadowFactor(shadowCoords);
+
+			float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
+			Lo += brdf * radiance * NdotL * shadowValue;
+		}
+
+		vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
+		vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
+		vec3 spacular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
+
+		vec3 irradiance = texture(samplerIrradiance, N).rgb;
+
+		vec3 ambient = irradiance * (1 - metallic) * diffuse * brdfPreIntegrated.b * ao / M_PI;
+		Lo += ambient + spacular;
 	}
-
-	for(int i = 1; i <= scene.directionalLightsCount; i++)
-	{
-		DirectionalLight light = bufferDirectionalLights.lights[i];
-		vec3 L = normalize(-light.direction);
-		vec3 H = normalize(V + L);
-		vec3 radiance = light.color.rgb;
-
-		vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
-
-		float shadowValue = shadowFactor(shadowCoords);
-
-		float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
-		Lo += brdf * radiance * NdotL;
+	else {
+		Lo = diffuse;
 	}
-
-	vec3 ambient = vec3(0.01f) * diffuse * ao;
-	Lo += ambient;
 	
 	outColour = vec4(Lo, 1.0f);
 }

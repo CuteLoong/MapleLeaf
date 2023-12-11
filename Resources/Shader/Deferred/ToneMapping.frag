@@ -12,7 +12,32 @@ layout(input_attachment_index=0, set=0, binding = 1) uniform subpassInput Resolv
 
 layout(location = 0) out vec4 outColor;
 
+vec3 toneMapAces(vec3 color)
+{
+    // Cancel out the pre-exposure mentioned in
+    // https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+    color *= 0.6;
+
+    float A = 2.51;
+    float B = 0.03;
+    float C = 2.43;
+    float D = 0.59;
+    float E = 0.14;
+
+    color = clamp((color*(A*color+B))/(color*(C*color+D)+E), 0.0f, 1.0f);
+    return color;
+}
+
+vec3 toneMap(vec3 color) {
+    return toneMapAces(color);
+}
+
 void main() {
     vec4 color = toneMapping.exposure * subpassLoad(ResolvedImage);
-    outColor = vec4(pow(color.rgb, vec3(1.0 / toneMapping.gamma)), color.a);
+
+    vec3 finalColor = color.rgb;
+
+    finalColor = toneMap(finalColor);
+
+    outColor = vec4(pow(color.rgb, vec3(1.0f / toneMapping.gamma)), color.a);
 }

@@ -21,6 +21,7 @@
 #include "SSRStereoSpatialFilterSubrender.hpp"
 #include "SSRStereoSubrender.hpp"
 #include "ShadowSubrender.hpp"
+#include "SkyboxSubrender.hpp"
 #include "StereoMaskSubrender.hpp"
 #include "StochasticSSRStereoSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
@@ -60,7 +61,7 @@ StereoRenderer::StereoRenderer()
                                                    {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                    {5, "instanceId", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_NEAREST}};
 
-    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {0, 1, 2, 3, 4, 5}}};
+    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {1, 2, 3, 4}}, {1, {}, {0, 1, 2, 3, 4, 5}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::STEREO, renderpassAttachments1, renderpassSubpasses1));
 
     std::vector<Attachment>  renderpassAttachments2{{0, "backDepth", Attachment::Type::Depth, false}};
@@ -87,13 +88,13 @@ StereoRenderer::StereoRenderer()
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments5, renderpassSubpasses5));
 
-    std::vector<Attachment> renderpassAttachments6{{0, "lighting", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_UNORM}};
+    std::vector<Attachment> renderpassAttachments6{{0, "lighting", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     std::vector<SubpassType> renderpassSubpasses6 = {{0, {}, {0}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments6, renderpassSubpasses6));
 
-    std::vector<Attachment> renderpassAttachments7{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_UNORM},
+    std::vector<Attachment> renderpassAttachments7{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {1, "swapchain", Attachment::Type::Swapchain, false}};
 
     std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {}}, {1, {}, {0}}, {2, {0}, {1}}};
@@ -104,7 +105,10 @@ StereoRenderer::StereoRenderer()
 void StereoRenderer::Start()
 {
     AddSubrender<ShadowSubrender>({0, 0});
-    AddSubrender<IndirectDrawStereoSubrender>({1, 0});
+
+    AddSubrender<SkyboxSubrender>({1, 0});
+    AddSubrender<IndirectDrawStereoSubrender>({1, 1});
+
     AddSubrender<IndirectDrawStereoBackSubrender>({2, 0});
 
     AddSubrender<StereoMaskSubrender>({3, 0});

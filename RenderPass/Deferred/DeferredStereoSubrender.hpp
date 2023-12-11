@@ -1,6 +1,8 @@
 #pragma once
 
 #include "DescriptorHandler.hpp"
+#include "Future.hpp"
+#include "ImageCube.hpp"
 #include "PipelineGraphics.hpp"
 #include "Subrender.hpp"
 #include "UniformHandler.hpp"
@@ -38,5 +40,15 @@ private:
     UniformHandler     uniformCamera;
     StorageHandler     storagePointLights;
     StorageHandler     storageDirectionalLights;
+
+    std::shared_ptr<ImageCube> skybox;
+
+    Future<std::unique_ptr<Image2d>>   brdf;
+    Future<std::unique_ptr<ImageCube>> irradiance;
+    Future<std::unique_ptr<ImageCube>> prefiltered;
+
+    static std::unique_ptr<Image2d>   ComputeBRDF(uint32_t size);
+    static std::unique_ptr<ImageCube> ComputeIrradiance(const std::shared_ptr<ImageCube>& source, uint32_t size);
+    static std::unique_ptr<ImageCube> ComputePrefiltered(const std::shared_ptr<ImageCube>& source, uint32_t size);
 };
 }   // namespace MapleLeaf
