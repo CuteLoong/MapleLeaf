@@ -68,16 +68,17 @@ void main()
 
     float roughness = texture(inMaterial, screenUV).g;
     vec2 noise = texture(blueNoise, (screenUV + jitterData.jitter) * filterData.noiseScale).rg * 2.0f - 1.0f;
-    mat2 rotation = mat2(noise.x, noise.y, -noise.y, -noise.x);
+    mat2 rotation = mat2(noise.x, noise.y, -noise.y, noise.x);
 
     float totalWeight = 0.0f;
     vec4 ReflectionColor = vec4(0.0f);
 
     for(int i = 0; i < NUM_FILTER; i++) {
         vec2 offsetUV = rotation * offset[i] * camera.pixelSize.zw;
-        vec2 sampleUV = screenUV;
+        vec2 sampleUV = screenUV + offsetUV;
 
-        vec4 hitInfo = texture(SSRHitsMap, sampleUV); // xy: hitUV, z: hitDepth, w: pdf
+        // vec4 hitInfo = texture(SSRHitsMap, sampleUV); // xy: hitUV, z: hitDepth, w: pdf
+        vec4 hitInfo = texelFetch(SSRHitsMap, ivec2(sampleUV * camera.pixelSize.xy), 0); // xy: hitUV, z: hitDepth, w: pdf
         vec3 hitPosWS = StereoWorldSpacePosAtScreenUV(hitInfo.xy);
 
         if(hitInfo.xy == vec2(-1.0f)) continue;
