@@ -25,6 +25,7 @@ void ResolvedSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
     descriptorSet.Push("ReflectionColorMap", Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
     descriptorSet.Push("PreIntegratedBRDF", *brdf);
+    descriptorSet.Push("GlossyMV", Graphics::Get()->GetNonRTAttachment("GlossyMV"));
 
     if (!descriptorSet.Update(pipeline)) return;
     pipeline.BindPipeline(commandBuffer);

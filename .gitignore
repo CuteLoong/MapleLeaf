@@ -4,4 +4,5 @@ build/
 vsxmake2022/
 Resources/Models/Sponza/
 Resources/Models/Room/
+Resources/Models/RoomCamera1/
 Config/config.h

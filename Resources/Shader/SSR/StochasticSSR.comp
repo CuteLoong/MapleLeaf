@@ -38,6 +38,7 @@ layout(set=0, binding=9) uniform sampler2D inMaxHiZRight;
 layout(set=0, binding=10) uniform sampler2D blueNoise;
 layout(set=0, binding=11) writeonly uniform image2D SSRHitsMap;
 layout(set=0, binding=12) writeonly uniform image2D SSRMask;
+layout(set=0, binding=13) writeonly uniform image2D GlossyMV;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
@@ -50,11 +51,26 @@ float calculateFadeAmount(vec2 positionUV, vec2 positionUV2, vec2 startPositionU
     float boundary1 = distance(positionUV, vec2(0.5f, 0.5f)) * 2.0f;
     float boundary2 = distance(positionUV2, vec2(0.5f, 0.5f)) * 2.0f;
     float fadeOnEdge = max(1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f), 1.0f - clamp((boundary2 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f));
+    // float fadeOnEdge = 1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
 
     float travelled = distance(positionUV, startPositionUV);
     float fadeOnDistance = 1.0f - clamp((travelled - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
 
     return fadeOnMirror * fadeOnEdge * fadeOnDistance;
+}
+
+vec3 calculateGlossyPositionInAnotherEye(vec3 hitWS, vec3 originWS, vec3 normalWS, int viewIndex)
+{
+    vec3 reflectRayWS = hitWS - originWS;
+    vec3 virtualImageWS = hitWS - 2.0f * dot(reflectRayWS, normalWS) * normalWS; 
+
+    vec4 virtualImageHSEye2 =  camera.stereoProjection[1 - viewIndex] * camera.stereoView[1 - viewIndex] * vec4(virtualImageWS, 1.0f);
+
+    vec3 virtualImageSSEye2 = virtualImageHSEye2.xyz / virtualImageHSEye2.w;
+    virtualImageSSEye2.xy = virtualImageSSEye2.xy * 0.5f + 0.5f;
+    virtualImageSSEye2.y = 1.0f - virtualImageSSEye2.y; // flip y
+
+    return virtualImageSSEye2;
 }
 
 bool hiZTracing(vec3 pointSS0, vec3 pointSS1, vec3 pointSS0Eye2, vec3 pointSS1Eye2, inout int viewIndex, inout vec3 hitPointSS, inout vec3 hitPointSSEye2)
@@ -119,6 +135,8 @@ void main()
     vec3 normalWS = texture(inNormal, screenUV).xyz;
     vec3 normalVS = normalize(mat3(transpose(inverse(camera.stereoView[viewIndex]))) * normalWS);
     vec3 originVS = StereoViewSpacePosAtScreenUV(screenUV);
+    vec4 originWS = camera.invStereoView[viewIndex] * vec4(originVS, 1.0f);
+
     vec3 viewRayVS = normalize(originVS);
     vec3 viewRayWS = normalize(mat3(transpose(inverse(camera.invStereoView[viewIndex]))) * viewRayVS);
     float roughness = texture(inMaterial, screenUV).g;
@@ -150,7 +168,7 @@ void main()
     pointSS1.xy = pointSS1.xy * 0.5f + 0.5f;
     pointSS1.y = 1.0f - pointSS1.y; // flip y
 
-    vec4 pointHS0Eye2 = camera.stereoProjection[1 - viewIndex] * camera.stereoView[1 - viewIndex] * camera.invStereoView[viewIndex] * vec4(originVS, 1.0f);
+    vec4 pointHS0Eye2 = camera.stereoProjection[1 - viewIndex] * camera.stereoView[1 - viewIndex] * originWS;
     vec4 pointHS1Eye2 = camera.stereoProjection[1 - viewIndex] * camera.stereoView[1 - viewIndex] * camera.invStereoView[viewIndex] * vec4(endPointVS, 1.0f);
     vec3 pointSS0Eye2 = pointHS0Eye2.xyz / pointHS0Eye2.w;
     vec3 pointSS1Eye2 = pointHS1Eye2.xyz / pointHS1Eye2.w;
@@ -161,24 +179,31 @@ void main()
 
     vec3 hitPointSS = vec3(-1.0f);
     vec3 hitPointSSEye2 = vec3(-1.0f);
+    int hitViewIndex = viewIndex;
     bool missed = true;
 
     if(reflectDirVS.z < 0.0f) {
-        missed = hiZTracing(pointSS0, pointSS1, pointSS0Eye2, pointSS1Eye2, viewIndex, hitPointSS, hitPointSSEye2);
+        missed = hiZTracing(pointSS0, pointSS1, pointSS0Eye2, pointSS1Eye2, hitViewIndex, hitPointSS, hitPointSSEye2);
     }
 
     float alphaBlend = 0.0f;
+    vec2 glossyMV = vec2(-1.0f);
     if(missed) {
         hitPointSS.xy = vec2(-1.0f);
     }
     else {
-        // vec3 reflectDirVSEye2 = normalize(mat3(transpose(inverse(camera.stereoView[1 - viewIndex]))) * reflectDirWS);
-        // vec3 viewRayVSEye2 = normalize(mat3(transpose(inverse(camera.stereoView[1 - viewIndex]))) * viewRayWS);
+        vec4 hitWS = camera.invStereoView[hitViewIndex] * vec4(StereoViewSpacePosAtStereoUV(hitPointSS.xy, hitViewIndex), 1.0f);
 
+        vec3 glossySS = calculateGlossyPositionInAnotherEye(hitWS.xyz, originWS.xyz, normalWS, viewIndex);
+        glossySS.xy = StereoUVToScreenUV(glossySS.xy, 1 - viewIndex);
+
+        // glossyMV = abs(pointSS0.z - glossySS.z) < 0.001f ? glossySS.xy - screenUV : vec2(-1.0f);
+        glossyMV = glossySS.xy - screenUV;
         alphaBlend = calculateFadeAmount(hitPointSS.xy, hitPointSSEye2.xy, pointSS0.xy, reflectDirVS, viewRayVS);
-        hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, viewIndex);
+        hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, hitViewIndex);
     }
 
     imageStore(SSRHitsMap, pixel, vec4(hitPointSS, pdf));
     imageStore(SSRMask, pixel, vec4(alphaBlend));
+    imageStore(GlossyMV, pixel, vec4(glossyMV, 0.0f, 0.0f));
 }

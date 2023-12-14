@@ -5,13 +5,14 @@
 
 layout(location = 0) in vec2 inUV;
 
-layout(set=0, binding=1) uniform sampler2D inDepth;
-layout(set=0, binding=2) uniform sampler2D inNormal;
-layout(set=0, binding=3) uniform sampler2D inMaterial;
+layout(set=0, binding = 1) uniform sampler2D inDepth;
+layout(set=0, binding = 2) uniform sampler2D inNormal;
+layout(set=0, binding = 3) uniform sampler2D inMaterial;
 layout(set=0, binding = 4) uniform sampler2D inDiffuse;
 layout(set=0, binding = 5) uniform sampler2D LightingMap;
 layout(set=0, binding = 6) uniform sampler2D ReflectionColorMap;
 layout(set=0, binding = 7) uniform sampler2D PreIntegratedBRDF;
+layout(set=0, binding = 8) uniform sampler2D GlossyMV;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
@@ -29,8 +30,13 @@ void main()
 	vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
     int viewIndex = inUV.x < 0.5f ? 0 : 1;
 
+    vec2 anotherUV = uv + texture(GlossyMV, uv).xy;
+
     vec3 normalWS = texture(inNormal, uv).xyz;
+
     vec4 ssrColor = texture(ReflectionColorMap, uv);
+    vec4 ssrColor2 = texture(ReflectionColorMap, anotherUV);
+
     float roughness = texture(inMaterial, uv).g;
     float metallic = texture(inMaterial, uv).r;
     vec3 diffuseColor = texture(inDiffuse, uv).xyz;
@@ -46,9 +52,11 @@ void main()
 
     vec3 dfg = F0 * brdf.x + brdf.y;
 
-    vec3 reflectionColor = ssrColor.xyz * dfg * ssrColor.w;
+    vec3 reflectionColor = (ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * dfg * 0.5f;
+    // vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
 
     vec3 lighting = texture(LightingMap, uv).xyz;
 
+    // outColor = vec4(reflectionColor, 1.0f);
     outColor = vec4(lighting + reflectionColor, 1.0f);
 }

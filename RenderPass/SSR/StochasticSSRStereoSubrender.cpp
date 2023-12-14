@@ -22,6 +22,7 @@ void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer
 {
     const auto& SSRHitsMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
     const auto& SSRMask    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
+    const auto& glossyMV   = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("GlossyMV"));
 
     const auto& LeftMinHiZ  = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("LeftMinHi-z"));
     const auto& RightMinHiZ = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("RightMinHi-z"));
@@ -58,6 +59,7 @@ void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer
     descriptorSet.Push("blueNoise", *blueNoise);
     descriptorSet.Push("SSRHitsMap", SSRHitsMap);
     descriptorSet.Push("SSRMask", SSRMask);
+    descriptorSet.Push("GlossyMV", glossyMV);
 
     if (!descriptorSet.Update(pipelineCompute)) return;
 
