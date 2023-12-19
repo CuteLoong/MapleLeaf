@@ -8,6 +8,20 @@
 #include <vector>
 
 namespace MapleLeaf {
+struct BLASInput
+{
+    VkAccelerationStructureGeometryKHR       geometry;
+    VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo;
+    VkBuildAccelerationStructureFlagsKHR     flags{0};
+
+    BLASInput() = default;
+
+    BLASInput(const VkAccelerationStructureGeometryKHR& geometry, const VkAccelerationStructureBuildRangeInfoKHR& buildRangeInfo)
+        : geometry(geometry)
+        , buildRangeInfo(buildRangeInfo)
+    {}
+};
+
 class Model : public Resource
 {
 public:
@@ -38,6 +52,7 @@ public:
     void                         SetIndices(const std::vector<uint32_t>& indices);
     const std::vector<Vertex3D>& GetVertices(std::size_t offset = 0) const { return vertices; }
     const std::vector<uint32_t>& GetIndices(std::size_t offset = 0) const { return indices; };
+    BLASInput*                   GetBLASInput() const { return blasInput.get(); }
 
     const glm::vec3&   GetMinExtents() const { return minExtents; }
     const glm::vec3&   GetMaxExtents() const { return maxExtents; }
@@ -53,6 +68,8 @@ public:
 
 protected:
     void Initialize(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices = {});
+    void BindInfoToGPU();
+    void InitBLASInput();
 
 private:
     std::unique_ptr<Buffer> vertexBuffer;
@@ -60,6 +77,8 @@ private:
 
     std::vector<Vertex3D> vertices;
     std::vector<uint32_t> indices;
+
+    std::unique_ptr<BLASInput> blasInput;
 
     uint32_t vertexCount = 0;
     uint32_t indexCount  = 0;

@@ -2,13 +2,14 @@
 
 #include "DescriptorHandler.hpp"
 #include "MaterialPipeline.hpp"
+#include "Resource.hpp"
 #include "StreamFactory.hpp"
 #include "Transform.hpp"
 #include "UniformHandler.hpp"
 #include "glm/fwd.hpp"
 
 namespace MapleLeaf {
-class Material : public StreamFactory<Material>
+class Material : public StreamFactory<Material>, public Resource
 {
 public:
     enum class TextureSlot
@@ -17,6 +18,7 @@ public:
         Material,   // metalic roughness's image
         Normal,
     };
+    std::type_index GetTypeIndex() const override { return typeid(Material); }
 
     virtual ~Material() = default;
 

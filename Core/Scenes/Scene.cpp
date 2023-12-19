@@ -3,6 +3,7 @@
 namespace MapleLeaf {
 Scene::Scene()
     : gpuScene(std::make_unique<GPUScene>())
+    , asScene(std::make_unique<ASScene>())
 {}
 
 void Scene::Update()
@@ -15,6 +16,14 @@ void Scene::Update()
     }
     else {
         gpuScene->Update();
+    }
+
+    if (!asScene->started) {
+        asScene->Start();
+        asScene->started = true;
+    }
+    else {
+        asScene->Update();
     }
 
     systems.ForEach([](auto typeId, auto system) {

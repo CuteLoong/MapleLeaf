@@ -3,7 +3,6 @@
 #include "Files.hpp"
 #include "Graphics.hpp"
 
-
 namespace MapleLeaf {
 PipelineCompute::PipelineCompute(std::filesystem::path shaderStage, std::vector<Shader::Define> defines, bool pushDescriptors)
     : shaderStage(std::move(shaderStage))
@@ -58,8 +57,8 @@ void PipelineCompute::CreateShaderProgram()
 
     if (!fileLoaded) throw std::runtime_error("Could not create pipeline, missing shader stage");
 
-    auto stageFlag    = Shader::GetShaderStage(shaderStage);
-    shaderModule = shader->CreateShaderModule(shaderStage, *fileLoaded, defineBlock.str(), stageFlag);
+    auto stageFlag = Shader::GetShaderStage(shaderStage);
+    shaderModule   = shader->CreateShaderModule(shaderStage, *fileLoaded, defineBlock.str(), stageFlag);
 
     shaderStageCreateInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStageCreateInfo.stage  = stageFlag;

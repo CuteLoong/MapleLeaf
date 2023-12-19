@@ -26,6 +26,19 @@ void Resources::Update()
     }
 }
 
+uint32_t Resources::GetResourceIndex(const std::shared_ptr<Resource>& r) const
+{
+    if (resources.find(r->GetTypeIndex()) == resources.end()) return 0;
+
+    uint32_t index = 0;
+    for (const auto& resource : resources.at(r->GetTypeIndex())) {
+        if (r == resource) return index;
+        index++;
+    }
+
+    return 0;
+}
+
 std::shared_ptr<Resource> Resources::Find(const std::type_index& typeIndex) const
 {
     if (resources.find(typeIndex) == resources.end()) return nullptr;
@@ -37,9 +50,15 @@ std::shared_ptr<Resource> Resources::Find(const std::type_index& typeIndex) cons
     return nullptr;
 }
 
+const std::vector<std::shared_ptr<Resource>> Resources::FindAll(const std::type_index& typeIndex) const
+{
+    if (resources.find(typeIndex) == resources.end()) return {};
+    return resources.at(typeIndex);
+}
+
 void Resources::Add(const std::shared_ptr<Resource>& resource)
 {
-    if (Find(resource->GetTypeIndex())) return;
+    if (Find(resource->GetTypeIndex()) == resource) return;
 
     resources[resource->GetTypeIndex()].emplace_back(resource);
 }

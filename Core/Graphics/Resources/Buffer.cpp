@@ -18,19 +18,24 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
     VkBufferCreateInfo bufferCreateInfo    = {};
     bufferCreateInfo.sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferCreateInfo.size                  = size;
-    bufferCreateInfo.usage                 = usage;
+    bufferCreateInfo.usage                 = usage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;   // device address for ray tracing
     bufferCreateInfo.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
     bufferCreateInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamily.size());
     bufferCreateInfo.pQueueFamilyIndices   = queueFamily.data();
     Graphics::CheckVk(vkCreateBuffer(*logicalDevice, &bufferCreateInfo, nullptr, &buffer));
 
     // Create the memory backing up the buffer handle.
+    VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo = {};
+    memoryAllocateFlagsInfo.sType                     = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+    memoryAllocateFlagsInfo.flags                     = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
     VkMemoryRequirements memoryRequirements;
     vkGetBufferMemoryRequirements(*logicalDevice, buffer, &memoryRequirements);
     VkMemoryAllocateInfo memoryAllocateInfo = {};
     memoryAllocateInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     memoryAllocateInfo.allocationSize       = memoryRequirements.size;
     memoryAllocateInfo.memoryTypeIndex      = FindMemoryType(memoryRequirements.memoryTypeBits, properties);
+    memoryAllocateInfo.pNext                = &memoryAllocateFlagsInfo;
     Graphics::CheckVk(vkAllocateMemory(*logicalDevice, &memoryAllocateInfo, nullptr, &bufferMemory));
 
     // If a pointer to the buffer data has been passed, map the buffer and copy over the data.
@@ -53,6 +58,11 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
     }
     // Attach the memory to the buffer object.
     Graphics::CheckVk(vkBindBufferMemory(*logicalDevice, buffer, bufferMemory, 0));
+
+    VkBufferDeviceAddressInfo bufferDeviceAddressInfo = {};
+    bufferDeviceAddressInfo.sType                     = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+    bufferDeviceAddressInfo.buffer                    = buffer;
+    deviceAddress                                     = vkGetBufferDeviceAddress(*logicalDevice, &bufferDeviceAddressInfo);
 }
 
 Buffer::~Buffer()

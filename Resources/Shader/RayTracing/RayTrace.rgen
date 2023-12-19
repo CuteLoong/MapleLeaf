@@ -1,0 +1,30 @@
+#version 460
+#extension GL_EXT_ray_tracing : require
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+layout(set = 0, binding = 1) uniform accelerationStructureEXT topLevelAS;
+layout(set = 0, binding = 2, rgba32f) writeonly uniform image2D image;
+
+#include <Misc/Camera.glsl>
+
+layout(location = 0) rayPayloadEXT vec3 prd;
+
+void main() 
+{
+    const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
+    const vec2 pixelUV     = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+    vec2 d = pixelUV * 2.0 - 1.0;
+    
+    vec4 origin = camera.cameraPosition;
+    vec4 target = camera.invProjection * (vec4(d.x, d.y, -1.0f, 1.0f));
+    vec4 direction = normalize(camera.invView * vec4(normalize(target.xyz), 0.0));
+
+    uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    float tMin     = 0.001;
+    float tMax     = 200.0;
+
+    traceRayEXT(topLevelAS, rayFlags, 0xFF, 0, 0, 0, origin.xyz, tMin, direction.xyz, tMax, 0);
+
+    imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(prd, 1.0f));
+}

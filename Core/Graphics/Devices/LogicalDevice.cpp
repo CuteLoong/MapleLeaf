@@ -5,11 +5,15 @@
 #include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
-const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-                                                                  VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-                                                                  VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
-                                                                  VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
-                                                                  VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
+const std::vector<const char*> LogicalDevice::DeviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+    VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
+    VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
+    VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+    VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+    VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+    VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME};   // VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
 
 LogicalDevice::LogicalDevice(const Instance& instance, const PhysicalDevice& physicalDevice)
     : instance(instance)
@@ -138,6 +142,28 @@ void LogicalDevice::CreateLogicalDevice()
     else
         Log::Warning("Selected GPU does not support independentBlend!\n");
 
+    if (physicalDeviceFeatures.shaderInt64)
+        enabledFeatures.shaderInt64 = VK_TRUE;
+    else
+        Log::Warning("Selected GPU does not support shaderInt64!\n");
+
+    // add deviceAddress feature
+    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
+    bufferDeviceAddressFeatures.sType                                       = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+    bufferDeviceAddressFeatures.bufferDeviceAddress                         = VK_TRUE;
+    bufferDeviceAddressFeatures.pNext                                       = nullptr;
+
+    // add raytracing feature
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
+    accelFeature.sType                 = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+    accelFeature.accelerationStructure = VK_TRUE;
+    accelFeature.pNext                 = &bufferDeviceAddressFeatures;
+
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeature{};
+    rayTracingPipelineFeature.sType              = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+    rayTracingPipelineFeature.rayTracingPipeline = VK_TRUE;
+    rayTracingPipelineFeature.pNext              = &accelFeature;
+
     // add bindless feature
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
     indexingFeatures.sType                                         = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
@@ -149,7 +175,7 @@ void LogicalDevice::CreateLogicalDevice()
     indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
     indexingFeatures.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
-    indexingFeatures.pNext                                         = nullptr;
+    indexingFeatures.pNext                                         = &rayTracingPipelineFeature;
 
     VkPhysicalDeviceMaintenance4Features maintenance4Features = {};
     maintenance4Features.sType                                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;

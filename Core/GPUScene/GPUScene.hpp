@@ -28,7 +28,11 @@ public:
     void PushDescriptors(DescriptorsHandler& descriptorSet);
     bool cmdRender(const CommandBuffer& commandBuffer);
 
+    const Buffer* GetVertexBuffer() const { return vertexBuffer.get(); }
+    const Buffer* GetIndexBuffer() const { return indexBuffer.get(); }
+
     const StorageBuffer* GetInstanceDatasHandler() const { return instancesBuffer.get(); }
+    const StorageBuffer* GetMaterialDatasHandler() const { return materialsBuffer.get(); }
 
     const IndirectBuffer* GetIndirectBuffer() const { return drawCullingIndirectBuffer.get(); }
 

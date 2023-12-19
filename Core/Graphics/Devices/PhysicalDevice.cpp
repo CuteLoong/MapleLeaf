@@ -26,6 +26,13 @@ PhysicalDevice::PhysicalDevice(const Instance& instance)
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
     msaaSamples = GetMaxUsableSampleCount();
 
+    rayTracingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+
+    VkPhysicalDeviceProperties2 properties2{};
+    properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+    properties2.pNext = &rayTracingProperties;
+    vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+
 #ifdef MAPLELEAF_DEVICE_DEBUG
     Log::Out("Selected Physical Device: ", properties.deviceID, " ", std::quoted(properties.deviceName), '\n');
 #endif

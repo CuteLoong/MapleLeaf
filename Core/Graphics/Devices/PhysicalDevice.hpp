@@ -15,20 +15,22 @@ public:
 
     operator const VkPhysicalDevice&() const { return physicalDevice; }
 
-    const VkPhysicalDevice&                 GetPhysicalDevice() const { return physicalDevice; }
-    const VkPhysicalDeviceProperties&       GetProperties() const { return properties; }
-    const VkPhysicalDeviceFeatures&         GetFeatures() const { return features; }
-    const VkPhysicalDeviceMemoryProperties& GetMemoryProperties() const { return memoryProperties; }
-    const VkSampleCountFlagBits&            GetMsaaSamples() const { return msaaSamples; }
+    const VkPhysicalDevice&                                GetPhysicalDevice() const { return physicalDevice; }
+    const VkPhysicalDeviceProperties&                      GetProperties() const { return properties; }
+    const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingProperties() const { return rayTracingProperties; }
+    const VkPhysicalDeviceFeatures&                        GetFeatures() const { return features; }
+    const VkPhysicalDeviceMemoryProperties&                GetMemoryProperties() const { return memoryProperties; }
+    const VkSampleCountFlagBits&                           GetMsaaSamples() const { return msaaSamples; }
 
 private:
     const Instance& instance;
 
-    VkPhysicalDevice                 physicalDevice   = VK_NULL_HANDLE;
-    VkPhysicalDeviceProperties       properties       = {};
-    VkPhysicalDeviceFeatures         features         = {};
-    VkPhysicalDeviceMemoryProperties memoryProperties = {};
-    VkSampleCountFlagBits            msaaSamples      = VK_SAMPLE_COUNT_1_BIT;
+    VkPhysicalDevice                                physicalDevice       = VK_NULL_HANDLE;
+    VkPhysicalDeviceProperties                      properties           = {};
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties = {};
+    VkPhysicalDeviceFeatures                        features             = {};
+    VkPhysicalDeviceMemoryProperties                memoryProperties     = {};
+    VkSampleCountFlagBits                           msaaSamples          = VK_SAMPLE_COUNT_1_BIT;
 
     VkPhysicalDevice      ChoosePhysicalDevice(const std::vector<VkPhysicalDevice>& devices);
     static uint32_t       ScorePhysicalDevice(const VkPhysicalDevice& device);

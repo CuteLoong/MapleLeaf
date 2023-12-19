@@ -28,6 +28,7 @@ set_configvar("MAPLELEAF_PIPELINE_DEBUG", false)
 set_configvar("MAPLELEAF_VALIDATION_DEBUG", true)
 set_configvar("MAPLELEAF_DESCRIPTOR_DEBUG", false)
 set_configvar("MAPLELEAF_RENDERSTAGE_DEBUG", false)
+set_configvar("MAPLELEAF_RAY_TRACING", true)
 
 set_configdir("Config") 
 add_configfiles("./config.h.in")
@@ -49,6 +50,7 @@ add_includedirs(
 "Core/Graphics/Commands", 
 "Core/Graphics/Descriptors/",
 "Core/Graphics/Pipelines", 
+"Core/Graphics/AccelerationStruct",
 "Core/Files", 
 "Core/Models", 
 "Core/Materials", 
@@ -58,6 +60,7 @@ add_includedirs(
 "Core/Scenes/Light", 
 "Core/Scenes/Shadow", 
 "Core/Scenes/Skybox", 
+"Core/ASScene", 
 "Core/Importers", 
 "Core/Importers/Builder",
 "Core/Bitmaps",
@@ -78,7 +81,8 @@ add_includedirs(
 "RenderPass/StereoMask",
 "RenderPass/Blur",
 "RenderPass/SSR",
-"RenderPass/Skybox"
+"RenderPass/Skybox",
+"RenderPass/RayTracing"
 )
 
 target("RenderPass")
@@ -94,7 +98,8 @@ target("RenderPass")
     "RenderPass/StereoMask/*.cpp",
     "RenderPass/Blur/*.cpp",
     "RenderPass/SSR/*.cpp",
-    "RenderPass/Skybox/*.cpp"
+    "RenderPass/Skybox/*.cpp",
+    "RenderPass/RayTracing/*.cpp"
     )
 target_end()
 
@@ -114,6 +119,7 @@ target("Core")
     "Core/Graphics/Commands/*.cpp", 
     "Core/Graphics/Descriptors/*.cpp", 
     "Core/Graphics/Pipelines/*.cpp", 
+    "Core/Graphics/AccelerationStruct/*.cpp", 
     "Core/Files/*.cpp", 
     "Core/Models/*.cpp", 
     "Core/Materials/*.cpp", 
@@ -123,6 +129,7 @@ target("Core")
     "Core/Scenes/Light/*.cpp", 
     "Core/Scenes/Shadow/*.cpp", 
     "Core/Scenes/Skybox/*.cpp", 
+    "Core/ASScene/*.cpp", 
     "Core/Importers/*.cpp", 
     "Core/Importers/Builder/*.cpp",
     "Core/Bitmaps/*.cpp",
@@ -137,6 +144,6 @@ target("MapleLeaf")
     set_kind("binary")
     add_deps("Core")
     add_deps("RenderPass")
-    add_includedirs("App/", "Renderer/GPURenderer", "Renderer/MultiDrawRenderer", "Renderer/StereoRenderer")
-    add_files("App/*.cpp", "Renderer/GPURenderer/*.cpp", "Renderer/MultiDrawRenderer/*.cpp", "Renderer/StereoRenderer/*.cpp")
+    add_includedirs("App/", "Renderer/GPURenderer", "Renderer/MultiDrawRenderer", "Renderer/StereoRenderer", "Renderer/RayTracingRenderer")
+    add_files("App/*.cpp", "Renderer/GPURenderer/*.cpp", "Renderer/MultiDrawRenderer/*.cpp", "Renderer/StereoRenderer/*.cpp", "Renderer/RayTracingRenderer/*.cpp")
 target_end()
