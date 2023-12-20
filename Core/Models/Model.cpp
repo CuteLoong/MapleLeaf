@@ -5,8 +5,10 @@ Model::Model(const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>&
     : Model()
 {
     Initialize(vertices, indices);
+#ifdef MAPLELEAF_RAY_TRACING
     BindInfoToGPU();
     InitBLASInput();
+#endif
 }
 
 void Model::BindInfoToGPU()

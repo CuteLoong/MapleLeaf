@@ -6,6 +6,8 @@
 #include "GPUScene.hpp"
 #include "SystemHolder.hpp"
 
+#include "config.h"
+
 namespace MapleLeaf {
 class Scene
 {
@@ -78,7 +80,8 @@ public:
     void             SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom);
 
     GPUScene* GetGpuScene() { return gpuScene.get(); }
-    ASScene*  GetAsScene() { return asScene.get(); }
+
+    ASScene* GetAsScene() { return asScene.get(); }
 
 private:
     bool         started = false;
@@ -87,8 +90,8 @@ private:
     Camera*      camera;
 
     std::unique_ptr<GPUScene> gpuScene;
-    std::unique_ptr<ASScene>  asScene;
 
+    std::unique_ptr<ASScene> asScene;
 
     glm::vec3 minExtents = glm::vec3(std::numeric_limits<float>::infinity());
     glm::vec3 maxExtents = glm::vec3(-std::numeric_limits<float>::infinity());

@@ -26,11 +26,11 @@ VkDeviceAddress AccelerationStruct::GetDeviceAddress() const
     return vkGetAccelerationStructureDeviceAddressKHR(*Graphics::Get()->GetLogicalDevice(), &accelerationStructureDeviceAddressInfo);
 }
 
-void AccelerationStruct::GetAccelerationStructureBuildSizes(VkAccelerationStructureBuildTypeKHR                buildType,
-                                                            const VkAccelerationStructureBuildGeometryInfoKHR& buildGeometryInfo,
-                                                            const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo)
+void AccelerationStruct::GetAccelerationStructureBuildSizes(VkAccelerationStructureBuildTypeKHR          buildType,
+                                                            VkAccelerationStructureBuildGeometryInfoKHR* buildGeometryInfo,
+                                                            uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo)
 {
-    vkGetAccelerationStructureBuildSizesKHR(*Graphics::Get()->GetLogicalDevice(), buildType, &buildGeometryInfo, pMaxPrimitiveCounts, pSizeInfo);
+    vkGetAccelerationStructureBuildSizesKHR(*Graphics::Get()->GetLogicalDevice(), buildType, buildGeometryInfo, pMaxPrimitiveCounts, pSizeInfo);
 }
 
 WriteDescriptorSet AccelerationStruct::GetWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType,

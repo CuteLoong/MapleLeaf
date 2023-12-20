@@ -15,7 +15,7 @@ namespace MapleLeaf {
 class SceneBuilder : public Scene
 {
 public:
-    SceneBuilder(const std::filesystem::path path = "Models/Pica/Pica.gltf")
+    SceneBuilder(const std::filesystem::path path = "Models/Room/Room.gltf")
         : Scene()
         , path(path)
     {

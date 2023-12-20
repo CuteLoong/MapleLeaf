@@ -7,7 +7,7 @@
 namespace Test {
 RayTracingRenderer::RayTracingRenderer()
 {
-    std::vector<NonRTAttachment> globalAttachments = {{"RayTracingTarget", NonRTAttachment::Type::Image2d, false}};
+    std::vector<NonRTAttachment> globalAttachments = {{"RayTracingTarget", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32G32B32A32_SFLOAT}};
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
     std::vector<Attachment> renderpassAttachments0 = {};

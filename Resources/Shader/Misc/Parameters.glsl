@@ -5,11 +5,8 @@
 
 struct Vertex {
     vec3 position;
-    int pad;
     vec2 texCoord;
-    vec2 pad1;
     vec3 normal;
-    int pad2;
 };
 
 struct Material {
@@ -28,7 +25,7 @@ struct SceneDescription {
     uint64_t instanceInfoAddress;  // Address of the triangle material index buffer
 };
 
-struct GPUInstanceData
+struct InstanceData
 {
     mat4 modelMatrix;
     vec3 AABBLocalMin;

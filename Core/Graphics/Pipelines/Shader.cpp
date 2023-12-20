@@ -657,6 +657,14 @@ void Shader::LoadAttribute(const glslang::TProgram& program, VkShaderStageFlags 
 int32_t Shader::ComputeSize(const glslang::TType* ttype)
 {
     int32_t components = 0;
+    int32_t basicSize  = 0;
+
+    if (ttype->getBasicType() == glslang::EbtUint64)
+        basicSize = sizeof(uint64_t);
+    else if (ttype->getBasicType() == glslang::EbtInt64)
+        basicSize = sizeof(int64_t);
+    else
+        basicSize = sizeof(float);
 
     if (ttype->getBasicType() == glslang::EbtStruct || ttype->getBasicType() == glslang::EbtBlock) {
         for (const auto& tl : *ttype->getStruct()) components += ComputeSize(tl.type);
@@ -676,6 +684,6 @@ int32_t Shader::ComputeSize(const glslang::TType* ttype)
         }
         components *= arraySize;
     }
-    return sizeof(float) * components;
+    return basicSize * components;
 }
 }   // namespace MapleLeaf

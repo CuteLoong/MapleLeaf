@@ -10,9 +10,9 @@
 namespace MapleLeaf {
 struct ASBuildInfo
 {
-    VkAccelerationStructureBuildGeometryInfoKHR     buildGeometryInfo{};
-    VkAccelerationStructureBuildSizesInfoKHR        buildSizesInfo{};
-    const VkAccelerationStructureBuildRangeInfoKHR* buildRangeInfo;
+    VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{};
+    VkAccelerationStructureBuildSizesInfoKHR    buildSizesInfo{};
+    VkAccelerationStructureBuildRangeInfoKHR    buildRangeInfo{};
 };
 
 class AccelerationStruct : public Descriptor
@@ -30,9 +30,9 @@ public:
     static VkDescriptorSetLayoutBinding GetDescriptorSetLayout(uint32_t binding, VkShaderStageFlags stage, uint32_t count);
 
     const VkAccelerationStructureKHR& GetAccelerationStruct() const { return accelerationStruct; }
-    static void                       GetAccelerationStructureBuildSizes(VkAccelerationStructureBuildTypeKHR                buildType,
-                                                                         const VkAccelerationStructureBuildGeometryInfoKHR& buildGeometryInfo,
-                                                                         const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo);
+    static void                       GetAccelerationStructureBuildSizes(VkAccelerationStructureBuildTypeKHR          buildType,
+                                                                         VkAccelerationStructureBuildGeometryInfoKHR* buildGeometryInfo, uint32_t* pMaxPrimitiveCounts,
+                                                                         VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo);
 
 
     void DestroyAccelerationStruct();

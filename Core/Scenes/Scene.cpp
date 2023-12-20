@@ -3,7 +3,9 @@
 namespace MapleLeaf {
 Scene::Scene()
     : gpuScene(std::make_unique<GPUScene>())
+#ifdef MAPLELEAF_RAY_TRACING
     , asScene(std::make_unique<ASScene>())
+#endif
 {}
 
 void Scene::Update()
@@ -18,6 +20,7 @@ void Scene::Update()
         gpuScene->Update();
     }
 
+#ifdef MAPLELEAF_RAY_TRACING
     if (!asScene->started) {
         asScene->Start();
         asScene->started = true;
@@ -25,6 +28,7 @@ void Scene::Update()
     else {
         asScene->Update();
     }
+#endif
 
     systems.ForEach([](auto typeId, auto system) {
         if (system->IsEnabled()) system->Update();

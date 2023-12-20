@@ -5,8 +5,6 @@
 #include <iomanip>
 #include <map>
 
-#include "config.h"
-
 namespace MapleLeaf {
 static const std::vector<VkSampleCountFlagBits> STAGE_FLAG_BITS = {
     VK_SAMPLE_COUNT_64_BIT, VK_SAMPLE_COUNT_32_BIT, VK_SAMPLE_COUNT_16_BIT, VK_SAMPLE_COUNT_8_BIT, VK_SAMPLE_COUNT_4_BIT, VK_SAMPLE_COUNT_2_BIT};
@@ -25,13 +23,14 @@ PhysicalDevice::PhysicalDevice(const Instance& instance)
     vkGetPhysicalDeviceFeatures(physicalDevice, &features);
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
     msaaSamples = GetMaxUsableSampleCount();
-
+#ifdef MAPLELEAF_RAY_TRACING
     rayTracingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
 
     VkPhysicalDeviceProperties2 properties2{};
     properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     properties2.pNext = &rayTracingProperties;
     vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+#endif
 
 #ifdef MAPLELEAF_DEVICE_DEBUG
     Log::Out("Selected Physical Device: ", properties.deviceID, " ", std::quoted(properties.deviceName), '\n');

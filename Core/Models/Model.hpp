@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include "config.h"
+
 namespace MapleLeaf {
 struct BLASInput
 {
@@ -52,7 +54,8 @@ public:
     void                         SetIndices(const std::vector<uint32_t>& indices);
     const std::vector<Vertex3D>& GetVertices(std::size_t offset = 0) const { return vertices; }
     const std::vector<uint32_t>& GetIndices(std::size_t offset = 0) const { return indices; };
-    BLASInput*                   GetBLASInput() const { return blasInput.get(); }
+
+    BLASInput* GetBLASInput() const { return blasInput.get(); }
 
     const glm::vec3&   GetMinExtents() const { return minExtents; }
     const glm::vec3&   GetMaxExtents() const { return maxExtents; }

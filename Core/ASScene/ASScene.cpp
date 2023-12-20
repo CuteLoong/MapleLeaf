@@ -5,6 +5,7 @@
 #include "Resources.hpp"
 #include "Scenes.hpp"
 #include "TopLevelAccelerationStruct.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
 ASScene::ASScene() {}
@@ -33,29 +34,31 @@ void ASScene::BuildBLAS(VkBuildAccelerationStructureFlagBitsKHR flags)
     VkDeviceSize ASTotalSize = 0;
     VkDeviceSize scratchSize = 0;
 
-    std::vector<ASBuildInfo> ASBuildInfos{};
+    std::vector<ASBuildInfo> ASBuildInfos(models.size());
 
-    for (const auto& model : models) {
+    for (size_t i = 0; i < models.size(); ++i) {
+        const auto& model = models[i];
+
         VkAccelerationStructureBuildGeometryInfoKHR geometryInfo{};
         geometryInfo.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
         geometryInfo.type          = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
         geometryInfo.mode          = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-        geometryInfo.flags         = flags | model->GetBLASInput()->flags;
+        geometryInfo.flags         = model->GetBLASInput()->flags | flags;
         geometryInfo.geometryCount = 1;
         geometryInfo.pGeometries   = &model->GetBLASInput()->geometry;
-
-        VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo = model->GetBLASInput()->buildRangeInfo;
 
         VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo{};
         buildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
 
-        AccelerationStruct::GetAccelerationStructureBuildSizes(
-            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, geometryInfo, &buildRangeInfo.primitiveCount, &buildSizesInfo);
+        ASBuildInfos[i] = std::move(ASBuildInfo{geometryInfo, buildSizesInfo, model->GetBLASInput()->buildRangeInfo});
 
-        ASBuildInfos.emplace_back(ASBuildInfo{geometryInfo, buildSizesInfo, &buildRangeInfo});
+        AccelerationStruct::GetAccelerationStructureBuildSizes(VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                                                               &ASBuildInfos[i].buildGeometryInfo,
+                                                               &ASBuildInfos[i].buildRangeInfo.primitiveCount,
+                                                               &ASBuildInfos[i].buildSizesInfo);
 
-        ASTotalSize += buildSizesInfo.accelerationStructureSize;
-        scratchSize += buildSizesInfo.buildScratchSize;
+        ASTotalSize += ASBuildInfos[i].buildSizesInfo.accelerationStructureSize;
+        scratchSize = std::max(ASBuildInfos[i].buildSizesInfo.buildScratchSize, scratchSize);
     }
 
     Buffer scratchBuffer(
@@ -123,10 +126,12 @@ void ASScene::BuildTLAS(VkBuildAccelerationStructureFlagBitsKHR flags)
     buildRangeInfo.firstVertex     = 0;
     buildRangeInfo.transformOffset = 0;
 
-    AccelerationStruct::GetAccelerationStructureBuildSizes(
-        VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, buildGeometryInfo, &buildRangeInfo.primitiveCount, &buildSizesInfo);
+    ASBuildInfo buildInfo{buildGeometryInfo, buildSizesInfo, buildRangeInfo};
 
-    ASBuildInfo buildInfo{buildGeometryInfo, buildSizesInfo, &buildRangeInfo};
+    AccelerationStruct::GetAccelerationStructureBuildSizes(VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                                                           &buildInfo.buildGeometryInfo,
+                                                           &buildInfo.buildRangeInfo.primitiveCount,
+                                                           &buildInfo.buildSizesInfo);
 
     topLevelAccelerationStruct = std::make_unique<TopLevelAccelerationStruct>(buildInfo);
 }

@@ -22,9 +22,11 @@ BottomLevelAccelerationStruct::BottomLevelAccelerationStruct(ASBuildInfo& buildI
     buildInfo.buildGeometryInfo.dstAccelerationStructure  = accelerationStruct;
     buildInfo.buildGeometryInfo.scratchData.deviceAddress = scratchAddress;
 
+    const VkAccelerationStructureBuildRangeInfoKHR* pBuildOffsetInfo = &buildInfo.buildRangeInfo;
+
     CommandBuffer commandBuffer;
 
-    vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildInfo.buildGeometryInfo, &buildInfo.buildRangeInfo);
+    vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildInfo.buildGeometryInfo, &pBuildOffsetInfo);
 
     VkMemoryBarrier memoryBarrier = {};
     memoryBarrier.sType           = VK_STRUCTURE_TYPE_MEMORY_BARRIER;

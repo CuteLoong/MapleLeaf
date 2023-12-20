@@ -14,10 +14,8 @@ void RayTracingSubrender::PreRender(const CommandBuffer& commandBuffer)
     auto gpuScene = Scenes::Get()->GetScene()->GetGpuScene();
     if (!gpuScene) return;
 
-    sceneDescription.vertexAddress       = gpuScene->GetVertexBuffer()->GetDeviceAddress();
-    sceneDescription.indexAddress        = gpuScene->GetIndexBuffer()->GetDeviceAddress();
-    sceneDescription.materialAddress     = gpuScene->GetMaterialDatasHandler()->GetDeviceAddress();
-    sceneDescription.instanceInfoAddress = gpuScene->GetInstanceDatasHandler()->GetDeviceAddress();
+    sceneDescription.vertexAddress = gpuScene->GetVertexBuffer()->GetDeviceAddress();
+    sceneDescription.indexAddress  = gpuScene->GetIndexBuffer()->GetDeviceAddress();
 
     const auto& AS = Scenes::Get()->GetScene()->GetAsScene()->GetTopLevelAccelerationStruct();
 
@@ -26,13 +24,17 @@ void RayTracingSubrender::PreRender(const CommandBuffer& commandBuffer)
 
     uniformSceneData.Push("vertexAddress", sceneDescription.vertexAddress);
     uniformSceneData.Push("indexAddress", sceneDescription.indexAddress);
-    uniformSceneData.Push("materialAddress", sceneDescription.materialAddress);
-    uniformSceneData.Push("instanceInfoAddress", sceneDescription.instanceInfoAddress);
 
     descriptorSet.Push("topLevelAS", AS);
     descriptorSet.Push("UniformSceneData", uniformSceneData);
     descriptorSet.Push("UniformCamera", uniformCamera);
-    descriptorSet.Push("InstanceDatas", gpuScene->GetInstanceDatasHandler());
+    // descriptorSet.Push("InstanceDatas", gpuScene->GetInstanceDatasHandler());
+    // descriptorSet.Push("MaterialDatas", gpuScene->GetMaterialDatasHandler());
+    // for (int i = 0; i < GPUMaterial::images.size(); i++) {
+    //     descriptorSet.Push("ImageSamplers", GPUMaterial::images[i], i);
+    // }
+    gpuScene->PushDescriptors(descriptorSet);
+
     descriptorSet.Push("image", Graphics::Get()->GetNonRTAttachment("RayTracingTarget"));
 
     if (!descriptorSet.Update(pipelineRayTracing)) return;

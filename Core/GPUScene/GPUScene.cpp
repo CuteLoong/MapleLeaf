@@ -149,9 +149,10 @@ void GPUScene::SetVertices(const std::vector<Vertex3D>& vertices)
                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                          vertices.data());
-    vertexBuffer = std::make_unique<Buffer>(vertexStaging.GetSize(),
-                                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    vertexBuffer = std::make_unique<Buffer>(
+        vertexStaging.GetSize(),
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     CommandBuffer commandBuffer;
 
@@ -172,9 +173,10 @@ void GPUScene::SetIndices(const std::vector<uint32_t>& indices)
                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         indices.data());
-    indexBuffer = std::make_unique<Buffer>(indexStaging.GetSize(),
-                                           VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    indexBuffer = std::make_unique<Buffer>(
+        indexStaging.GetSize(),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     CommandBuffer commandBuffer;
 
