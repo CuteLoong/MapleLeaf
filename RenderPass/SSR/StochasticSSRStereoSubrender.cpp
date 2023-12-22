@@ -50,6 +50,7 @@ void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
+    descriptorSet.Push("inInstanceID", Graphics::Get()->GetAttachment("instanceId"));
 
     descriptorSet.Push("inMinHiZLeft", LeftMinHiZ);
     descriptorSet.Push("inMinHiZRight", RightMinHiZ);

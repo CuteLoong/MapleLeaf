@@ -52,11 +52,11 @@ void main()
 
     vec3 dfg = F0 * brdf.x + brdf.y;
 
-    // vec3 reflectionColor = (ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * dfg * 0.5f;
-    vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
+    vec3 reflectionColor = (ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * dfg * 0.5f;
+    // vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
 
     vec3 lighting = texture(LightingMap, uv).xyz;
 
     // outColor = vec4(reflectionColor, 1.0f);
-    outColor = vec4(lighting + reflectionColor, 1.0f);
+    outColor = vec4(reflectionColor, 1.0f);
 }

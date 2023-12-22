@@ -106,7 +106,7 @@ void StereoRenderer::Start()
 {
     AddSubrender<ShadowSubrender>({0, 0});
 
-    AddSubrender<SkyboxSubrender>({1, 0});
+    // AddSubrender<SkyboxSubrender>({1, 0});
     AddSubrender<IndirectDrawStereoSubrender>({1, 1});
 
     AddSubrender<IndirectDrawStereoBackSubrender>({2, 0});
