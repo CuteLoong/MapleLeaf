@@ -6,6 +6,7 @@
 #include "RayTracingRenderer.hpp"
 #include "SceneBuilder.hpp"
 #include "Scenes.hpp"
+#include "StereoRayTracingRenderer.hpp"
 #include "StereoRenderer.hpp"
 
 #include "config.h"
@@ -42,7 +43,8 @@ void MainApp::Start()
     Devices::Get()->GetWindow()->SetTitle("MapleLeaf");
 
 #ifdef MAPLELEAF_RAY_TRACING
-    Graphics::Get()->SetRenderer(std::make_unique<RayTracingRenderer>());
+    // Graphics::Get()->SetRenderer(std::make_unique<RayTracingRenderer>());
+    Graphics::Get()->SetRenderer(std::make_unique<StereoRayTracingRenderer>());
 #else
     // Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
