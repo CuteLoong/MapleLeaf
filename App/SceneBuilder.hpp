@@ -15,7 +15,7 @@ namespace MapleLeaf {
 class SceneBuilder : public Scene
 {
 public:
-    SceneBuilder(const std::filesystem::path path = "Models/RoomCamera1/Room.gltf")
+    SceneBuilder(const std::filesystem::path path = "Models/Pica/Pica.gltf")
         : Scene()
         , path(path)
     {
@@ -39,6 +39,7 @@ public:
                                      builder.meshes[node.meshes[i]]->GetModel()->GetMinExtents(),
                                      node.transform->GetWorldMatrix());
                     if (shadows) entity->AddComponent<ShadowRender>();
+                    Resources::Get()->Add(builder.meshes[node.meshes[i]]->GetModel());
                 }
             }
         }

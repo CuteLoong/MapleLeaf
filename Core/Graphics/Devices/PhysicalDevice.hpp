@@ -3,6 +3,8 @@
 #include "volk.h"
 #include <vector>
 
+#include "config.h"
+
 namespace MapleLeaf {
 class Instance;
 
@@ -21,6 +23,8 @@ public:
     const VkPhysicalDeviceMemoryProperties& GetMemoryProperties() const { return memoryProperties; }
     const VkSampleCountFlagBits&            GetMsaaSamples() const { return msaaSamples; }
 
+    const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingProperties() const { return rayTracingProperties; }
+
 private:
     const Instance& instance;
 
@@ -29,6 +33,8 @@ private:
     VkPhysicalDeviceFeatures         features         = {};
     VkPhysicalDeviceMemoryProperties memoryProperties = {};
     VkSampleCountFlagBits            msaaSamples      = VK_SAMPLE_COUNT_1_BIT;
+
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties = {};
 
     VkPhysicalDevice      ChoosePhysicalDevice(const std::vector<VkPhysicalDevice>& devices);
     static uint32_t       ScorePhysicalDevice(const VkPhysicalDevice& device);

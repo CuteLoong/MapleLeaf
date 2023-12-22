@@ -1,4 +1,5 @@
 #include "Shader.hpp"
+#include "AccelerationStruct.hpp"
 #include "Files.hpp"
 #include "Graphics.hpp"
 #include "ImageCube.hpp"
@@ -174,6 +175,11 @@ VkShaderStageFlagBits Shader::GetShaderStage(const std::filesystem::path& filena
     if (fileExt == ".tese") return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
     if (fileExt == ".geom") return VK_SHADER_STAGE_GEOMETRY_BIT;
     if (fileExt == ".frag") return VK_SHADER_STAGE_FRAGMENT_BIT;
+    if (fileExt == ".rgen") return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+    if (fileExt == ".rint") return VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+    if (fileExt == ".rahit") return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+    if (fileExt == ".rchit") return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+    if (fileExt == ".rmiss") return VK_SHADER_STAGE_MISS_BIT_KHR;
     return VK_SHADER_STAGE_ALL;
 }
 
@@ -186,6 +192,11 @@ EShLanguage GetEshLanguage(VkShaderStageFlags stageFlag)
     case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: return EShLangTessEvaluation;
     case VK_SHADER_STAGE_GEOMETRY_BIT: return EShLangGeometry;
     case VK_SHADER_STAGE_FRAGMENT_BIT: return EShLangFragment;
+    case VK_SHADER_STAGE_RAYGEN_BIT_KHR: return EShLangRayGen;
+    case VK_SHADER_STAGE_INTERSECTION_BIT_KHR: return EShLangIntersect;
+    case VK_SHADER_STAGE_ANY_HIT_BIT_KHR: return EShLangAnyHit;
+    case VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR: return EShLangClosestHit;
+    case VK_SHADER_STAGE_MISS_BIT_KHR: return EShLangMiss;
     default: return EShLangCount;
     }
 }
@@ -439,30 +450,36 @@ void Shader::CreateReflection()
                 descriptorSetInfos[descriptorSetIndex].bindingCount++;
         }
 
-        switch (uniform.glType) {
-        case 0:
-            descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        if (uniform.basicType == glslang::EbtAccStruct) {
             descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
-            break;
-        case 0x8B5E:   // GL_SAMPLER_2D
-        case 0x8DD2:   // GL_USAMPLER_2D
-        case 0x904D:   // GL_IMAGE_2D
-        case 0x8DC1:   // GL_TEXTURE_2D_ARRAY
-        case 0x9108:   // GL_SAMPLER_2D_MULTISAMPLE
-        case 0x9055:   // GL_IMAGE_2D_MULTISAMPLE
-            descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
-            break;
-        case 0x8B60:   // GL_SAMPLER_CUBE
-        case 0x9050:   // GL_IMAGE_CUBE
-        case 0x9054:   // GL_IMAGE_CUBE_MAP_ARRAY
-            descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorSetLayouts[descriptorSetIndex].emplace_back(
-                ImageCube::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
-            break;
-        default: break;
+                AccelerationStruct::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), uniform.stageFlags, descriptorCount));
+        }
+        else {
+            switch (uniform.glType) {
+            case 0:
+                descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+                descriptorSetLayouts[descriptorSetIndex].emplace_back(
+                    Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
+                break;
+            case 0x8B5E:   // GL_SAMPLER_2D
+            case 0x8DD2:   // GL_USAMPLER_2D
+            case 0x904D:   // GL_IMAGE_2D
+            case 0x8DC1:   // GL_TEXTURE_2D_ARRAY
+            case 0x9108:   // GL_SAMPLER_2D_MULTISAMPLE
+            case 0x9055:   // GL_IMAGE_2D_MULTISAMPLE
+                descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorSetLayouts[descriptorSetIndex].emplace_back(
+                    Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
+                break;
+            case 0x8B60:   // GL_SAMPLER_CUBE
+            case 0x9050:   // GL_IMAGE_CUBE
+            case 0x9054:   // GL_IMAGE_CUBE_MAP_ARRAY
+                descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorSetLayouts[descriptorSetIndex].emplace_back(
+                    ImageCube::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
+                break;
+            default: break;
+            }
         }
 
         IncrementDescriptorPool(descriptorPoolCounts, descriptorType);
@@ -553,7 +570,8 @@ void Shader::LoadUniformBlock(const glslang::TProgram& program, VkShaderStageFla
     }
 
     auto type = UniformBlock::Type::None;
-    if (reflection.getType()->getQualifier().storage == glslang::EvqUniform) type = UniformBlock::Type::Uniform;
+    if (reflection.getType()->getQualifier().storage == glslang::EvqUniform)
+        type = reflection.getType()->getBasicType() == glslang::EbtAccStruct ? UniformBlock::Type::AccStruct : UniformBlock::Type::Uniform;
     if (reflection.getType()->getQualifier().storage == glslang::EvqBuffer) type = UniformBlock::Type::Storage;
     if (reflection.getType()->getQualifier().layoutPushConstant) type = UniformBlock::Type::Push;
 
@@ -588,6 +606,7 @@ void Shader::LoadUniform(const glslang::TProgram& program, VkShaderStageFlags st
                                                     reflection.offset,
                                                     ComputeSize(reflection.getType()),
                                                     reflection.glDefineType,
+                                                    reflection.getType()->getBasicType(),
                                                     false,
                                                     false,
                                                     false,
@@ -610,6 +629,7 @@ void Shader::LoadUniform(const glslang::TProgram& program, VkShaderStageFlags st
                              reflection.offset,
                              -1,
                              reflection.glDefineType,
+                             reflection.getType()->getBasicType(),
                              qualifier.readonly,
                              qualifier.writeonly,
                              bindless,
@@ -637,6 +657,14 @@ void Shader::LoadAttribute(const glslang::TProgram& program, VkShaderStageFlags 
 int32_t Shader::ComputeSize(const glslang::TType* ttype)
 {
     int32_t components = 0;
+    int32_t basicSize  = 0;
+
+    if (ttype->getBasicType() == glslang::EbtUint64)
+        basicSize = sizeof(uint64_t);
+    else if (ttype->getBasicType() == glslang::EbtInt64)
+        basicSize = sizeof(int64_t);
+    else
+        basicSize = sizeof(float);
 
     if (ttype->getBasicType() == glslang::EbtStruct || ttype->getBasicType() == glslang::EbtBlock) {
         for (const auto& tl : *ttype->getStruct()) components += ComputeSize(tl.type);
@@ -656,6 +684,6 @@ int32_t Shader::ComputeSize(const glslang::TType* ttype)
         }
         components *= arraySize;
     }
-    return sizeof(float) * components;
+    return basicSize * components;
 }
 }   // namespace MapleLeaf

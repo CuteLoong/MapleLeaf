@@ -19,6 +19,6 @@ public:
     void   SetScene(std::unique_ptr<Scene>&& scene) { this->scene = std::move(scene); }
 
 private:
-    std::unique_ptr<Scene>     scene;
+    std::unique_ptr<Scene> scene;
 };
 }   // namespace MapleLeaf

@@ -19,7 +19,7 @@
 						1,
 						1
 					],
-					"intensity":2,
+					"intensity":0.7,
 					"type":"directional",
 					"name":"light1"
 				}

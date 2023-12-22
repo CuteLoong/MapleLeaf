@@ -1,9 +1,12 @@
 #pragma once
 
+#include "ASScene.hpp"
 #include "Camera.hpp"
 #include "EntityHolder.hpp"
 #include "GPUScene.hpp"
 #include "SystemHolder.hpp"
+
+#include "config.h"
 
 namespace MapleLeaf {
 class Scene
@@ -12,7 +15,8 @@ class Scene
 
 public:
     Scene();
-    virtual ~Scene() { 
+    virtual ~Scene()
+    {
         gpuScene = nullptr;
         entities.Clear();
     }
@@ -67,7 +71,7 @@ public:
     void ClearEntities() { entities.Clear(); }
 
     Camera* GetCamera() const { return camera; }
-    void    SetCamera(Camera* camera) { this->camera= camera; }
+    void    SetCamera(Camera* camera) { this->camera = camera; }
 
     virtual bool IsPaused() const = 0;
 
@@ -77,6 +81,8 @@ public:
 
     GPUScene* GetGpuScene() { return gpuScene.get(); }
 
+    ASScene* GetAsScene() { return asScene.get(); }
+
 private:
     bool         started = false;
     SystemHolder systems;
@@ -84,6 +90,8 @@ private:
     Camera*      camera;
 
     std::unique_ptr<GPUScene> gpuScene;
+
+    std::unique_ptr<ASScene> asScene;
 
     glm::vec3 minExtents = glm::vec3(std::numeric_limits<float>::infinity());
     glm::vec3 maxExtents = glm::vec3(-std::numeric_limits<float>::infinity());

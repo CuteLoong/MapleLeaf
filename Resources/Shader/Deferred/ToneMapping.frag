@@ -39,5 +39,5 @@ void main() {
 
     finalColor = toneMap(finalColor);
 
-    outColor = vec4(pow(color.rgb, vec3(1.0f / toneMapping.gamma)), color.a);
+    outColor = vec4(pow(finalColor, vec3(1.0f / toneMapping.gamma)), color.a);
 }

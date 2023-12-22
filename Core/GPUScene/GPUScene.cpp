@@ -83,15 +83,6 @@ void GPUScene::Update()
         }
 
         UpdateGPUScene |= (instance.GetInstanceStatus() == GPUInstance::Status::ModelChanged);
-
-        // VkDrawIndexedIndirectCommand indirectCmd = {};
-        // indirectCmd.firstIndex                   = instance.indexOffset;
-        // indirectCmd.firstInstance                = instance.instanceID;
-        // indirectCmd.indexCount                   = instance.indexCount;
-        // indirectCmd.instanceCount                = 1;
-        // indirectCmd.vertexOffset                 = instance.vertexOffset;
-
-        // drawCommands.push_back(indirectCmd);
     }
 
     if (UpdateGPUScene) {
@@ -158,9 +149,10 @@ void GPUScene::SetVertices(const std::vector<Vertex3D>& vertices)
                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                          vertices.data());
-    vertexBuffer = std::make_unique<Buffer>(vertexStaging.GetSize(),
-                                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    vertexBuffer = std::make_unique<Buffer>(
+        vertexStaging.GetSize(),
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     CommandBuffer commandBuffer;
 
@@ -181,9 +173,10 @@ void GPUScene::SetIndices(const std::vector<uint32_t>& indices)
                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         indices.data());
-    indexBuffer = std::make_unique<Buffer>(indexStaging.GetSize(),
-                                           VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    indexBuffer = std::make_unique<Buffer>(
+        indexStaging.GetSize(),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     CommandBuffer commandBuffer;
 
@@ -193,46 +186,4 @@ void GPUScene::SetIndices(const std::vector<uint32_t>& indices)
 
     commandBuffer.SubmitIdle();
 }
-
-// std::unique_ptr<IndirectBuffer> GPUScene::ComputeFrustumCulling(const StorageBuffer* instanceBuffer)
-// {
-//     if (!instanceBuffer) return nullptr;
-//     auto gpuScene = Scenes::Get()->GetScene()->GetGpuScene();
-//     auto camera   = Scenes::Get()->GetScene()->GetCamera();
-
-//     uint32_t instanceCount = gpuScene->GetInstanceCount();
-
-//     std::unique_ptr<IndirectBuffer> indirectBuffer = std::make_unique<IndirectBuffer>(instanceCount * sizeof(VkDrawIndexedIndirectCommand));
-
-//     CommandBuffer   commandBuffer(true, VK_QUEUE_COMPUTE_BIT);
-//     PipelineCompute compute("Shader/GPUDriven/Culling.comp");
-
-//     compute.BindPipeline(commandBuffer);
-
-//     DescriptorsHandler descriptorSet(compute);
-//     PushHandler        pushHandler(*compute.GetShader()->GetUniformBlock("PushObject"));
-//     pushHandler.Push("projection", camera->GetProjectionMatrix());
-//     pushHandler.Push("view", camera->GetViewMatrix());
-//     pushHandler.Push("cameraPos", camera->GetPosition());
-//     pushHandler.Push("up", camera->GetUpVector());
-//     pushHandler.Push("forward", camera->GetForward());
-//     pushHandler.Push("right", camera->GetRight());
-//     pushHandler.Push("nearPlane", camera->GetNearPlane());
-//     pushHandler.Push("farPlane", camera->GetFarPlane());
-//     pushHandler.Push("fieldOfView", camera->GetFieldOfView());
-//     pushHandler.Push("aspectRatio", camera->GetAspectRatio());
-//     pushHandler.Push("instanceCount", instanceCount);
-
-//     descriptorSet.Push("InstanceDatas", instanceBuffer);
-//     descriptorSet.Push("DrawCommandBuffer", indirectBuffer);
-//     descriptorSet.Push("PushObject", pushHandler);
-//     descriptorSet.Update(compute);
-
-//     descriptorSet.BindDescriptor(commandBuffer, compute);
-//     pushHandler.BindPush(commandBuffer, compute);
-//     compute.CmdRender(commandBuffer, glm::uvec2(instanceCount, 1));
-//     commandBuffer.SubmitIdle();
-
-//     return indirectBuffer;
-// }
 }   // namespace MapleLeaf

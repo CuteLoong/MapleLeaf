@@ -19,13 +19,22 @@ vec3 DiffuseReflectionDisney(vec3 diffuseColor, float roughness, vec3 N, vec3 L,
 
     if(min(VoN, NoL) < 0.001f) return vec3(0.0f);
 
-    float Fd90 = 0.5 + 2.0 * VoH * VoH * roughness;
+    float Fd90 = 0.5f + 2.0f * LoH * LoH * roughness;
     float Fd0 = 1.0f;
 
     float wiScatter = evalFresnelSchlick(Fd0, Fd90, LoH);
     float woScatter = evalFresnelSchlick(Fd0, Fd90, VoH);
 
-    return diffuseColor * wiScatter * woScatter * INV_M_PI;
+    return diffuseColor * wiScatter * woScatter /* * INV_M_PI */;
+}
+
+float evalPdfDiffuseReflectionDisney(vec3 V, vec3 N, vec3 L) {
+    float NoV = clamp(dot(N, V), 0.0f, 1.0f);
+    float NoL = clamp(dot(N, L), 0.0f, 1.0f);
+
+    if(min(NoV, NoL) < 0.001f) return 0.0f;
+
+    return NoL * INV_M_PI;
 }
 
 /** Specular reflection using microfacets.
@@ -43,11 +52,27 @@ vec3 SpecularReflectionMicrofacet(vec3 specularColor, float roughness,vec3 N, ve
 
     if(min(NoV, NoL) < 0.001f) return vec3(0.0f);
 
-    float D = evalNdfGGX(roughness, NoH);
-    float G = evalMaskingSmithGGXCorrelated(roughness, NoL, NoV);
-    vec3 F = evalFresnelSchlick(specularColor, vec3(1.0f), LoH);
+    float alpha = roughness * roughness;
 
-    return D * G * F * 0.25f / (NoL * NoV);
+    float D = evalNdfGGX(alpha, NoH);
+    float G = evalMaskingSmithGGXCorrelated(alpha, NoV, NoL);
+    vec3 F = evalFresnelSchlick(specularColor, vec3(1.0f), VoH);
+
+    return D * G * F * 0.25f / (/* NoL * */ NoV);
+}
+
+float evalPdfReflectionMicrofacet(vec3 V, vec3 N, vec3 L, float roughness) {
+    vec3 H = normalize(L + V);
+    float NoH = clamp(dot(N, H), 0.0f, 1.0f);
+    float NoV = clamp(dot(N, V), 0.0f, 1.0f);
+    float NoL = clamp(dot(N, L), 0.0f, 1.0f);
+    float VoH = clamp(dot(V, H), 0.0f, 1.0f);
+
+    if(min(NoV, NoL) < 0.001f) return 0.0f;
+
+    float alpha = roughness * roughness;
+
+    return evalPdfGGX_NDF(alpha, NoH) / (4.0f * VoH);
 }
 
 #endif // BRDF_GLSL

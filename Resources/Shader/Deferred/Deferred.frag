@@ -15,12 +15,15 @@ layout(set=0, binding = 1) uniform UniformScene {
 struct PointLight {
 	vec4 color;
 	vec3 position;
+	float pad;
 	vec3 attenuation;
+	float pad1;
 };
 
 struct DirectionalLight {
 	vec4 color;
 	vec3 direction;
+	float pad;
 };
 
 layout(set=0, binding = 2) buffer BufferPointLights {
@@ -88,11 +91,15 @@ void main() {
 		// vec3 kS = F;
 		// vec3 kD = vec3(1.0f) - kS;
 		// kD *= 1.0f - metallic;
+		float NdotH = clamp(dot(N, H), 0.0f, 1.0f);
+		float VdotH = clamp(dot(V, H), 0.0f, 1.0f);
+
 		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
+		float pdf = evalPdfGGX_NDF(roughness, NdotH) / (4.0f * VdotH);
 
 		float NdotL = max(dot(N, L), 0.0f);
 		// Lo += (kD * diffuse / M_PI + specular) * radiance * NdotL;
-		Lo += brdf * radiance * NdotL;
+		Lo += brdf * radiance * NdotL / pdf;
 	}
 
 	for(int i = 1; i <= scene.directionalLightsCount; i++)
@@ -102,28 +109,14 @@ void main() {
 		vec3 H = normalize(V + L);
 		vec3 radiance = light.color.rgb;
 
-		// float NDF = DistributionGGX(N, H, roughness);
-		// float G = GeometrySmith(N, V, L, roughness);
-		// vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
-
-		// vec3 nominator = NDF * G * F;
-		// float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);
-		// vec3 specular = nominator / max(denominator, 0.001f);
-
-		// vec3 kS = F;
-		// vec3 kD = vec3(1.0f) - kS;
-		// kD *= 1.0f - metallic;
 		vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
-
 		float shadowValue = shadowFactor(shadowCoords);
 
-		float NdotL = max(dot(N, L), 0.0f);
-		// Lo += (kD * diffuse / M_PI + specular) * radiance * NdotL * shadowValue;
-		Lo += brdf * radiance * NdotL * shadowValue;
+		Lo += brdf * radiance;
 	}
 
-	vec3 ambient = vec3(0.1f) * diffuse * ao;
-	Lo += ambient;
+	// vec3 ambient = vec3(0.1f) * diffuse * ao;
+	// Lo += ambient;
 	
 	outColour = vec4(Lo, 1.0f);
 }

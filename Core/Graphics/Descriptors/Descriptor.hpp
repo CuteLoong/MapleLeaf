@@ -42,12 +42,20 @@ public:
         this->writeDescriptorSet.pBufferInfo = this->bufferInfo.get();
     }
 
+    WriteDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet, const VkWriteDescriptorSetAccelerationStructureKHR& accelerationStructureInfo)
+        : writeDescriptorSet(writeDescriptorSet)
+        , accelerationStructureInfo(std::make_unique<VkWriteDescriptorSetAccelerationStructureKHR>(accelerationStructureInfo))
+    {
+        this->writeDescriptorSet.pNext = this->accelerationStructureInfo.get();
+    }
+
     const VkWriteDescriptorSet& GetWriteDescriptorSet() const { return writeDescriptorSet; }
 
 private:
-    VkWriteDescriptorSet                    writeDescriptorSet;
-    std::unique_ptr<VkDescriptorImageInfo>  imageInfo;
-    std::unique_ptr<VkDescriptorBufferInfo> bufferInfo;
+    VkWriteDescriptorSet                                          writeDescriptorSet;
+    std::unique_ptr<VkDescriptorImageInfo>                        imageInfo;
+    std::unique_ptr<VkDescriptorBufferInfo>                       bufferInfo;
+    std::unique_ptr<VkWriteDescriptorSetAccelerationStructureKHR> accelerationStructureInfo;
 };
 
 class Descriptor

@@ -1,0 +1,71 @@
+#version 460
+#extension GL_EXT_ray_tracing : require
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+layout(set = 0, binding = 1) uniform accelerationStructureEXT topLevelAS;
+layout(set = 0, binding = 2, rgba32f) writeonly uniform image2D image;
+
+layout(set = 0, binding = 3) uniform UniformFrameData {
+    uint frameID;
+    uint spp;
+    uint maxDepth;
+} uniformFrameData;
+
+#include <Misc/Camera.glsl>
+#include <Misc/RayTracingCommon.glsl>
+#include <Sampling/TinyEncryptionSample.glsl>
+
+layout(location = 0) rayPayloadEXT HitPayLoad prd;
+
+void main() 
+{
+    const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
+    const vec2 pixelUV     = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+    vec2 d = pixelUV * 2.0f - 1.0f;
+    
+    vec4 origin = camera.cameraPosition;
+    vec4 target = camera.invProjection * (vec4(d.x, d.y, -1.0f, 1.0f));
+    vec4 direction = normalize(camera.invView * vec4(normalize(target.xyz), 0.0));
+
+    uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    float tMin     = 0.001;
+    float tMax     = 200.0;
+
+    
+
+    vec3 hitValue = vec3(0.0f);
+    for(int i = 0; i < uniformFrameData.spp; i++) {
+        uint seed = TinyEncryptionInit(gl_LaunchIDEXT.x + gl_LaunchSizeEXT.x * gl_LaunchIDEXT.y, uniformFrameData.frameID + i);
+        prd.randomSeed = seed;
+
+        prd.Lo = vec3(0.0f);
+        prd.depth = 0;
+        prd.accBRDF = vec3(1.0f);
+        prd.done = 1;
+        prd.nextOrigin = origin;
+        prd.accPDF = 1.0f;
+        prd.nextDir = direction;
+
+        vec3 rayDirection = prd.nextDir.xyz;
+        vec3 rayOrigin = prd.nextOrigin.xyz;
+
+        for(;;) {
+            traceRayEXT(topLevelAS, rayFlags, 0xFF, 0, 0, 0, rayOrigin, tMin, rayDirection, tMax, 0);
+            hitValue += prd.Lo;
+
+            prd.depth++;
+
+            if (prd.done == 1 || prd.depth >= uniformFrameData.maxDepth) {
+                break;
+            }
+
+            rayDirection = prd.nextDir.xyz;
+            rayOrigin = prd.nextOrigin.xyz;
+            prd.done = 1;
+        }
+    }
+    hitValue /= uniformFrameData.spp;
+
+    imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(hitValue, 1.0f));
+}

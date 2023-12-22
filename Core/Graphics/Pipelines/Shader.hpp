@@ -46,13 +46,14 @@ public:
         friend class Shader;
 
     public:
-        explicit Uniform(uint32_t set = -1, int32_t binding = -1, int32_t offset = -1, int32_t size = -1, int32_t glType = -1, bool readOnly = false,
-                         bool writeOnly = false, bool bindless = false, VkShaderStageFlags stageFlags = 0)
+        explicit Uniform(uint32_t set = -1, int32_t binding = -1, int32_t offset = -1, int32_t size = -1, int32_t glType = -1, int32_t basicType = -1,
+                         bool readOnly = false, bool writeOnly = false, bool bindless = false, VkShaderStageFlags stageFlags = 0)
             : set(set)
             , binding(binding)
             , offset(offset)
             , size(size)
             , glType(glType)
+            , basicType(basicType)
             , readOnly(readOnly)
             , writeOnly(writeOnly)
             , bindless(bindless)
@@ -64,6 +65,7 @@ public:
         int32_t            GetOffset() const { return offset; }
         int32_t            GetSize() const { return size; }
         int32_t            GetGlType() const { return glType; }
+        int32_t            GetBasicType() const { return basicType; }
         bool               IsReadOnly() const { return readOnly; }
         bool               IsWriteOnly() const { return writeOnly; }
         bool               IsBindless() const { return bindless; }
@@ -83,6 +85,7 @@ public:
         int32_t            offset;
         int32_t            size;
         int32_t            glType;
+        int32_t            basicType;
         bool               readOnly;
         bool               writeOnly;
         bool               bindless;
@@ -98,6 +101,7 @@ public:
         {
             None,
             Uniform,
+            AccStruct,
             Storage,
             Push
         };

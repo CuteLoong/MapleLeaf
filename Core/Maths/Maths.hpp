@@ -23,6 +23,12 @@ public:
         seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
 
+    template<class integral>
+    static constexpr integral AlignUp(integral x, size_t a) noexcept
+    {
+        return integral((x + (integral(a) - 1)) & ~integral(a - 1));
+    }
+
     // Base 2 Van der Corput radical inverse
     static float radicalInverse(uint32_t i)
     {

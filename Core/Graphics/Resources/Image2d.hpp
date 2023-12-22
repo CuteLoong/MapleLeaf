@@ -11,7 +11,7 @@ class Image2d : public Image
 public:
     static std::shared_ptr<Image2d> Create(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR,
                                            VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, bool anisotropic = true,
-                                           bool mipmap = true);
+                                           bool mipmap = false);
 
     /**
      * Creates a new 2D image.
@@ -41,7 +41,7 @@ public:
      * @param load If this resource will be loaded immediately, otherwise {@link Image2d#Load} can be called later.
      */
     explicit Image2d(std::filesystem::path filename, VkFilter filter = VK_FILTER_LINEAR,
-                     VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, bool anisotropic = true, bool mipmap = true,
+                     VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, bool anisotropic = true, bool mipmap = false,
                      bool load = true);
 
     /**
