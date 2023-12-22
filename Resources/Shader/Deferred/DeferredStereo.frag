@@ -83,28 +83,24 @@ void main() {
 			vec3 L = light.position - worldPosition;
 			float d = length(L);
 			L = normalize(L);
-			vec3 H = normalize(V + L);
 			vec3 radiance = calcAttenuation(d, light.attenuation) * light.color.rgb;
 
 			vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
-			float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
-			Lo += brdf * radiance * NdotL;
+			Lo += brdf * radiance;
 		}
 
 		for(int i = 1; i <= scene.directionalLightsCount; i++)
 		{
 			DirectionalLight light = bufferDirectionalLights.lights[i];
 			vec3 L = normalize(-light.direction);
-			vec3 H = normalize(V + L);
 			vec3 radiance = light.color.rgb;
 
 			vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
 			float shadowValue = shadowFactor(shadowCoords);
 
-			float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
-			Lo += brdf * radiance * NdotL * shadowValue;
+			Lo += brdf * radiance * shadowValue;
 		}
 
 		vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;

@@ -8,6 +8,14 @@ void generateBasis(vec3 N, out vec3 up, out vec3 right, out vec3 forward)
     forward = cross(N, right);
 }
 
+vec3 localToWorld(vec3 localVector, vec3 N)
+{
+	vec3 up, right, forward;
+	generateBasis(N, up, right, forward);
+
+	return normalize(right * localVector.x + forward * localVector.y + N * localVector.z);
+}
+
 float evalGGX(float ggxAlpha, float NdotH)
 {
     float a2 = ggxAlpha * ggxAlpha;

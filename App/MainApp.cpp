@@ -40,11 +40,14 @@ MainApp::~MainApp() {}
 void MainApp::Start()
 {
     Devices::Get()->GetWindow()->SetTitle("MapleLeaf");
+
+#ifdef MAPLELEAF_RAY_TRACING
+    Graphics::Get()->SetRenderer(std::make_unique<RayTracingRenderer>());
+#else
     // Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
-    // Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
-    Graphics::Get()->SetRenderer(std::make_unique<RayTracingRenderer>());
-
+    Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
+#endif
 
     std::unique_ptr<SceneBuilder> scene = std::make_unique<SceneBuilder>();
     Scenes::Get()->SetScene(std::move(scene));

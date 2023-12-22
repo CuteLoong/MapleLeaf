@@ -6,30 +6,103 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 #extension GL_EXT_buffer_reference2 : require
 
-layout(location = 0) rayPayloadInEXT vec3 hitValue;
+#include <Misc/RayTracingCommon.glsl>
+
+layout(location = 0) rayPayloadInEXT HitPayLoad prd;
 hitAttributeEXT vec3 attribs;
 
 #include <Misc/Parameters.glsl>
 
+struct PointLight {
+	vec4 color;
+	vec3 position;
+	float pad;
+	vec3 attenuation;
+	float pad1;
+};
+
+struct DirectionalLight {
+	vec4 color;
+	vec3 direction;
+	float pad;
+};
+
 layout(buffer_reference, scalar) readonly buffer Vertices {Vertex v[]; };
 layout(buffer_reference, scalar) readonly buffer Indices {uint i[]; };
 
-layout(set = 0, binding = 3, scalar) uniform UniformSceneData {
-	uint64_t vertexAddress;      
-	uint64_t indexAddress;       
+layout(set = 0, binding = 4, scalar) uniform UniformSceneData {
+	uint64_t vertexAddress;
+	uint64_t indexAddress; 
+	int pointLightsCount;
+	int directionalLightsCount;
 } uniformSceneData;
 
-layout(set = 0, binding = 4) buffer InstanceDatas
+layout(set = 0, binding = 5) buffer InstanceDatas
 {
     InstanceData instanceData[];
 } instanceDatas;
 
-layout(set = 0, binding = 5) buffer MaterialDatas
+layout(set = 0, binding = 6) buffer MaterialDatas
 {
     Material materialData[];
 } materialDatas;
 
+layout(set=0, binding = 7) buffer BufferPointLights {
+	PointLight lights[];
+} bufferPointLights;
+
+layout(set=0, binding = 8) buffer BufferDirectionalLights {
+	DirectionalLight lights[];
+} bufferDirectionalLights;
+
 layout(set = 1, binding = 0) uniform sampler2D ImageSamplers[];
+
+#include <Misc/Constants.glsl>
+#include <Materials/Fresnel.glsl>
+#include <Materials/BRDF.glsl>
+#include <Sampling/TinyEncryptionSample.glsl>
+
+float calcAttenuation(float distance, vec3 attenuation)
+{
+    return 1.0f / (attenuation.x + attenuation.y * distance + attenuation.z * distance * distance);
+}
+
+void generateBasis(vec3 N, out vec3 up, out vec3 right, out vec3 forward)
+{
+    up = abs(N.z) < 0.999f ? vec3(0, 0, 1) : vec3(1, 0, 0);
+    right = normalize(cross(up, N));
+    forward = cross(N, right);
+}
+
+vec3 localToWorld(vec3 localVector, vec3 N)
+{
+	vec3 up, right, forward;
+	generateBasis(N, up, right, forward);
+
+	return localVector.x * right + localVector.y * forward + localVector.z * N;
+}
+
+vec3 ImportanceSampleGGX(vec2 u, vec3 N, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+
+    float phi = M_2PI * u.x;
+    float cosTheta = sqrt((1 - u.y) / (1 + (a2 - 1) * u.y));
+    float sinTheta = sqrt(1 - cosTheta * cosTheta);
+
+    // Tangent space H
+    vec3 tH;
+    tH.x = sinTheta * cos(phi);
+    tH.y = sinTheta * sin(phi);
+    tH.z = cosTheta;
+
+    vec3 up, right, forward;
+    generateBasis(N, up, right, forward);
+
+    // World space H
+    return normalize(right * tH.x + forward * tH.y + N * tH.z);
+}
 
 void main()
 {
@@ -55,7 +128,8 @@ void main()
 	vec3 worldNormal = normalize(vec3(normal * gl_WorldToObjectEXT));
 
 	vec4 diffuse = material.baseColor;
-	vec3 roughnessMetalic = vec3(material.metallic, material.roughness, 0.0f);
+	float metallic = material.metallic;
+	float roughness = material.roughness;
 
 	int baseColorTex = material.baseColorTex;
 	int normalTex = material.normalTex;
@@ -64,8 +138,8 @@ void main()
 	if(baseColorTex != -1) diffuse = texture(ImageSamplers[baseColorTex], texCoord);
 	if(materialTex != -1) {
 		vec4 textureMaterial = texture(ImageSamplers[materialTex], texCoord);
-		roughnessMetalic.x *= textureMaterial.r;
-		roughnessMetalic.y *= textureMaterial.g;
+		metallic *= textureMaterial.b;
+		roughness *= textureMaterial.g;
 	}
 	if(normalTex != -1) {
 		vec3 tangentNormal = texture(ImageSamplers[normalTex], texCoord).rgb * 2.0f - 1.0f;
@@ -81,5 +155,46 @@ void main()
 		worldNormal = normalize(TBN * tangentNormal);
 	}
 
-  	hitValue = vec3(worldNormal);
+	vec3 V = -normalize(gl_WorldRayDirectionEXT);
+
+	vec3 Lo = vec3(0.0f);
+	vec3 F0 = vec3(0.04f);
+	F0 = mix(F0, diffuse.rgb, metallic);
+	for(int i = 1; i <= uniformSceneData.pointLightsCount; i++) {
+		PointLight light = bufferPointLights.lights[i];
+		vec3 L = normalize(light.position - worldPosition);
+		float d = length(L);
+		L = normalize(L);
+
+		vec3 radiance = light.color.rgb * calcAttenuation(d, light.attenuation.xyz);
+
+		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
+
+		Lo += brdf * radiance;
+	}
+
+	for(int i = 1; i <= uniformSceneData.directionalLightsCount; i++) {
+		DirectionalLight light = bufferDirectionalLights.lights[i];
+		vec3 L = normalize(-light.direction);
+
+		vec3 radiance = light.color.rgb;
+
+		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
+
+		Lo += brdf * radiance;
+	}
+
+	vec2 Xi = vec2(TinyEncryptionRandom(prd.randomSeed), TinyEncryptionRandom(prd.randomSeed));
+
+	float pdf = 1.0f;
+    vec3 H = localToWorld(sampleGGX_NDF(roughness*roughness, Xi, pdf), worldNormal);
+	float VoH = clamp(dot(V, H), 0.0f, 1.0f);
+	pdf = pdf / (4.0f * VoH);
+
+	prd.Lo = Lo * prd.accBRDF / prd.accPDF;
+	prd.done = 0;
+	prd.nextOrigin = vec4(worldPosition, 1.0f);
+	prd.nextDir = vec4(normalize(reflect(-V, H)), 0.0f);
+	prd.accBRDF *= SpecularReflectionMicrofacet(F0, roughness, worldNormal, prd.nextDir.xyz, V);
+	prd.accPDF *= pdf;
 }

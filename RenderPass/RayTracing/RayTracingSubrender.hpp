@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Color.hpp"
 #include "DescriptorHandler.hpp"
 #include "PipelineRayTracing.hpp"
 #include "Subrender.hpp"
@@ -9,12 +10,17 @@ namespace MapleLeaf {
 class RayTracingSubrender : public Subrender
 {
 public:
-    struct SceneDescription
+    struct PointLight
     {
-        uint64_t vertexAddress;         // Address of the Vertex buffer
-        uint64_t indexAddress;          // Address of the index buffer
-        uint64_t materialAddress;       // Address of the material buffer
-        uint64_t instanceInfoAddress;   // Address of the instance info buffer
+        Color color                       = Color::White;
+        alignas(16) glm::vec3 position    = glm::vec3(0.0f);
+        alignas(16) glm::vec3 attenuation = glm::vec3(0.0f);
+    };
+
+    struct DirectionalLight
+    {
+        Color color                     = Color::White;
+        alignas(16) glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
     };
     explicit RayTracingSubrender(const Pipeline::Stage& pipelineStage);
 
@@ -26,9 +32,14 @@ private:
     PipelineRayTracing pipelineRayTracing;
 
     UniformHandler     uniformSceneData;
+    UniformHandler     uniformFrameData;
     UniformHandler     uniformCamera;
     DescriptorsHandler descriptorSet;
 
-    SceneDescription sceneDescription;
+    // light buffer need light class manager
+    StorageHandler storagePointLights;
+    StorageHandler storageDirectionalLights;
+
+    uint32_t frameID = 0;
 };
 }   // namespace MapleLeaf

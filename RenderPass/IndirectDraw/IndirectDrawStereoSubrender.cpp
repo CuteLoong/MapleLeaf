@@ -7,7 +7,8 @@ IndirectDrawStereoSubrender::IndirectDrawStereoSubrender(const Pipeline::Stage& 
     : Subrender(pipelineStage)
     , compute("Shader/GPUDriven/CullingStereo.comp")
     , pipeline(pipelineStage, {"Shader/GPUDriven/DefaultStereo.vert", "Shader/GPUDriven/Multiview.geom", "Shader/GPUDriven/DefaultStereo.frag"},
-               {Vertex3D::GetVertexInput()}, {}, PipelineGraphics::Mode::StereoMRT)
+               {Vertex3D::GetVertexInput()}, {}, PipelineGraphics::Mode::StereoMRT, PipelineGraphics::Depth::ReadWrite,
+               VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, false)
     , pipelineComputeHiZMin("Shader/GPUDriven/HierarchicalDepthStereo-Min.comp")
 {
     RecreateHiDepths();

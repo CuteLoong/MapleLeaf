@@ -10,7 +10,8 @@ IndirectDrawSubrender::IndirectDrawSubrender(const Pipeline::Stage& pipelineStag
 
     , compute("Shader/GPUDriven/Culling.comp")
     , pipeline(pipelineStage, {"Shader/GPUDriven/Default.vert", "Shader/GPUDriven/Default.frag"}, {Vertex3D::GetVertexInput()}, {},
-               PipelineGraphics::Mode::MRT)
+               PipelineGraphics::Mode::MRT, PipelineGraphics::Depth::ReadWrite, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_POLYGON_MODE_FILL,
+               VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, false)
     , pipelineComputeHiZMin("Shader/GPUDriven/HierarchicalDepth-Min.comp")
     , pipelineComputeHiZMax("Shader/GPUDriven/HierarchicalDepth-Max.comp")
 {}

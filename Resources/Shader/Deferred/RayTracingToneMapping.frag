@@ -37,9 +37,7 @@ void main() {
     vec2 uv = inUV;
     vec4 color = texture(RayTracingTarget, uv);
 
-    vec3 finalColor = color.rgb;
+    vec3 finalColor = toneMap(color.xyz);
 
-    // finalColor = toneMap(finalColor);
-
-    outColor = vec4(finalColor, color.a);
+    outColor = vec4(pow(finalColor, vec3(1.0f / toneMapping.gamma)), color.a);
 }

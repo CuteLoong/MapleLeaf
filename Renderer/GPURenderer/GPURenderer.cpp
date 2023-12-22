@@ -1,6 +1,7 @@
 #include "GPURenderer.hpp"
 
 #include "DeferredSubrender.hpp"
+#include "GPUPipelineResolveSubrender.hpp"
 #include "GaussianBlurSubrender.hpp"
 #include "Graphics.hpp"
 #include "HBAOSubrender.hpp"
@@ -14,6 +15,7 @@
 #include "SSAOSubrender.hpp"
 #include "SSRSubrender.hpp"
 #include "ShadowSubrender.hpp"
+#include "ToneMapingSubrender.hpp"
 
 
 namespace Test {
@@ -65,13 +67,18 @@ GPURenderer::GPURenderer()
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments4, renderpassSubpasses4));
 
-    std::vector<Attachment> renderpassAttachments5{
-        {0, "swapchain", Attachment::Type::Swapchain, false},
-    };
+    std::vector<Attachment> renderpassAttachments5{{0, "lighting", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     std::vector<SubpassType> renderpassSubpasses5 = {{0, {}, {0}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments5, renderpassSubpasses5));
+
+    std::vector<Attachment> renderpassAttachments6{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                   {1, "swapchain", Attachment::Type::Swapchain, false}};
+
+    std::vector<SubpassType> renderpassSubpasses6 = {{0, {}, {0}}, {1, {0}, {1}}};
+
+    AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments6, renderpassSubpasses6));
 }
 
 void GPURenderer::Start()
@@ -86,7 +93,10 @@ void GPURenderer::Start()
     AddSubrender<SSRSubrender>({3, 1});
     AddSubrender<GaussianBlurSubrender>({4, 0}, "AOMap");
     AddSubrender<DeferredSubrender>({5, 0});
-    AddSubrender<ImguiSubrender>({5, 0});
+
+    AddSubrender<GPUPipelineResolveSubrender>({6, 0});
+    AddSubrender<ToneMapingSubrender>({6, 1});
+    AddSubrender<ImguiSubrender>({6, 1});
 }
 
 void GPURenderer::Update()
