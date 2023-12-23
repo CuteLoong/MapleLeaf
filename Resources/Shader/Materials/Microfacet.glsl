@@ -1,6 +1,8 @@
 #ifndef MICROFACET_GLSL
 #define MICROFACET_GLSL
 
+#include <Misc/Constants.glsl>
+
 /** Evaluates the GGX (Trowbridge-Reitz) normal distribution function (D).
 
     Introduced by Trowbridge and Reitz, "Average irregularity representation of a rough surface for ray reflection", Journal of the Optical Society of America, vol. 65(5), 1975.

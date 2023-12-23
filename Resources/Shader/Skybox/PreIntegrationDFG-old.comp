@@ -9,7 +9,6 @@ layout(set = 0, binding = 0) uniform writeonly image2D preIntegratedDFG;
 
 #include <Sampling/LowDiscrepancy/HammersleySequence.glsl>
 #include <Materials/Fresnel.glsl>
-#include <Materials/Microfacet.glsl>
 #include <Misc/Constants.glsl>
 
 void generateBasis(vec3 N, out vec3 up, out vec3 right, out vec3 forward)
@@ -17,14 +16,6 @@ void generateBasis(vec3 N, out vec3 up, out vec3 right, out vec3 forward)
     up = abs(N.z) < 0.999999f ? vec3(0, 0, 1) : vec3(1, 0, 0);
     right = normalize(cross(up, N));
     forward = cross(N, right);
-}
-
-vec3 localToWorld(vec3 localVector, vec3 N)
-{
-	vec3 up, right, forward;
-	generateBasis(N, up, right, forward);
-
-	return normalize(right * localVector.x + forward * localVector.y + N * localVector.z);
 }
 
 vec3 importanceSampleCosDir(vec2 u, vec3 N)
@@ -45,6 +36,35 @@ vec3 importanceSampleCosDir(vec2 u, vec3 N)
     return normalize(right * L.y + forward * L.x + N * L.z);
 }
 
+vec3 importanceSampleGGX(vec2 u, vec3 N, float roughness)
+{
+    float a = roughness * roughness;
+
+    float phi = M_2PI * u.x;
+    float cosTheta = sqrt((1 - u.y) / (1 + (a * a - 1) * u.y));
+    float sinTheta = sqrt(1 - cosTheta * cosTheta);
+
+    // Tangent space H
+    vec3 tH;
+    tH.x = sinTheta * cos(phi);
+    tH.y = sinTheta * sin(phi);
+    tH.z = cosTheta;
+
+    vec3 up, right, forward;
+    generateBasis(N, up, right, forward);
+
+    // World space H
+    return normalize(right * tH.x + forward * tH.y + N * tH.z);
+}
+
+float smithGGX(float NdotL, float NdotV, float roughness)
+{
+    float k = ((roughness) * (roughness)) / 2;
+    float g1 = NdotL / (NdotL * (1 - k) + k);
+    float g2 = NdotV / (NdotV * (1 - k) + k);
+    return g1 * g2;
+}
+
 vec4 integrateDFG(vec3 N, vec3 V, float roughness)
 {
     float NdotV = dot(N, V);
@@ -57,14 +77,13 @@ vec4 integrateDFG(vec3 N, vec3 V, float roughness)
         vec2 u = getHammersley(i, gSampleCount, uvec2(HaltonSequence(i, 3)));
 
         // Specular GGX DFG integration (stored in RG)
-        float pdf;
-        vec3 H = localToWorld(sampleGGX_NDF(roughness*roughness, u, pdf), N);
+        vec3 H = importanceSampleGGX(u, N, roughness);
         vec3 L = reflect(-V, H);
         float NdotH = clamp(dot(N, H), 0.0f, 1.0f);
         float LdotH = clamp(dot(L, H), 0.0f, 1.0f);
         float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
 
-        float G = evalMaskingSmithGGXCorrelated(roughness * roughness, NdotV, NdotL);
+        float G = smithGGX(NdotL, NdotV, roughness);
         if(NdotL > 0 && G > 0)
         {
             float GVis = (G * LdotH) / (NdotV * NdotH);

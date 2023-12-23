@@ -5,7 +5,7 @@
 
 #define RAY_MARCH_ORIGIN_OFFSET_EPSILON 0.1
 #define HIZ_STEP_EPSILON 0.00001
-#define FADE_START 0.8
+#define FADE_START 0.9
 #define FADE_END 1.0
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
@@ -201,12 +201,17 @@ void main()
         vec4 hitWS = camera.invStereoView[hitViewIndex] * vec4(StereoViewSpacePosAtStereoUV(hitPointSS.xy, hitViewIndex), 1.0f);
 
         vec3 glossySS = calculateGlossyPositionInAnotherEye(hitWS.xyz, originWS.xyz, normalWS, viewIndex);
+        bool validMV = glossySS.x >= 0.0f && glossySS.x <= 1.0f && glossySS.y >= 0.0f && glossySS.y <= 1.0f;
+
         glossySS.xy = StereoUVToScreenUV(glossySS.xy, 1 - viewIndex);
 
         int rawInstanceID = int(texture(inInstanceID, screenUV).x);
         int glossyInstanceID = int(texture(inInstanceID, glossySS.xy).x);
+        int glossyViewIndex = glossySS.x < (camera.pixelSize.x / 2) ? 0 : 1;
 
-        glossyMV = rawInstanceID == glossyInstanceID ? glossySS.xy - screenUV : vec2(0.0f);
+        validMV = validMV && (rawInstanceID == glossyInstanceID);
+
+        glossyMV = validMV ? glossySS.xy - screenUV : vec2(0.0f);
         // glossyMV = glossySS.xy - screenUV;
         alphaBlend = calculateFadeAmount(hitPointSS.xy, hitPointSSEye2.xy, pointSS0.xy, reflectDirVS, viewRayVS);
         hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, hitViewIndex);
@@ -214,5 +219,5 @@ void main()
 
     imageStore(SSRHitsMap, pixel, vec4(hitPointSS, pdf));
     imageStore(SSRMask, pixel, vec4(alphaBlend));
-    imageStore(GlossyMV, pixel, vec4(glossyMV, 0.0f, 0.0f));
+    imageStore(GlossyMV, pixel, vec4(glossyMV, hitPointSS.z, 0.0f));
 }

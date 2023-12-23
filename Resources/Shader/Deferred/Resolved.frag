@@ -30,7 +30,13 @@ void main()
 	vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
     int viewIndex = inUV.x < 0.5f ? 0 : 1;
 
-    vec2 anotherUV = uv + texture(GlossyMV, uv).xy;
+    vec3 glossyMV = texture(GlossyMV, uv).xyz;
+
+    vec2 anotherUV = uv + glossyMV.xy;
+    float curReflectDepth = glossyMV.z;
+    float anotherReflectDepth = texture(GlossyMV, anotherUV).z;
+
+    if(abs(curReflectDepth - anotherReflectDepth) > 0.1f) anotherUV = uv;
 
     vec3 normalWS = texture(inNormal, uv).xyz;
 

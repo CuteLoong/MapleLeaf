@@ -43,7 +43,7 @@ StereoRenderer::StereoRenderer()
                                                       {"RightMaxHi-z", NonRTAttachment::Type::StereoImageHierarchyZ, false},
                                                       {"SSRHitsMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                       {"SSRMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                      {"GlossyMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16_SFLOAT},
+                                                      {"GlossyMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                       {"ReflectionMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);

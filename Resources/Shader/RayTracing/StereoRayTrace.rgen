@@ -60,6 +60,7 @@ void main()
             prd.depth++;
 
             if (prd.done == 1 || prd.depth >= uniformFrameData.maxDepth) {
+                // hitValue += prd.Lo;
                 break;
             }
 
