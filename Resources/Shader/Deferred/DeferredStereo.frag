@@ -36,7 +36,7 @@ layout(set=0, binding = 5) uniform sampler2D inDiffuse;
 layout(set=0, binding = 6) uniform sampler2D inNormal;
 layout(set=0, binding = 7) uniform sampler2D inMaterial;
 layout(set=0, binding = 8) uniform sampler2D inShadowMap;
-layout(set=0, binding = 9) uniform sampler2D inAOMap;
+// layout(set=0, binding = 9) uniform sampler2D inAOMap;
 
 layout(set=0, binding = 10) uniform sampler2D samplerBRDF;
 layout(set=0, binding = 11) uniform samplerCube samplerIrradiance;
@@ -61,7 +61,7 @@ void main() {
 	vec3 diffuse = texture(inDiffuse, uv).rgb;
 	vec3 normal = texture(inNormal, uv).rgb;
 	vec3 material = texture(inMaterial, uv).rgb;
-	vec3 ao = texture(inAOMap, uv).rgb;
+	// vec3 ao = texture(inAOMap, uv).rgb;
 
 	float metallic = material.r;
 	float roughness = material.g;

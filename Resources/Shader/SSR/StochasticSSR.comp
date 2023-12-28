@@ -5,6 +5,7 @@
 
 #define RAY_MARCH_ORIGIN_OFFSET_EPSILON 0.1
 #define HIZ_STEP_EPSILON 0.00001
+#define EPSILON_ANGLE 0.244
 #define FADE_START 0.9
 #define FADE_END 1.0
 
@@ -47,7 +48,7 @@ layout(set=0, binding=14) writeonly uniform image2D GlossyMV;
 #include <Materials/Microfacet.glsl>
 #include "StochasticSSRCommon.glsl"
 
-float calculateFadeAmount(vec2 positionUV, vec2 positionUV2, vec2 startPositionUV, vec3 reflectVS, vec3 viewVS){
+float calculateFadeAmount(vec2 positionUV, vec2 positionUV2, float tParameter, vec3 reflectVS, vec3 viewVS){
     float fadeOnMirror = dot(reflectVS, viewVS);
 
     float boundary1 = distance(positionUV, vec2(0.5f, 0.5f)) * 2.0f;
@@ -55,7 +56,7 @@ float calculateFadeAmount(vec2 positionUV, vec2 positionUV2, vec2 startPositionU
     float fadeOnEdge = max(1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f), 1.0f - clamp((boundary2 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f));
     // float fadeOnEdge = 1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
 
-    float travelled = distance(positionUV, startPositionUV);
+    float travelled = tParameter;
     float fadeOnDistance = 1.0f - clamp((travelled - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
 
     return fadeOnMirror * fadeOnEdge * fadeOnDistance;
@@ -75,7 +76,7 @@ vec3 calculateGlossyPositionInAnotherEye(vec3 hitWS, vec3 originWS, vec3 normalW
     return virtualImageSSEye2;
 }
 
-bool hiZTracing(vec3 pointSS0, vec3 pointSS1, vec3 pointSS0Eye2, vec3 pointSS1Eye2, inout int viewIndex, inout vec3 hitPointSS, inout vec3 hitPointSSEye2)
+bool hiZTracing(vec3 pointSS0, vec3 pointSS1, vec3 pointSS0Eye2, vec3 pointSS1Eye2, inout int viewIndex, inout vec3 hitPointSS, inout vec3 hitPointSSEye2, inout float tParameter)
 {
     pointSS0.z = Linear01Depth(pointSS0.z);
     pointSS1.z = Linear01Depth(pointSS1.z);
@@ -110,7 +111,7 @@ bool hiZTracing(vec3 pointSS0, vec3 pointSS1, vec3 pointSS0Eye2, vec3 pointSS1Ey
     vec2 pixel = GetHizPixel(pointSS0.xy, levelSize); // pixel must in stereo texture [960, 1080]
 
     vec2 tStartPixelXY = ((pixel + step) / levelSize + stepOffset - pointSS0.xy) / rayDir.xy;
-    float tParameter = min(tStartPixelXY.x, tStartPixelXY.y);
+    tParameter = min(tStartPixelXY.x, tStartPixelXY.y);
     vec2 tSceneZMinMax = vec2(0.0f, 1.0f);
     float mipLevel = ssrData.hiZStartLevel; // set to 2
     int rawViewIndex = viewIndex;
@@ -121,6 +122,54 @@ bool hiZTracing(vec3 pointSS0, vec3 pointSS1, vec3 pointSS0Eye2, vec3 pointSS1Ey
     hitPointSSEye2 = (rawViewIndex == viewIndex) ? vec3(pointSS0Eye2.xy + rayDirEye2XY * tParameter, 1.0f / (interpPoint + interpVec * tParameter)) : vec3(pointSS0.xy + rayDir.xy * tParameter, 1.0f / (interpPoint + interpVec * tParameter));
 
     return (mipLevel != -1.0f) || (tParameter < tSceneZMinMax.x) || (tParameter > tSceneZMinMax.y);
+}
+
+bool hiZTracing2(vec3 pointSS0, vec3 pointSS1, vec3 pointSS0Eye2, vec3 pointSS1Eye2, inout int viewIndex, inout vec3 hitPointSS, inout vec3 hitPointSSEye2, inout float tParameter)
+{
+    pointSS0.z = Linear01Depth(pointSS0.z);
+    pointSS1.z = Linear01Depth(pointSS1.z);
+
+    vec3 rayDir = pointSS1 - pointSS0;
+    vec2 rayDirEye2XY = pointSS1Eye2.xy - pointSS0Eye2.xy;
+
+    vec2 stepSign;
+    stepSign.x = (rayDir.x >= 0) ? 1.0f : -1.0f;
+    stepSign.y = (rayDir.y >= 0) ? 1.0f : -1.0f;
+    vec2 stepOffset = HIZ_STEP_EPSILON * stepSign.xy;
+
+    vec2 stepSignEye2;
+    stepSignEye2.x = (rayDirEye2XY.x >= 0) ? 1.0f : -1.0f;
+    stepSignEye2.y = (rayDirEye2XY.y >= 0) ? 1.0f : -1.0f;
+    vec2 stepOffsetEye2 = HIZ_STEP_EPSILON * stepSignEye2.xy;
+
+    vec2 step = clamp(stepSign.xy, 0.0f, 1.0f); // if rayDir is negative, offset will make it to else pixel
+    vec2 stepEye2 = clamp(stepSignEye2.xy, 0.0f, 1.0f);
+
+    float pointSS0InvZ = 1.0f / pointSS0.z;
+    float pointSS1InvZ = 1.0f / pointSS1.z;
+
+    float interpPoint = pointSS0InvZ;
+    float interpVec = pointSS1InvZ - pointSS0InvZ;
+
+    // claculate tParameter (1/z - 1/z0) / (1/z1 - 1/z0)
+    float calcT0 = -pointSS0InvZ;
+    float calcT1 = 1.0f / (pointSS1InvZ - pointSS0InvZ);
+
+    vec2 levelSize = GetHiZLevelSize(0.0f);
+    vec2 pixel = GetHizPixel(pointSS0.xy, levelSize); // pixel must in stereo texture [960, 1080]
+
+    vec2 tStartPixelXY = ((pixel + step) / levelSize + stepOffset - pointSS0.xy) / rayDir.xy;
+    tParameter = min(tStartPixelXY.x, tStartPixelXY.y);
+    vec2 tSceneZMinMax = vec2(0.0f, 1.0f);
+    float mipLevel = ssrData.hiZStartLevel; // set to 2
+    int rawViewIndex = viewIndex;
+
+    maxMinHiZTraversalLoop(step, stepOffset, stepEye2, stepOffsetEye2, pointSS0, rayDir, pointSS0Eye2.xy, rayDirEye2XY, calcT0, calcT1, viewIndex, mipLevel, tParameter, tSceneZMinMax);
+
+    hitPointSS = (rawViewIndex == viewIndex) ? vec3(pointSS0.xy + rayDir.xy * tParameter, 1.0f / (interpPoint + interpVec * tParameter)) : vec3(pointSS0Eye2.xy + rayDirEye2XY * tParameter, 1.0f / (interpPoint + interpVec * tParameter));
+    hitPointSSEye2 = (rawViewIndex == viewIndex) ? vec3(pointSS0Eye2.xy + rayDirEye2XY * tParameter, 1.0f / (interpPoint + interpVec * tParameter)) : vec3(pointSS0.xy + rayDir.xy * tParameter, 1.0f / (interpPoint + interpVec * tParameter));
+
+    return (mipLevel != -1.0f) || (tParameter < tSceneZMinMax.y) || (tParameter > tSceneZMinMax.x);
 }
 
 void main() 
@@ -150,23 +199,14 @@ void main()
     float pdf = 1.0f;
     vec3 H = localToWorld(sampleGGX_NDF(roughness*roughness, Xi, pdf), normalWS);
 
-    // vec3 H = vec3(0.0f);
-    // if(roughness > 0.1f) {
-    //     H = ImportanceSampleGGX(Xi, normalWS, roughness);
-    // } else {
-    //     H = normalWS;
-    // }
     vec3 reflectDirWS = normalize(reflect(viewRayWS, H));
     vec3 reflectDirVS = normalize(mat3(transpose(inverse(camera.stereoView[viewIndex]))) * reflectDirWS);
 
-    float NdotH = clamp(dot(normalWS, H), 0.0f, 1.0f);
-    float LdotH = clamp(dot(reflectDirWS, H), 0.0f, 1.0f);
     float VdotH = clamp(dot(-viewRayWS, H), 0.0f, 1.0f);
-
-    // float pdf = roughness > 0.1f ? evalGGX(roughness * roughness, NdotH) * NdotH : 1.0f;
     pdf = pdf / (4.0f * VdotH);
 
-    float maxRayLength = min((camera.projectionParams.z * camera.projectionParams.x - originVS.z) / reflectDirVS.z, ssrData.maxRayLength);
+    // float maxRayLength = min((camera.projectionParams.z * camera.projectionParams.x - originVS.z) / reflectDirVS.z, ssrData.maxRayLength);
+    float maxRayLength = ssrData.maxRayLength;
     vec3 endPointVS = originVS + reflectDirVS * maxRayLength;
 
     vec4 pointHS1 = camera.stereoProjection[viewIndex] * vec4(endPointVS, 1.0f);
@@ -186,14 +226,18 @@ void main()
     vec3 hitPointSS = vec3(-1.0f);
     vec3 hitPointSSEye2 = vec3(-1.0f);
     int hitViewIndex = viewIndex;
+    float tParameter = 0.0f;
     bool missed = true;
 
     if(reflectDirVS.z < 0.0f) {
-        missed = hiZTracing(pointSS0, pointSS1, pointSS0Eye2, pointSS1Eye2, hitViewIndex, hitPointSS, hitPointSSEye2);
+        missed = hiZTracing(pointSS0, pointSS1, pointSS0Eye2, pointSS1Eye2, hitViewIndex, hitPointSS, hitPointSSEye2, tParameter);
+    }
+    else {
+        missed = hiZTracing2(pointSS0, pointSS1, pointSS0Eye2, pointSS1Eye2, hitViewIndex, hitPointSS, hitPointSSEye2, tParameter);
     }
 
     float alphaBlend = 0.0f;
-    vec2 glossyMV = vec2(-1.0f);
+    vec2 glossyMV = vec2(0.0f);
     if(missed) {
         hitPointSS.xy = vec2(-1.0f);
     }
@@ -207,13 +251,12 @@ void main()
 
         int rawInstanceID = int(texture(inInstanceID, screenUV).x);
         int glossyInstanceID = int(texture(inInstanceID, glossySS.xy).x);
-        int glossyViewIndex = glossySS.x < (camera.pixelSize.x / 2) ? 0 : 1;
 
         validMV = validMV && (rawInstanceID == glossyInstanceID);
 
         glossyMV = validMV ? glossySS.xy - screenUV : vec2(0.0f);
         // glossyMV = glossySS.xy - screenUV;
-        alphaBlend = calculateFadeAmount(hitPointSS.xy, hitPointSSEye2.xy, pointSS0.xy, reflectDirVS, viewRayVS);
+        alphaBlend = calculateFadeAmount(hitPointSS.xy, hitPointSSEye2.xy, tParameter, reflectDirVS, viewRayVS);
         hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, hitViewIndex);
     }
 

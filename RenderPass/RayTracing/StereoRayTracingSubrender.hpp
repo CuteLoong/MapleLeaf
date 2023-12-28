@@ -39,7 +39,5 @@ private:
     // light buffer need light class manager
     StorageHandler storagePointLights;
     StorageHandler storageDirectionalLights;
-
-    uint32_t frameID = 0;
 };
 }   // namespace MapleLeaf

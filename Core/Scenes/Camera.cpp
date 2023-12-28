@@ -2,6 +2,7 @@
 #include "Engine.hpp"
 #include "Inputs.hpp"
 #include "Scenes.hpp"
+#include <limits>
 
 #include "config.h"
 
@@ -24,6 +25,8 @@ void Camera::Start()
 }
 void Camera::Update()
 {
+    frameID = (frameID + 1) % std::numeric_limits<uint32_t>::max();
+
     const auto& transform = GetEntity()->GetComponent<Transform>();
     if (transform->GetUpdateStatus() == Transform::UpdateStatus::Transformation) {
         UpdateByTransform();
@@ -43,6 +46,11 @@ void Camera::UpdateByTransform()
     forward               = -transform->GetWorldMatrix()[2];
     position              = transform->GetWorldMatrix()[3];
     rotation              = transform->GetRotation();
+
+    right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    up    = glm::normalize(glm::cross(right, forward));
+
+    frameID = 0;
 }
 
 void Camera::UpdateByInput()
@@ -52,6 +60,9 @@ void Camera::UpdateByInput()
     if (!Scenes::Get()->GetScene()->IsPaused()) {
         auto positionDelta = Inputs::Get()->GetPositionDelta();
         auto rotationDelta = Inputs::Get()->GetRotationDelta();   // x---yaw y---pitch
+
+        if (positionDelta == glm::vec3(0.0f) && rotationDelta == glm::vec2(0.0f)) return;
+
         Inputs::Get()->ResetPositionDelta();
         Inputs::Get()->ResetRotationDelta();
 
@@ -77,6 +88,8 @@ void Camera::UpdateByInput()
         position += velocity.z * forward;
         position += velocity.x * right;
         position += velocity.y * up;
+
+        frameID = 0;
     }
 }
 
@@ -229,5 +242,6 @@ void Camera::PushUniforms(UniformHandler& uniformObject)
     uniformObject.Push("stereoPixelSize", GetStereoPixelSize());
     uniformObject.Push("cameraPosition", glm::vec4(position, 1.0f));
     uniformObject.Push("cameraStereoPosition", stereoViewPosition);
+    uniformObject.Push("frameID", frameID);
 }
 }   // namespace MapleLeaf

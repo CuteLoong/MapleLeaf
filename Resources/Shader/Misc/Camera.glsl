@@ -23,6 +23,7 @@ layout(set=0, binding=0) uniform UniformCamera
     vec4 stereoPixelSize;
     vec4 cameraPosition;
     vec4 cameraStereoPosition[2];
+    uint frameID;
 } camera;
 
 mat4 GetProjection(){ return camera.projection; }

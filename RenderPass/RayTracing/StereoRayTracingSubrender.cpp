@@ -52,7 +52,6 @@ void StereoRayTracingSubrender::PreRender(const CommandBuffer& commandBuffer)
     uniformSceneData.Push("pointLightsCount", pointLights.size() - 1);
     uniformSceneData.Push("directionalLightsCount", directionalLights.size() - 1);
 
-    uniformFrameData.Push("frameID", frameID);
     uniformFrameData.Push("spp", 100);
     uniformFrameData.Push("maxDepth", 2);
 
@@ -72,8 +71,6 @@ void StereoRayTracingSubrender::PreRender(const CommandBuffer& commandBuffer)
     pipelineRayTracing.BindPipeline(commandBuffer);
     descriptorSet.BindDescriptor(commandBuffer, pipelineRayTracing);
     pipelineRayTracing.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
-
-    frameID++;
 }
 
 void StereoRayTracingSubrender::Render(const CommandBuffer& commandBuffer) {}

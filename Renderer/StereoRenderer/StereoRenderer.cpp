@@ -117,12 +117,15 @@ void StereoRenderer::Start()
     // AddSubrender<HBAOStereoWithThickSubrender>({4, 1});
     // AddSubrender<HBAOStereoWithOcclusionInfoSubrender>({4, 1});
 
-    AddSubrender<HBAOStereoAwareLeftSubrender>({4, 0});
-    AddSubrender<HBAOStereoAwareSubrender>({4, 1});
+    // Stereo-Aware AO 2 rows
+    // AddSubrender<HBAOStereoAwareLeftSubrender>({4, 0});
+    // AddSubrender<HBAOStereoAwareSubrender>({4, 1});
+
     // AddSubrender<SSRStereoSubrender>({4, 2});
     AddSubrender<StochasticSSRStereoSubrender>({4, 2});
 
-    AddSubrender<GaussianBlurSubrender>({5, 0}, "AOMap");
+    // AO filter
+    // AddSubrender<GaussianBlurSubrender>({5, 0}, "AOMap");
     // AddSubrender<GaussianBlurXYSubrender>({5, 0}, "AOMap");
 
     AddSubrender<DeferredStereoSubrender>({6, 0});

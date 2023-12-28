@@ -31,6 +31,7 @@ void SSRStereoSpatialFilterSubrender::PreRender(const CommandBuffer& commandBuff
     descriptorSet.Push("UniformCamera", uniformCamera);
     descriptorSet.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
     descriptorSet.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
+    descriptorSet.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
     descriptorSet.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
     descriptorSet.Push("SSRHitsMap", SSRHitsMap);

@@ -76,7 +76,7 @@ void DeferredStereoSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
 
     descriptorSet.Push("inShadowMap", Graphics::Get()->GetAttachment("shadows"));
-    descriptorSet.Push("inAOMap", Graphics::Get()->GetAttachment("AOMapFilter"));
+    // descriptorSet.Push("inAOMap", Graphics::Get()->GetAttachment("AOMapFilter"));
 
     descriptorSet.Push("samplerBRDF", *brdf);
     descriptorSet.Push("samplerIrradiance", *irradiance);

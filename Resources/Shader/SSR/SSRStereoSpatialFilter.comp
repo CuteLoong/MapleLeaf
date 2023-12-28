@@ -17,17 +17,19 @@ layout(set = 0, binding = 2) uniform UniformJitterData {
 
 layout(set=0, binding=4) uniform sampler2D inDepth;
 layout(set=0, binding=5) uniform sampler2D inNormal;
-layout(set=0, binding=6) uniform sampler2D inMaterial;
-layout(set=0, binding=7) uniform sampler2D LightingMap;
-layout(set=0, binding=8) uniform sampler2D SSRHitsMap;
-layout(set=0, binding=9) uniform sampler2D SSRHitsMask;
-layout(set=0, binding=10) uniform sampler2D blueNoise;
+layout(set=0, binding=6) uniform sampler2D inDiffuse;
+layout(set=0, binding=7) uniform sampler2D inMaterial;
+layout(set=0, binding=8) uniform sampler2D LightingMap;
+layout(set=0, binding=9) uniform sampler2D SSRHitsMap;
+layout(set=0, binding=10) uniform sampler2D SSRHitsMask;
+layout(set=0, binding=11) uniform sampler2D blueNoise;
 
-layout(set=0, binding=11) writeonly uniform image2D ReflectionColorMap;
+layout(set=0, binding=12) writeonly uniform image2D ReflectionColorMap;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
 #include <Misc/Constants.glsl>
+#include <Materials/BRDF.glsl>
 
 float evalGGX(float ggxAlpha, float NdotH)
 {
@@ -66,11 +68,18 @@ void main()
     vec3 normalWS = texture(inNormal, screenUV).xyz;
     vec3 normalVS = normalize(mat3(transpose(inverse(camera.stereoView[viewIndex]))) * normalWS);
 
+    vec3 diffuse = texture(inDiffuse, screenUV).xyz;
+
+    float metallic = texture(inMaterial, screenUV).r;
     float roughness = texture(inMaterial, screenUV).g;
+
+    vec3 F0 = vec3(0.04f);
+    F0 = mix(F0, diffuse, metallic);
+
     vec2 noise = texture(blueNoise, (screenUV + jitterData.jitter) * filterData.noiseScale).rg * 2.0f - 1.0f;
     mat2 rotation = mat2(noise.x, noise.y, -noise.y, noise.x);
 
-    float totalWeight = 0.0f;
+    vec4 totalWeight = vec4(0.0f);
     vec4 ReflectionColor = vec4(0.0f);
 
     for(int i = 0; i < NUM_FILTER; i++) {
@@ -85,20 +94,21 @@ void main()
 
         vec3 reflectRayWS = hitPosWS - originWS;
 
-        vec3 H = normalize(eyeRayWS + reflectRayWS);
-        float NdotH = clamp(dot(normalWS, H), 0.0f, 1.0f);
-        float NdotV = clamp(dot(normalWS, eyeRayWS), 0.0f, 1.0f);
-        float NdotL = clamp(dot(normalWS, reflectRayWS), 0.0f, 1.0f);
+        // vec3 H = normalize(eyeRayWS + reflectRayWS);
+        // float NdotH = clamp(dot(normalWS, H), 0.0f, 1.0f);
+        // float NdotV = clamp(dot(normalWS, eyeRayWS), 0.0f, 1.0f);
+        // float NdotL = clamp(dot(normalWS, reflectRayWS), 0.0f, 1.0f);
 
-        float brdf = max(0.0f, evalGGX(roughness, NdotH) * Vis_SmithJointApprox(NdotL, NdotV, roughness));
+        // float brdf = max(0.0f, evalGGX(roughness, NdotH) * Vis_SmithJointApprox(NdotL, NdotV, roughness));
+        vec3 brdf = SpecularReflectionMicrofacet(F0, roughness, normalWS, reflectRayWS, eyeRayWS);
         float pdf = max(1e-5, hitInfo.w);
 
-        float weight = brdf * NdotL / pdf;
+        vec3 weight = brdf / pdf;
         vec4 sampleColor = vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, sampleUV).x);
         sampleColor.rgb /= 1 + Luminance(sampleColor.rgb);
 
-        ReflectionColor += sampleColor * weight;
-        totalWeight += weight;
+        ReflectionColor += vec4(sampleColor.xyz * weight, sampleColor.w);
+        totalWeight += vec4(weight, 1.0f);
     }
 
     ReflectionColor /= totalWeight;

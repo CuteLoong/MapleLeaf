@@ -63,6 +63,6 @@ void main()
 
     vec3 lighting = texture(LightingMap, uv).xyz;
 
-    // outColor = vec4(reflectionColor, 1.0f);
+    // outColor = vec4(lighting + reflectionColor, 1.0f);
     outColor = vec4(reflectionColor, 1.0f);
 }

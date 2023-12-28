@@ -114,6 +114,8 @@ protected:
     glm::mat4 invViewMatrix;
     glm::mat4 invProjectionMatrix;
 
+    uint32_t frameID;   // this camera's frame id
+
     /* frustum's four vector, start from camera position
      *0    1
      *2    3

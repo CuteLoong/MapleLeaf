@@ -3,6 +3,26 @@
 
 #include "Pseudorandom/LGC.glsl"
 
+/** Tiny uniform random sample generator.
+
+    This generator has only 32 bit state and sub-optimal statistical properties.
+    Do not use for anything critical; correlation artifacts may be prevalent.
+*/
+
+uvec2 blockCipherTEA(uint v0, uint v1, uint iterations)
+{
+    uint sum = 0;
+    const uint delta = 0x9e3779b9;
+    const uint k[4] = { 0xa341316c, 0xc8013ea4, 0xad90777d, 0x7e95761e }; // 128-bit key.
+    for (uint i = 0; i < iterations; i++)
+    {
+        sum += delta;
+        v0 += ((v1 << 4) + k[0]) ^ (v1 + sum) ^ ((v1 >> 5) + k[1]);
+        v1 += ((v0 << 4) + k[2]) ^ (v0 + sum) ^ ((v0 >> 5) + k[3]);
+    }
+    return uvec2(v0, v1);
+}
+
 uint TinyEncryptionInit(uint val0, uint val1)
 {
   uint v0 = val0;

@@ -7,7 +7,6 @@ layout(set = 0, binding = 1) uniform accelerationStructureEXT topLevelAS;
 layout(set = 0, binding = 2, rgba32f) writeonly uniform image2D image;
 
 layout(set = 0, binding = 3) uniform UniformFrameData {
-    uint frameID;
     uint spp;
     uint maxDepth;
 } uniformFrameData;
@@ -32,11 +31,9 @@ void main()
     float tMin     = 0.001;
     float tMax     = 200.0;
 
-    
-
     vec3 hitValue = vec3(0.0f);
     for(int i = 0; i < uniformFrameData.spp; i++) {
-        uint seed = TinyEncryptionInit(gl_LaunchIDEXT.x + gl_LaunchSizeEXT.x * gl_LaunchIDEXT.y, uniformFrameData.frameID + i);
+        uint seed = TinyEncryptionInit(gl_LaunchIDEXT.x + gl_LaunchSizeEXT.x * gl_LaunchIDEXT.y, camera.frameID + i);
         prd.randomSeed = seed;
 
         prd.Lo = vec3(0.0f);
