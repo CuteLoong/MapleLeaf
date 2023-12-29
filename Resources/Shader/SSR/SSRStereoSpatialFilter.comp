@@ -50,7 +50,7 @@ float Luminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
 }
 
-const vec2 offset[9] = {vec2(-2.0, -2.0), vec2(0.0, -2.0), vec2(2.0, -2.0), vec2(-2.0, 0.0), vec2(0.0, 0.0), vec2(2.0, 0.0), vec2(-2.0, 2.0), vec2(0.0, 2.0), vec2(2.0, 2.0)};
+const vec2 offset[9] = {vec2(-1.0, -1.0), vec2(0.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 0.0), vec2(0.0, 0.0), vec2(1.0, 0.0), vec2(-1.0, 1.0), vec2(0.0, 1.0), vec2(1.0, 1.0)};
 
 void main() 
 {

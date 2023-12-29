@@ -138,8 +138,8 @@ void Camera::UpdateStereoCameraInfo()
 
     stereoViewMatrix[0]       = glm::lookAt(glm::vec3(stereoViewPosition[0]), glm::vec3(stereoViewPosition[0]) + forward, up);
     stereoViewMatrix[1]       = glm::lookAt(glm::vec3(stereoViewPosition[1]), glm::vec3(stereoViewPosition[1]) + forward, up);
-    stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio / 2.0f, nearPlane, farPlane);
-    stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio / 2.0f, nearPlane, farPlane);
+    stereoProjectionMatrix[0] = glm::perspective(fieldOfView, aspectRatio, nearPlane, farPlane);
+    stereoProjectionMatrix[1] = glm::perspective(fieldOfView, aspectRatio, nearPlane, farPlane);
 
     invStereoViewMatrix[0]       = glm::inverse(stereoViewMatrix[0]);
     invStereoViewMatrix[1]       = glm::inverse(stereoViewMatrix[1]);
@@ -147,7 +147,7 @@ void Camera::UpdateStereoCameraInfo()
     invStereoProjectionMatrix[1] = glm::inverse(stereoProjectionMatrix[1]);
 
     float farPlaneHalfVertical = farPlane * std::tan(fieldOfView / 2.0f);
-    float farPlaneHalfHorizon  = farPlaneHalfVertical * aspectRatio / 2.0f;
+    float farPlaneHalfHorizon  = farPlaneHalfVertical * aspectRatio;
 
     for (int i = 0; i <= 1; i++) {
         const glm::vec3& curEyePosition  = glm::vec3(stereoViewPosition[i]);

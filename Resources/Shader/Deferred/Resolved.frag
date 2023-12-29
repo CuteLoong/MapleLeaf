@@ -19,6 +19,7 @@ layout(set=0, binding = 8) uniform sampler2D GlossyMV;
 #include <Misc/Constants.glsl>
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outIndirectLighting;
 
 vec3 LookUpPreIntegratedBRDF(float NoV, float roughness)
 {
@@ -36,7 +37,7 @@ void main()
     float curReflectDepth = glossyMV.z;
     float anotherReflectDepth = texture(GlossyMV, anotherUV).z;
 
-    if(abs(curReflectDepth - anotherReflectDepth) > 0.1f) anotherUV = uv;
+    if(abs(curReflectDepth - anotherReflectDepth) > 0.005f) anotherUV = uv;
 
     vec3 normalWS = texture(inNormal, uv).xyz;
 
@@ -58,11 +59,13 @@ void main()
 
     vec3 dfg = F0 * brdf.x + brdf.y;
 
-    vec3 reflectionColor = (ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * dfg * 0.5f;
-    // vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
+    // vec3 reflectionColor = (ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * dfg * 0.5f;
+    vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
 
     vec3 lighting = texture(LightingMap, uv).xyz;
 
     // outColor = vec4(lighting + reflectionColor, 1.0f);
     outColor = vec4(reflectionColor, 1.0f);
+
+    outIndirectLighting = vec4(reflectionColor, 1.0f);
 }

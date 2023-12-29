@@ -14,11 +14,11 @@ StochasticSSRStereoSubrender::StochasticSSRStereoSubrender(const Pipeline::Stage
     haltonSampler = HaltonSamplePattern::Create(4);
 }
 
-void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 
 void StochasticSSRStereoSubrender::Render(const CommandBuffer& commandBuffer) {}
 
-void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
+void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
 {
     const auto& SSRHitsMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
     const auto& SSRMask    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));

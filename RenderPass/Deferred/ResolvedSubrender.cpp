@@ -4,7 +4,7 @@
 namespace MapleLeaf {
 ResolvedSubrender::ResolvedSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipeline(pipelineStage, {"Shader/Deferred/Resolved.vert", "Shader/Deferred/Resolved.frag"}, {}, {}, PipelineGraphics::Mode::Polygon,
+    , pipeline(pipelineStage, {"Shader/Deferred/Resolved.vert", "Shader/Deferred/Resolved.frag"}, {}, {}, PipelineGraphics::Mode::MRT,
                PipelineGraphics::Depth::None)
     , brdf(Resources::Get()->GetThreadPool().Enqueue(ComputeBRDF, 512))
 {}
@@ -34,7 +34,9 @@ void ResolvedSubrender::Render(const CommandBuffer& commandBuffer)
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void ResolvedSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+void ResolvedSubrender::PostRender(const CommandBuffer& commandBuffer) {
+    
+}
 
 std::unique_ptr<Image2d> ResolvedSubrender::ComputeBRDF(uint32_t size)
 {

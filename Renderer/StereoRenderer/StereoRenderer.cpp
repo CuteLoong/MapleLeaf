@@ -95,9 +95,10 @@ StereoRenderer::StereoRenderer()
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments6, renderpassSubpasses6));
 
     std::vector<Attachment> renderpassAttachments7{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                   {1, "swapchain", Attachment::Type::Swapchain, false}};
+                                                   {1, "indirectLighting", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                   {2, "swapchain", Attachment::Type::Swapchain, false}};
 
-    std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {}}, {1, {}, {0}}, {2, {0}, {1}}};
+    std::vector<SubpassType> renderpassSubpasses7 = {{0, {}, {}}, {1, {}, {0, 1}}, {2, {0}, {2}}};
 
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments7, renderpassSubpasses7));
 }
@@ -111,7 +112,7 @@ void StereoRenderer::Start()
 
     AddSubrender<IndirectDrawStereoBackSubrender>({2, 0});
 
-    AddSubrender<StereoMaskSubrender>({3, 0});
+    // AddSubrender<StereoMaskSubrender>({3, 0});
 
     // AddSubrender<HBAOStereoSubrender>({4, 1});
     // AddSubrender<HBAOStereoWithThickSubrender>({4, 1});
