@@ -2,6 +2,7 @@
 
 #include "Component.hpp"
 #include "DescriptorHandler.hpp"
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <array>
@@ -110,7 +111,9 @@ protected:
     glm::vec3 right;
 
     glm::mat4 viewMatrix;
+    glm::mat4 prevViewMatrix;
     glm::mat4 projectionMatrix;
+    glm::mat4 prevProjectionMatrix;
     glm::mat4 invViewMatrix;
     glm::mat4 invProjectionMatrix;
 
@@ -130,7 +133,9 @@ protected:
     std::array<glm::vec4, 2> stereoViewPosition;
 
     std::array<glm::mat4, 2> stereoViewMatrix;
+    std::array<glm::mat4, 2> prevStereoViewMatrix;
     std::array<glm::mat4, 2> stereoProjectionMatrix;
+    std::array<glm::mat4, 2> prevStereoProjectionMatrix;
     std::array<glm::mat4, 2> invStereoViewMatrix;
     std::array<glm::mat4, 2> invStereoProjectionMatrix;
 

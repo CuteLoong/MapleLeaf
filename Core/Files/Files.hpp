@@ -14,7 +14,7 @@ enum class FileMode
 
 class Files : public Module::Registrar<Files>
 {
-    inline static const bool Registered = Register(Stage::Post);
+    inline static const bool Registered = Register(Stage::Pre);
 
 public:
     Files();

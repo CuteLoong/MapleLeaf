@@ -46,6 +46,92 @@ Image2d::Image2d(std::unique_ptr<Bitmap>&& bitmap, VkFormat format, VkImageLayou
     Image2d::Load(std::move(bitmap));
 }
 
+void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d) const
+{
+    // Transition destination image to transfer destination layout.
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             0,
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+                             VK_IMAGE_LAYOUT_UNDEFINED,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+
+    // Transition image from previous usage to transfer source layout
+    InsertImageMemoryBarrier(commandBuffer,
+                             image2d.image,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_ACCESS_TRANSFER_READ_BIT,
+                             image2d.layout,
+                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+
+    VkImageCopy imageCopyRegion{};
+    imageCopyRegion.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopyRegion.srcSubresource.baseArrayLayer = 0;
+    imageCopyRegion.srcSubresource.layerCount     = image2d.arrayLayers;
+    imageCopyRegion.srcSubresource.mipLevel       = 0;
+    imageCopyRegion.srcOffset                     = {0, 0, 0};
+    imageCopyRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopyRegion.dstSubresource.baseArrayLayer = 0;
+    imageCopyRegion.dstSubresource.layerCount     = arrayLayers;
+    imageCopyRegion.dstSubresource.mipLevel       = 0;
+    imageCopyRegion.dstOffset                     = {0, 0, 0};
+    imageCopyRegion.extent.width                  = std::min(extent.width, image2d.extent.width);
+    imageCopyRegion.extent.height                 = std::min(extent.height, image2d.extent.height);
+    imageCopyRegion.extent.depth                  = 1;
+
+    vkCmdCopyImage(commandBuffer.GetCommandBuffer(),
+                   image2d.image,
+                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                   image,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   1,
+                   &imageCopyRegion);
+
+    // Transition destination image to general layout, which is the required layout for mapping the image memory later on.
+    InsertImageMemoryBarrier(commandBuffer,
+                             image,
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             layout,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+
+    // Transition back the image after the blit is done.
+    InsertImageMemoryBarrier(commandBuffer,
+                             image2d.image,
+                             VK_ACCESS_TRANSFER_READ_BIT,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                             image2d.layout,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             0,
+                             1,
+                             0);
+}
+
 
 void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
 {

@@ -4,11 +4,15 @@
 layout(set=0, binding=0) uniform UniformCamera
 {
 	mat4 projection;
+    mat4 prevProjection;
 	mat4 view;
+    mat4 prevView;
     mat4 invProjection;
     mat4 invView;
     mat4 stereoProjection[2];
+    mat4 prevStereoProjection[2];
     mat4 stereoView[2];
+    mat4 prevStereoView[2];
     mat4 invStereoProjection[2];
     mat4 invStereoView[2];
     vec4 frustumVector[4]; // leftTop, rightTop, leftBottom, rightBottom

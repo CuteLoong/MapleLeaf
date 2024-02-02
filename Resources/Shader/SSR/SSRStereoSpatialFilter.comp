@@ -50,7 +50,8 @@ float Luminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
 }
 
-const vec2 offset[9] = {vec2(-1.0, -1.0), vec2(0.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 0.0), vec2(0.0, 0.0), vec2(1.0, 0.0), vec2(-1.0, 1.0), vec2(0.0, 1.0), vec2(1.0, 1.0)};
+// const vec2 offset[9] = {vec2(-1.0, -1.0), vec2(0.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 0.0), vec2(0.0, 0.0), vec2(1.0, 0.0), vec2(-1.0, 1.0), vec2(0.0, 1.0), vec2(1.0, 1.0)};
+const vec2 offset[9] = {vec2(-2.0, -2.0), vec2(0.0, -2.0), vec2(2.0, -2.0), vec2(-2.0, 0.0), vec2(0.0, 0.0), vec2(2.0, 0.0), vec2(-2.0, 2.0), vec2(0.0, 2.0), vec2(2.0, 2.0)};
 
 void main() 
 {
@@ -89,9 +90,11 @@ void main()
         // vec4 hitInfo = texture(SSRHitsMap, sampleUV); // xy: hitUV, z: hitDepth, w: pdf
         vec4 hitInfo = texelFetch(SSRHitsMap, ivec2(sampleUV * camera.pixelSize.xy), 0); // xy: hitUV, z: hitDepth, w: pdf
         vec3 hitPosWS = StereoWorldSpacePosAtScreenUV(hitInfo.xy);
+        vec3 hitPosNormalWS = texture(inNormal, sampleUV).xyz;
 
         if(hitInfo.xy == vec2(-1.0f)) continue;
 
+        float normalWeight = clamp(dot(normalWS, hitPosNormalWS), 0.0f, 1.0f);
         vec3 reflectRayWS = hitPosWS - originWS;
 
         // vec3 H = normalize(eyeRayWS + reflectRayWS);
@@ -103,7 +106,7 @@ void main()
         vec3 brdf = SpecularReflectionMicrofacet(F0, roughness, normalWS, reflectRayWS, eyeRayWS);
         float pdf = max(1e-5, hitInfo.w);
 
-        vec3 weight = brdf / pdf;
+        vec3 weight = normalWeight * brdf / pdf;
         vec4 sampleColor = vec4(texture(LightingMap, hitInfo.xy).xyz, texture(SSRHitsMask, sampleUV).x);
         sampleColor.rgb /= 1 + Luminance(sampleColor.rgb);
 

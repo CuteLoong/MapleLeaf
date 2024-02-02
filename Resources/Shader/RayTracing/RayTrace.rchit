@@ -55,12 +55,25 @@ layout(set=0, binding = 8) buffer BufferDirectionalLights {
 	DirectionalLight lights[];
 } bufferDirectionalLights;
 
+layout(set=0, binding = 10) uniform sampler2D samplerBRDF;
+layout(set=0, binding = 11) uniform samplerCube samplerIrradiance;
+layout(set=0, binding = 12) uniform samplerCube samplerPrefiltered;
+
 layout(set = 1, binding = 0) uniform sampler2D ImageSamplers[];
 
 #include <Misc/Constants.glsl>
 #include <Materials/Fresnel.glsl>
 #include <Materials/BRDF.glsl>
 #include <Sampling/TinyEncryptionSample.glsl>
+
+vec3 prefilteredReflection(vec3 R, float roughness, samplerCube prefiltered) {
+	float lod = roughness * float(textureQueryLevels(prefiltered));
+	float lodf = floor(lod);
+	float lodc = ceil(lod);
+	vec3 a = textureLod(prefiltered, R, lodf).rgb;
+	vec3 b = textureLod(prefiltered, R, lodc).rgb;
+	return mix(a, b, lod - lodf);
+}
 
 float calcAttenuation(float distance, vec3 attenuation)
 {
@@ -166,23 +179,40 @@ void main()
 		float d = length(L);
 		L = normalize(L);
 
+		float NoL = clamp(dot(worldNormal, L), 0.0f, 1.0f);
+
 		vec3 radiance = light.color.rgb * calcAttenuation(d, light.attenuation.xyz);
 
-		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
+		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
 
-		Lo += brdf * radiance;
+		// Lo += brdf * radiance;
 	}
 
 	for(int i = 1; i <= uniformSceneData.directionalLightsCount; i++) {
 		DirectionalLight light = bufferDirectionalLights.lights[i];
 		vec3 L = normalize(-light.direction);
 
+		float NoL = clamp(dot(worldNormal, L), 0.0f, 1.0f);
+
 		vec3 radiance = light.color.rgb;
 
-		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
+		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
 
-		Lo += brdf * radiance;
+		// Lo += brdf * radiance;
 	}
+
+	float NdotV = clamp(dot(worldNormal, V), 0.0f, 1.0f);
+	vec3 R = reflect(-V, worldNormal);
+
+	vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
+	vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
+	vec3 specular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
+
+	vec3 irradiance = texture(samplerIrradiance, worldNormal).rgb;
+	vec3 diffuseLo = irradiance * (1 - metallic) * diffuse.rgb * brdfPreIntegrated.b * INV_M_PI;
+
+	// Lo += (specular + diffuseLo);
+	Lo += (specular + diffuseLo) * 2.0f;
 
 	vec2 Xi = vec2(TinyEncryptionRandom(prd.randomSeed), TinyEncryptionRandom(prd.randomSeed));
 
@@ -195,6 +225,7 @@ void main()
 	prd.done = 0;
 	prd.nextOrigin = vec4(worldPosition, 1.0f);
 	prd.nextDir = vec4(normalize(reflect(-V, H)), 0.0f);
+	float NoL = clamp(dot(worldNormal, R), 0.0f, 1.0f);
 	prd.accBRDF *= SpecularReflectionMicrofacet(F0, roughness, worldNormal, prd.nextDir.xyz, V);
 	prd.accPDF *= pdf;
 }

@@ -23,6 +23,7 @@ void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
     const auto& SSRHitsMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
     const auto& SSRMask    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
     const auto& glossyMV   = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("GlossyMV"));
+    // const auto& debugMask  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("DebugMask"));
 
     const auto& LeftMinHiZ  = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("LeftMinHi-z"));
     const auto& RightMinHiZ = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("RightMinHi-z"));
@@ -51,6 +52,7 @@ void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
     descriptorSet.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
     descriptorSet.Push("inInstanceID", Graphics::Get()->GetAttachment("instanceId"));
+    descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
 
     descriptorSet.Push("inMinHiZLeft", LeftMinHiZ);
     descriptorSet.Push("inMinHiZRight", RightMinHiZ);
@@ -61,6 +63,7 @@ void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
     descriptorSet.Push("SSRHitsMap", SSRHitsMap);
     descriptorSet.Push("SSRMask", SSRMask);
     descriptorSet.Push("GlossyMV", glossyMV);
+    // descriptorSet.Push("DebugMask", debugMask);
 
     if (!descriptorSet.Update(pipelineCompute)) return;
 

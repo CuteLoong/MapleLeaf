@@ -13,7 +13,7 @@
 namespace MapleLeaf {
 class Imgui : public Module::Registrar<Imgui>
 {
-    inline static const bool Registered = Register(Stage::Render, Requires<Devices>());
+    inline static const bool Registered = Register(Stage::Render, Requires<Devices, Graphics>());
 
 public:
     Imgui();

@@ -8,7 +8,7 @@
 namespace MapleLeaf {
 class Scenes : public Module::Registrar<Scenes>
 {
-    inline static const bool Registered = Register(Stage::Normal, Requires<Graphics>());
+    inline static const bool Registered = Register(Stage::Normal, Requires<Graphics, Resources>());
 
 public:
     Scenes();

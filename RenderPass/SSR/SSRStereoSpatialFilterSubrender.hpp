@@ -20,11 +20,15 @@ public:
 
 private:
     PipelineCompute pipelineCompute;
+    PipelineCompute pipelineTemporalFilter;
 
-    UniformHandler     uniformFilterData;
-    UniformHandler     uniformJitterData;
-    UniformHandler     uniformCamera;
+    UniformHandler uniformFilterData;
+    UniformHandler uniformJitterData;
+    UniformHandler uniformCamera;
+    UniformHandler uniformCameraTemporalFilter;
+
     DescriptorsHandler descriptorSet;
+    DescriptorsHandler descriptorSetTemporalFilter;
 
     std::shared_ptr<HaltonSamplePattern> haltonSampler;
     Future<std::shared_ptr<Image2d>>     blueNoise;

@@ -7,6 +7,7 @@ namespace MapleLeaf {
 SSRStereoSpatialFilterSubrender::SSRStereoSpatialFilterSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
     , pipelineCompute("Shader/SSR/SSRStereoSpatialFilter.comp", {}, false)
+    , pipelineTemporalFilter("Shader/SSR/SSRStereoTemporalFilter.comp", {}, false)
     , blueNoise(Resources::Get()->GetThreadPool().Enqueue(LoadBlueNoise))
 {
     haltonSampler = HaltonSamplePattern::Create(4);
@@ -46,6 +47,33 @@ void SSRStereoSpatialFilterSubrender::PreRender(const CommandBuffer& commandBuff
     descriptorSet.BindDescriptor(commandBuffer, pipelineCompute);
 
     pipelineCompute.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
+
+    ReflectionMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+
+    // const auto& SSRHitsMap       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
+    // const auto& ReflectionMap    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
+    const auto& PrevSSRColor     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevSSRColor"));
+    const auto& TemporalSSRColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("TemporalSSRColor"));
+
+    // auto camera = Scenes::Get()->GetScene()->GetCamera();
+    camera->PushUniforms(uniformCameraTemporalFilter);
+
+    descriptorSetTemporalFilter.Push("UniformCamera", uniformCameraTemporalFilter);
+    descriptorSetTemporalFilter.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
+    descriptorSetTemporalFilter.Push("SSRHitsMap", SSRHitsMap);
+    descriptorSetTemporalFilter.Push("PrevSSRColor", PrevSSRColor);
+    descriptorSetTemporalFilter.Push("CurSSRColor", ReflectionMap);
+    descriptorSetTemporalFilter.Push("TemporalSSRColor", TemporalSSRColor);
+
+    if (!descriptorSetTemporalFilter.Update(pipelineTemporalFilter)) return;
+
+    pipelineTemporalFilter.BindPipeline(commandBuffer);
+
+    descriptorSetTemporalFilter.BindDescriptor(commandBuffer, pipelineTemporalFilter);
+
+    pipelineTemporalFilter.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
+
+    PrevSSRColor->CopyImage2d(commandBuffer, *TemporalSSRColor);
 }
 
 void SSRStereoSpatialFilterSubrender::Render(const CommandBuffer& commandBuffer) {}

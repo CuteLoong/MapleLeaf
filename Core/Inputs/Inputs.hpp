@@ -11,7 +11,7 @@ namespace MapleLeaf {
 
 class Inputs : public Module::Registrar<Inputs>
 {
-    inline static const bool Registered = Register(Stage::Pre, Requires<Devices, Graphics,Scenes>());
+    inline static const bool Registered = Register(Stage::Pre, Requires<Devices, Graphics, Scenes>());
 
 public:
     Inputs();

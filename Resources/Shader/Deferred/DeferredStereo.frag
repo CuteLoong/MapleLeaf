@@ -94,25 +94,29 @@ void main() {
 		{
 			DirectionalLight light = bufferDirectionalLights.lights[i];
 			vec3 L = normalize(-light.direction);
+
+			float NoL = clamp(dot(N, L), 0.0f, 1.0f);
 			vec3 radiance = light.color.rgb;
 
-			vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
+			vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
 			float shadowValue = shadowFactor(shadowCoords);
 
-			// Lo += brdf * radiance * shadowValue;
+			Lo += brdf * radiance * shadowValue;
 			Lo += brdf * radiance;
 		}
 
-		// vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
-		// vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
-		// vec3 specular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
+		vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
+		vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
+		vec3 specular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
 
-		// vec3 irradiance = texture(samplerIrradiance, N).rgb;
-		// vec3 diffuseLo = irradiance * (1 - metallic) * diffuse * brdfPreIntegrated.b * INV_M_PI;
+		vec3 irradiance = texture(samplerIrradiance, N).rgb;
+		vec3 diffuseLo = irradiance * (1 - metallic) * diffuse * brdfPreIntegrated.b * INV_M_PI;
 
-		// vec3 ambient = (diffuseLo + specular) * ao ;
-		// Lo += ambient;
+		vec3 ambient = (diffuseLo + specular) * 1.0f ;
+		// vec3 ambient = (specular) * 1.0f ;
+
+		Lo += ambient;
 	}
 	else {
 		Lo = diffuse;

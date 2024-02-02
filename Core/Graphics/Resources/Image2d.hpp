@@ -62,6 +62,8 @@ public:
                      VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
                      bool anisotropic = false, bool mipmap = false);
 
+    void CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d) const;
+
     void Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const;
     void Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const;
     void Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer) const;

@@ -95,6 +95,9 @@ void Camera::UpdateByInput()
 
 void Camera::UpdateCameraInfo()
 {
+    prevProjectionMatrix = projectionMatrix;
+    prevViewMatrix       = viewMatrix;
+
     viewMatrix       = glm::lookAt(position, position + forward, up);
     projectionMatrix = glm::perspective(fieldOfView, aspectRatio, nearPlane, farPlane);
 
@@ -133,6 +136,12 @@ void Camera::UpdateCameraInfo()
 
 void Camera::UpdateStereoCameraInfo()
 {
+    prevStereoViewMatrix[0] = stereoViewMatrix[0];
+    prevStereoViewMatrix[1] = stereoViewMatrix[1];
+
+    prevStereoProjectionMatrix[0] = stereoProjectionMatrix[0];
+    prevStereoProjectionMatrix[1] = stereoProjectionMatrix[1];
+
     stereoViewPosition[0] = glm::vec4(position - right * eyeSeparation / 2.0f, 1.0f);
     stereoViewPosition[1] = glm::vec4(position + right * eyeSeparation / 2.0f, 1.0f);
 
@@ -223,11 +232,15 @@ const glm::vec4 Camera::GetStereoPixelSize() const
 void Camera::PushUniforms(UniformHandler& uniformObject)
 {
     uniformObject.Push("projection", projectionMatrix);
+    uniformObject.Push("prevProjection", prevProjectionMatrix);
     uniformObject.Push("view", viewMatrix);
+    uniformObject.Push("prevView", prevViewMatrix);
     uniformObject.Push("invProjection", invProjectionMatrix);
     uniformObject.Push("invView", invViewMatrix);
     uniformObject.Push("stereoProjection", stereoProjectionMatrix);
+    uniformObject.Push("prevStereoProjection", prevStereoProjectionMatrix);
     uniformObject.Push("stereoView", stereoViewMatrix);
+    uniformObject.Push("prevStereoView", prevStereoViewMatrix);
     uniformObject.Push("invStereoProjection", invStereoProjectionMatrix);
     uniformObject.Push("invStereoView", invStereoViewMatrix);
     uniformObject.Push("frustumVector", frustumVector);

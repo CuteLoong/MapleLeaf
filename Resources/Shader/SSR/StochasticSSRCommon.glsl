@@ -74,9 +74,9 @@ vec2 GetZMinMaxFromHiZ(ivec2 pixel, float mipLevel, int levelSizeX, int viewInde
     return zMinMax;
 }
 
-void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 stepOffsetEye2, vec3 pointSS0, vec3 rayDir, vec2 pointSS0Eye2XY, vec2 rayDirEye2XY, float calcT0, float calcT1, inout int viewIndex, inout float mipLevel, inout float tParameter, inout vec2 tSceneZMinMax)
+void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 stepOffsetEye2, vec3 pointSS0, vec3 rayDir, vec2 pointSS0Eye2XY, vec2 rayDirEye2XY, float calcT0, float calcT1, inout int viewIndex, inout float mipLevel, inout float tParameter, inout vec2 tSceneZMinMax, inout int iterations)
 {
-    float iterations = 0.0f;
+    // float iterations = 0.0f;
     int curViewIndex;
     while(mipLevel >= 0.0f && iterations < ssrData.maxSteps && tParameter <= 1.0f) {
         iterations++;
@@ -103,16 +103,16 @@ void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
         tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
 
         // use another eyes info
-        if(tSceneZMinMax.y < tParameter || (outOfBounds1 && !outOfBounds2)) {
-            curViewIndex = 1 - curViewIndex;
-            maxRayPointXY = pointSS0Eye2XY + rayDirEye2XY * tParameter;
-            pixel = GetHizPixel(maxRayPointXY, levelSize);
+        // if(tSceneZMinMax.y <= tParameter || (outOfBounds1 && !outOfBounds2)) {
+        //     curViewIndex = 1 - curViewIndex;
+        //     maxRayPointXY = pointSS0Eye2XY + rayDirEye2XY * tParameter;
+        //     pixel = GetHizPixel(maxRayPointXY, levelSize);
 
-            tPixelXY = ((pixel + stepEye2) / levelSize + stepOffsetEye2 - pointSS0Eye2XY) / rayDirEye2XY;
-            tPixel = min(tPixelXY.x, tPixelXY.y);
-            sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, curViewIndex);
-            tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
-        }
+        //     tPixelXY = ((pixel + stepEye2) / levelSize + stepOffsetEye2 - pointSS0Eye2XY) / rayDirEye2XY;
+        //     tPixel = min(tPixelXY.x, tPixelXY.y);
+        //     sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, curViewIndex);
+        //     tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
+        // }
 
         mipLevel--;
         if(tSceneZMinMax.x <= tPixel && tParameter <= tSceneZMinMax.y) {
@@ -126,9 +126,9 @@ void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
     viewIndex = curViewIndex;
 }
 
-void maxMinHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 stepOffsetEye2, vec3 pointSS0, vec3 rayDir, vec2 pointSS0Eye2XY, vec2 rayDirEye2XY, float calcT0, float calcT1, inout int viewIndex, inout float mipLevel, inout float tParameter, inout vec2 tSceneZMinMax)
+void maxMinHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 stepOffsetEye2, vec3 pointSS0, vec3 rayDir, vec2 pointSS0Eye2XY, vec2 rayDirEye2XY, float calcT0, float calcT1, inout int viewIndex, inout float mipLevel, inout float tParameter, inout vec2 tSceneZMinMax, inout int iterations)
 {
-    float iterations = 0.0f;
+    // float iterations = 0.0f;
     int curViewIndex;
     while(mipLevel >= 0.0f && iterations < ssrData.maxSteps && tParameter <= 1.0f) {
         iterations++;
@@ -155,7 +155,7 @@ void maxMinHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
         tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
 
         // use another eyes info
-        // if(tSceneZMinMax.y < tParameter || (outOfBounds1 && !outOfBounds2)) {
+        // if(outOfBounds1 && !outOfBounds2) {
         //     curViewIndex = 1 - curViewIndex;
         //     maxRayPointXY = pointSS0Eye2XY + rayDirEye2XY * tParameter;
         //     pixel = GetHizPixel(maxRayPointXY, levelSize);

@@ -25,6 +25,7 @@
 #include "StereoMaskSubrender.hpp"
 #include "StochasticSSRStereoSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace Test {
 StereoRenderer::StereoRenderer()
@@ -44,7 +45,10 @@ StereoRenderer::StereoRenderer()
                                                       {"SSRHitsMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                       {"SSRMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                       {"GlossyMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-                                                      {"ReflectionMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
+                                                      {"ReflectionMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                      {"TemporalSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM},
+                                                      {"DebugMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                      {"PrevSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -107,7 +111,7 @@ void StereoRenderer::Start()
 {
     AddSubrender<ShadowSubrender>({0, 0});
 
-    // AddSubrender<SkyboxSubrender>({1, 0});
+    AddSubrender<SkyboxSubrender>({1, 0});
     AddSubrender<IndirectDrawStereoSubrender>({1, 1});
 
     AddSubrender<IndirectDrawStereoBackSubrender>({2, 0});

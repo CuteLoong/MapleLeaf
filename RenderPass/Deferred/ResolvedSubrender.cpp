@@ -13,6 +13,8 @@ void ResolvedSubrender::PreRender(const CommandBuffer& commandBuffer) {}
 
 void ResolvedSubrender::Render(const CommandBuffer& commandBuffer)
 {
+    const auto& TemporalSSRColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("TemporalSSRColor"));
+
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCamera);
 
@@ -23,7 +25,8 @@ void ResolvedSubrender::Render(const CommandBuffer& commandBuffer)
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
     descriptorSet.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
     descriptorSet.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
-    descriptorSet.Push("ReflectionColorMap", Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
+    // descriptorSet.Push("ReflectionColorMap", Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
+    descriptorSet.Push("ReflectionColorMap", TemporalSSRColor);
     descriptorSet.Push("PreIntegratedBRDF", *brdf);
     descriptorSet.Push("GlossyMV", Graphics::Get()->GetNonRTAttachment("GlossyMV"));
 
@@ -34,9 +37,7 @@ void ResolvedSubrender::Render(const CommandBuffer& commandBuffer)
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void ResolvedSubrender::PostRender(const CommandBuffer& commandBuffer) {
-    
-}
+void ResolvedSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 
 std::unique_ptr<Image2d> ResolvedSubrender::ComputeBRDF(uint32_t size)
 {
