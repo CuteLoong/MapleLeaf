@@ -1,6 +1,8 @@
 #include "Transform.hpp"
 #include "Entity.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace MapleLeaf {
@@ -21,15 +23,15 @@ Transform::Transform(const glm::mat4 modelMatrix)
     glm::vec4 perspective;
     glm::decompose(modelMatrix, scale, quaternion, translation, skew, perspective);
 
-    position    = translation;
+    position = translation;
 
 
-    rotation.x    = atan2(2.0f * (quaternion.y * quaternion.z + quaternion.w * quaternion.x),
+    rotation.x = atan2(2.0f * (quaternion.y * quaternion.z + quaternion.w * quaternion.x),
                        quaternion.w * quaternion.w - quaternion.x * quaternion.x - quaternion.y * quaternion.y + quaternion.z * quaternion.z);
     rotation.y = asin(-2.0f * (quaternion.x * quaternion.z - quaternion.w * quaternion.y));
     rotation.z = atan2(2.0f * (quaternion.x * quaternion.y + quaternion.w * quaternion.z),
-                      quaternion.w * quaternion.w + quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z);
-    //rotation    = glm::eulerAngles(quaternion);
+                       quaternion.w * quaternion.w + quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z);
+    // rotation    = glm::eulerAngles(quaternion);
     this->scale = scale;
 
     updateStatus = UpdateStatus::Transformation;

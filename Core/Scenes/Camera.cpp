@@ -32,16 +32,16 @@ void Camera::Update()
         UpdateByTransform();
     }
     else {
-        // UpdateByInput();
-        UpdateByCPU();
+        UpdateByInput();
+        // UpdateByCPU();
     }
 
     UpdateCameraInfo();
     UpdateStereoCameraInfo();
 
-    if (frameID != 0 && frameID < 14520 && frameID % 120 == 0) {
-        Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
-    }
+    // if (frameID != 0 && frameID < 14520 && frameID % 120 == 0) {
+    //     Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
+    // }
     // if (frameID == 120) {
     //     Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
     // }
