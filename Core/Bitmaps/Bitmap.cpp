@@ -45,12 +45,24 @@ void Bitmap::Load(const std::filesystem::path& filename)
     bytesPerPixel = 4;
 }
 
+void Bitmap::ConvertBGRAtoRGBA(uint8_t* bgraData, uint32_t width, uint32_t height) const
+{
+    for (uint32_t y = 0; y < height; ++y) {
+        for (uint32_t x = 0; x < width; ++x) {
+            uint32_t i = (y * width + x) * 4;
+            std::swap(bgraData[i], bgraData[i + 2]);
+        }
+    }
+}
+
 void Bitmap::Write(const std::filesystem::path& filename) const
 {
     if (auto parentPath = filename.parent_path(); !parentPath.empty()) std::filesystem::create_directories(parentPath);
 
-    std::ofstream              os(filename, std::ios::binary | std::ios::out);
-    int32_t                    len;
+    std::ofstream os(filename, std::ios::binary | std::ios::out);
+    int32_t       len;
+
+    ConvertBGRAtoRGBA(data.get(), size.x, size.y);
     std::unique_ptr<uint8_t[]> png(stbi_write_png_to_mem(data.get(), size.x * bytesPerPixel, size.x, size.y, bytesPerPixel, &len));
     os.write(reinterpret_cast<char*>(png.get()), len);
 }

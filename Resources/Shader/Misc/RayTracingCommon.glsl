@@ -9,6 +9,7 @@ struct HitPayLoad
     int done;
     vec4 nextOrigin;
     vec4 nextDir;
+    vec4 cameraOrigin;
     vec2 randomXi;
     float accPDF;
     uint randomSeed;

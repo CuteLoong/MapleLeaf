@@ -103,20 +103,6 @@ void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
         vec2 sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, viewIndex);
         tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
 
-        // use another eyes info
-        // if(tSceneZMinMax.y <= tParameter || (outOfBounds1 && !outOfBounds2)) {
-        //     // mipLevel = min(ssrData.hiZMaxLevel, mipLevel + 2.0f);
-
-        //     curViewIndex = 1 - curViewIndex;
-        //     maxRayPointXY = maxRayPointXY2;
-        //     pixel = GetHizPixel(maxRayPointXY, levelSize);
-
-        //     tPixelXY = ((pixel + stepEye2) / levelSize + stepOffsetEye2 - pointSS0Eye2XY) / rayDirEye2XY;
-        //     tPixel = min(tPixelXY.x, tPixelXY.y);
-        //     sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, curViewIndex);
-        //     tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
-        // }
-
         mipLevel--;
         if(tSceneZMinMax.x <= tPixel && tParameter <= tSceneZMinMax.y) {
             tParameter = max(tParameter, tSceneZMinMax.x);
@@ -162,18 +148,6 @@ void maxMinHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
 
         vec2 sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, viewIndex);
         tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
-
-        // use another eyes info
-        // if(outOfBounds1 && !outOfBounds2) {
-        //     curViewIndex = 1 - curViewIndex;
-        //     maxRayPointXY = pointSS0Eye2XY + rayDirEye2XY * tParameter;
-        //     pixel = GetHizPixel(maxRayPointXY, levelSize);
-
-        //     tPixelXY = ((pixel + stepEye2) / levelSize + stepOffsetEye2 - pointSS0Eye2XY) / rayDirEye2XY;
-        //     tPixel = min(tPixelXY.x, tPixelXY.y);
-        //     sceneZMinMax = GetZMinMaxFromHiZ(pixel, mipLevel, levelSize.x, curViewIndex);
-        //     tSceneZMinMax = (1.0f / sceneZMinMax + vec2(calcT0)) * calcT1;
-        // }
 
         mipLevel--;
         if(tSceneZMinMax.y <= tPixel && tParameter <= tSceneZMinMax.x) {

@@ -21,6 +21,7 @@ public:
 
     void UpdateByTransform();
     void UpdateByInput();
+    void UpdateByCPU();   // used in debug mode
 
     void UpdateCameraInfo();
     void UpdateStereoCameraInfo();

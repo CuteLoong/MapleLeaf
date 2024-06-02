@@ -392,4 +392,51 @@ void Graphics::CheckVk(VkResult result)
 
     throw std::runtime_error("Vulkan error: " + failure);
 }
+
+void Graphics::CaptureScreenshot(const std::filesystem::path& filename)
+{
+#ifdef MAPLELEAF_GRAPHIC_DEBUG
+    auto debugStart = Time::Now();
+#endif
+
+    auto size = Devices::Get()->GetWindow()->GetSize();
+
+    VkImage        dstImage;
+    VkDeviceMemory dstImageMemory;
+    auto           supportsBlit = Image::CopyImage(swapchain->GetActiveImage(),
+                                         dstImage,
+                                         dstImageMemory,
+                                         surface->GetFormat().format,
+                                                   {size.x, size.y, 1},
+                                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                                         0,
+                                         0);
+
+    // Get layout of the image (including row pitch).
+    VkImageSubresource imageSubresource = {};
+    imageSubresource.aspectMask         = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageSubresource.mipLevel           = 0;
+    imageSubresource.arrayLayer         = 0;
+
+    VkSubresourceLayout dstSubresourceLayout;
+    vkGetImageSubresourceLayout(*logicalDevice, dstImage, &imageSubresource, &dstSubresourceLayout);
+
+    Bitmap bitmap(std::make_unique<uint8_t[]>(dstSubresourceLayout.size), size);
+
+    void* data;
+    vkMapMemory(*logicalDevice, dstImageMemory, dstSubresourceLayout.offset, dstSubresourceLayout.size, 0, &data);
+    std::memcpy(bitmap.GetData().get(), data, static_cast<size_t>(dstSubresourceLayout.size));
+    vkUnmapMemory(*logicalDevice, dstImageMemory);
+
+    // Frees temp image and memory.
+    vkFreeMemory(*logicalDevice, dstImageMemory, nullptr);
+    vkDestroyImage(*logicalDevice, dstImage, nullptr);
+
+    // Writes the screenshot bitmap to the file.
+    bitmap.Write(filename);
+
+#ifdef MAPLELEAF_GRAPHIC_DEBUG
+    Log::Out("Screenshot ", filename, " created in ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+#endif
+}
 }   // namespace MapleLeaf

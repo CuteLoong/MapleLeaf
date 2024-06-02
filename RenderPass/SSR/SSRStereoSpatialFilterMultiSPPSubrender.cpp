@@ -1,24 +1,24 @@
-#include "SSRStereoSpatialFilterSubrender.hpp"
+#include "SSRStereoSpatialFilterMultiSPPSubrender.hpp"
 
 #include "Graphics.hpp"
 #include "Scenes.hpp"
 
 namespace MapleLeaf {
-SSRStereoSpatialFilterSubrender::SSRStereoSpatialFilterSubrender(const Pipeline::Stage& pipelineStage)
+SSRStereoSpatialFilterMultiSPPSubrender::SSRStereoSpatialFilterMultiSPPSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipelineCompute("Shader/SSR/SSRStereoSpatialFilter.comp", {}, false)
+    , pipelineCompute("Shader/SSR/SSRStereoSpatialFilterMultiSPP.comp", {}, false)
     , pipelineTemporalFilter("Shader/SSR/SSRStereoTemporalFilter.comp", {}, false)
     , blueNoise(Resources::Get()->GetThreadPool().Enqueue(LoadBlueNoise))
 {
     haltonSampler = HaltonSamplePattern::Create(4);
 }
 
-void SSRStereoSpatialFilterSubrender::PreRender(const CommandBuffer& commandBuffer)
+void SSRStereoSpatialFilterMultiSPPSubrender::PreRender(const CommandBuffer& commandBuffer)
 {
-    const auto& SSRHitsMap                     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
-    const auto& SSRMask                        = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
-    const auto& ReflectionMap                  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
-    const auto& ReprojectionReflectionColorMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReprojectionReflectionColorMap"));
+    const auto& SSRHitsMap       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
+    const auto& SSRMask          = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
+    const auto& ReflectionMap    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
+    const auto& MultiSSRColorMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("MultiSSRColorMap"));
 
     glm::vec2 noiseScale = static_cast<glm::vec2>(Devices::Get()->GetWindow()->GetSize()) / static_cast<glm::vec2>((*blueNoise)->GetSize());
 
@@ -36,10 +36,10 @@ void SSRStereoSpatialFilterSubrender::PreRender(const CommandBuffer& commandBuff
     descriptorSet.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
     descriptorSet.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
     descriptorSet.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
+    descriptorSet.Push("MultiSSRColorMap", MultiSSRColorMap);
     descriptorSet.Push("SSRHitsMap", SSRHitsMap);
     descriptorSet.Push("SSRHitsMask", SSRMask);
     descriptorSet.Push("blueNoise", *blueNoise);
-    descriptorSet.Push("ReprojectionReflectionColorMap", ReprojectionReflectionColorMap);
     descriptorSet.Push("ReflectionColorMap", ReflectionMap);
 
     if (!descriptorSet.Update(pipelineCompute)) return;
@@ -78,11 +78,11 @@ void SSRStereoSpatialFilterSubrender::PreRender(const CommandBuffer& commandBuff
     PrevSSRColor->CopyImage2d(commandBuffer, *TemporalSSRColor);
 }
 
-void SSRStereoSpatialFilterSubrender::Render(const CommandBuffer& commandBuffer) {}
+void SSRStereoSpatialFilterMultiSPPSubrender::Render(const CommandBuffer& commandBuffer) {}
 
-void SSRStereoSpatialFilterSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+void SSRStereoSpatialFilterMultiSPPSubrender::PostRender(const CommandBuffer& commandBuffer) {}
 
-std::shared_ptr<Image2d> SSRStereoSpatialFilterSubrender::LoadBlueNoise()
+std::shared_ptr<Image2d> SSRStereoSpatialFilterMultiSPPSubrender::LoadBlueNoise()
 {
     auto blueNoiseImage = Image2d::Create("NoiseImage/BlueNoise.tga", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT, false, false);
 

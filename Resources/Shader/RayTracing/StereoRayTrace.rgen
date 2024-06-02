@@ -71,13 +71,14 @@ void main()
         prd.nextOrigin = origin;
         prd.accPDF = 1.0f;
         prd.nextDir = direction;
+        prd.cameraOrigin = origin;
 
         vec3 rayDirection = prd.nextDir.xyz;
         vec3 rayOrigin = prd.nextOrigin.xyz;
 
         for(;;) {
             traceRayEXT(topLevelAS, rayFlags, 0xFF, 0, 0, 0, rayOrigin, tMin, rayDirection, tMax, 0);
-            hitValue += prd.Lo;
+            // hitValue += prd.Lo;
 
             prd.depth++;
 
@@ -96,6 +97,6 @@ void main()
 
     // indirectLight = pow(toneMap(indirectLight), vec3(1.0f / 2.2f));
 
-    imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(hitValue, 1.0f));
+    imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirectLight, 1.0f));
     // imageStore(indirectLightResult, ivec2(gl_LaunchIDEXT.xy), vec4(indirectLight, 1.0f));
 }

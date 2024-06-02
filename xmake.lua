@@ -81,6 +81,8 @@ add_includedirs(
 "RenderPass/StereoMask",
 "RenderPass/Blur",
 "RenderPass/SSR",
+"RenderPass/RawSSR",
+"RenderPass/SCSSR",
 "RenderPass/Skybox",
 "RenderPass/RayTracing"
 )
@@ -98,6 +100,8 @@ target("RenderPass")
     "RenderPass/StereoMask/*.cpp",
     "RenderPass/Blur/*.cpp",
     "RenderPass/SSR/*.cpp",
+    "RenderPass/RawSSR/*.cpp",
+    "RenderPass/SCSSR/*.cpp",
     "RenderPass/Skybox/*.cpp",
     "RenderPass/RayTracing/*.cpp"
     )
@@ -144,6 +148,6 @@ target("MapleLeaf")
     set_kind("binary")
     add_deps("Core")
     add_deps("RenderPass")
-    add_includedirs("App/", "Renderer/GPURenderer", "Renderer/MultiDrawRenderer", "Renderer/StereoRenderer", "Renderer/RayTracingRenderer", "Renderer/StereoRayTracingRenderer")
-    add_files("App/*.cpp", "Renderer/GPURenderer/*.cpp", "Renderer/MultiDrawRenderer/*.cpp", "Renderer/StereoRenderer/*.cpp", "Renderer/RayTracingRenderer/*.cpp", "Renderer/StereoRayTracingRenderer/*.cpp")
+    add_includedirs("App/", "Renderer/GPURenderer", "Renderer/MultiDrawRenderer", "Renderer/StereoRenderer", "Renderer/RawSSRRenderer", "Renderer/SCSSRRenderer", "Renderer/RayTracingRenderer", "Renderer/StereoRayTracingRenderer")
+    add_files("App/*.cpp", "Renderer/GPURenderer/*.cpp", "Renderer/MultiDrawRenderer/*.cpp", "Renderer/StereoRenderer/*.cpp", "Renderer/RawSSRRenderer/*.cpp", "Renderer/SCSSRRenderer/*.cpp","Renderer/RayTracingRenderer/*.cpp", "Renderer/StereoRayTracingRenderer/*.cpp")
 target_end()

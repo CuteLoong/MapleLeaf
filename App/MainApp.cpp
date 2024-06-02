@@ -3,11 +3,14 @@
 #include "GPURenderer.hpp"
 #include "Log.hpp"
 #include "MainRenderer.hpp"
+#include "RawSSRRenderer.hpp"
 #include "RayTracingRenderer.hpp"
+#include "SCSSRRenderer.hpp"
 #include "SceneBuilder.hpp"
 #include "Scenes.hpp"
 #include "StereoRayTracingRenderer.hpp"
 #include "StereoRenderer.hpp"
+
 
 #include "config.h"
 
@@ -48,7 +51,9 @@ void MainApp::Start()
 #else
     // Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
-    Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
+    // Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
+    Graphics::Get()->SetRenderer(std::make_unique<RawSSRRenderer>());
+    // Graphics::Get()->SetRenderer(std::make_unique<SCSSRRenderer>());
 #endif
 
     std::unique_ptr<SceneBuilder> scene = std::make_unique<SceneBuilder>();

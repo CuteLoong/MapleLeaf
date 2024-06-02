@@ -49,8 +49,8 @@ float evalPdfGGX_NDF(float alpha, float cosTheta)
 vec3 sampleGGX_NDF(float alpha, vec2 u, out float pdf)
 {
     float alphaSqr = alpha * alpha;
-    float phi = u.y * (2 * M_PI);
-    float tanThetaSqr = alphaSqr * u.x / (1 - u.x);
+    float phi = u.x * M_2PI;
+    float tanThetaSqr = alphaSqr * u.y / (1 - u.y);
     float cosTheta = 1 / sqrt(1 + tanThetaSqr);
     float r = sqrt(max(1 - cosTheta * cosTheta, 0));
 

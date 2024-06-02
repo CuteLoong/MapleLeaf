@@ -96,18 +96,26 @@ void main()
 	vec2 uv = vec2(inUV.x, 1.0f - inUV.y);
     int viewIndex = inUV.x < 0.5f ? 0 : 1;
 
-    vec3 glossyMV = texture(GlossyMV, uv).xyz;
+    // bool useAnother = false;
 
-    vec2 anotherUV = uv + glossyMV.xy;
-    float curReflectDepth = glossyMV.z;
-    float anotherReflectDepth = texture(GlossyMV, anotherUV).z;
-    bool useAnother = true;
+    // vec2 anotherUV = vec2(0.0f);
+    // float curReflectDepth = 0.0f;
+    // float anotherReflectDepth = 0.0f;
 
-    if(abs(curReflectDepth - anotherReflectDepth) > 0.01f) useAnother = false;
+    // vec3 glossyMV = texture(GlossyMV, uv).xyz;
+
+    // if(glossyMV.x != 0.0f && glossyMV.y != 0.0f) {
+    //     anotherUV = uv + glossyMV.xy;
+    //     curReflectDepth = glossyMV.z;
+    //     anotherReflectDepth = texture(GlossyMV, anotherUV).z;
+
+    //     if(abs(curReflectDepth - anotherReflectDepth) < 0.01f) useAnother = true;
+    // }
 
     vec3 normalWS = texture(inNormal, uv).xyz;
 
     vec4 ssrColor = texture(ReflectionColorMap, uv);
+    ssrColor.xyz *= 4.0f;
 
     float roughness = texture(inMaterial, uv).g;
     float metallic = texture(inMaterial, uv).r;
@@ -124,31 +132,34 @@ void main()
 
     vec3 dfg = F0 * brdf.x + brdf.y;
 
-    vec3 reflectionColor = vec3(0.0f);
-    if(useAnother) {
-        float SSRVariation = 0.0f;
-        vec4 SSRCurColor = vec4(0.0f);
-        vec4 SSRMinColor = vec4(0.0f);
-        vec4 SSRMaxColor = vec4(0.0f);
+    // vec3 reflectionColor = vec3(0.0f); 
+    // if(useAnother) {
+    //     float SSRVariation = 0.0f;
+    //     vec4 SSRCurColor = vec4(0.0f);
+    //     vec4 SSRMinColor = vec4(0.0f);
+    //     vec4 SSRMaxColor = vec4(0.0f);
 
-        ResolverAABB(ReflectionColorMap, 0.0f, 10.0f, 1.25f, uv, camera.pixelSize.zw, SSRVariation, SSRMinColor, SSRMaxColor, SSRCurColor);
-        vec4 ssrColor2 = texture(ReflectionColorMap, anotherUV);
+    //     // ResolverAABB(ReflectionColorMap, 0.0f, 10.0f, 1.25f, uv, camera.pixelSize.zw, SSRVariation, SSRMinColor, SSRMaxColor, SSRCurColor);
+    //     vec4 ssrColor2 = texture(ReflectionColorMap, anotherUV);
 
-        ssrColor2.xyz = clamp(ssrColor2.xyz, SSRMinColor.xyz, SSRMaxColor.xyz);
+    //     // ssrColor2.xyz = clamp(ssrColor2.xyz, SSRMinColor.xyz, SSRMaxColor.xyz);
 
-        reflectionColor = ((ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * 0.5f) * dfg;
-    }
-    else {
-        reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
-    }
+    //     reflectionColor = ((ssrColor.xyz * ssrColor.w + ssrColor2.xyz * ssrColor2.w) * 0.5) * dfg;
+    //     // reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
+    //     // reflectionColor = vec3(1.0f);
+    // }
+    // else {
+    //     reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
+    //     // reflectionColor = vec3(0.0f, 0.0f, 0.0f);
+    // }
         
-    // vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
+    vec3 reflectionColor = ssrColor.xyz * ssrColor.w * dfg;
 
     vec3 lighting = texture(LightingMap, uv).xyz;
 
-    outColor = vec4(lighting + reflectionColor * 2.0f, 1.0f);
-    // outColor = vec4(reflectionColor * 2.0f, 1.0f);
-    reflectionColor = toneMap(reflectionColor  * 2.0f);
+    // outColor = vec4(lighting * 0.3f + reflectionColor * 4.5f, 1.0f);
+    outColor = vec4(reflectionColor * 2.0f, 1.0f);
+    reflectionColor = toneMap(reflectionColor  * 4.5f);
 
     outIndirectLighting = vec4(pow(reflectionColor, vec3(1.0f / 2.2f)), 1.0f);
 }

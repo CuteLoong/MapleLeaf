@@ -168,7 +168,8 @@ void main()
 		worldNormal = normalize(TBN * tangentNormal);
 	}
 
-	vec3 V = -normalize(gl_WorldRayDirectionEXT);
+	// vec3 V1 = -normalize(gl_WorldRayDirectionEXT);
+	vec3 V = prd.depth == 0 ? -normalize(gl_WorldRayDirectionEXT) : normalize(prd.cameraOrigin.xyz - worldPosition);
 
 	vec3 Lo = vec3(0.0f);
 	vec3 F0 = vec3(0.04f);
@@ -212,7 +213,7 @@ void main()
 	vec3 diffuseLo = irradiance * (1 - metallic) * diffuse.rgb * brdfPreIntegrated.b * INV_M_PI;
 
 	// Lo += (specular + diffuseLo);
-	Lo += (specular + diffuseLo) * 2.0f;
+	Lo += prd.depth == 0 ? (specular + diffuseLo) : (specular + diffuseLo) * 4.0f;
 
 	vec2 Xi = vec2(TinyEncryptionRandom(prd.randomSeed), TinyEncryptionRandom(prd.randomSeed));
 

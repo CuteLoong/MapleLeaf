@@ -13,6 +13,8 @@ public:
     Bitmap(std::unique_ptr<uint8_t[]>&& data, const glm::uvec2& size, uint32_t bytesPerPixel = 4);
     ~Bitmap() = default;
 
+    void ConvertBGRAtoRGBA(uint8_t* bgraData, uint32_t width, uint32_t height) const;
+
     void Load(const std::filesystem::path& filename);
     void Write(const std::filesystem::path& filename) const;
 

@@ -23,29 +23,13 @@ layout(set=0, binding=8) uniform sampler2D LightingMap;
 layout(set=0, binding=9) uniform sampler2D SSRHitsMap;
 layout(set=0, binding=10) uniform sampler2D SSRHitsMask;
 layout(set=0, binding=11) uniform sampler2D blueNoise;
-layout(set=0, binding=12) uniform sampler2D ReprojectionReflectionColorMap;
 
-layout(set=0, binding=13) writeonly uniform image2D ReflectionColorMap;
+layout(set=0, binding=12) writeonly uniform image2D ReflectionColorMap;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
 #include <Misc/Constants.glsl>
 #include <Materials/BRDF.glsl>
-
-float evalGGX(float ggxAlpha, float NdotH)
-{
-    float a2 = ggxAlpha * ggxAlpha;
-    float d = ((NdotH * a2 - NdotH) * NdotH + 1.0f);
-    return a2 / (M_PI * d * d);
-}
-
-float Vis_SmithJointApprox(float NdotL, float NdotV, float roughness)
-{
-    float a = roughness * roughness;
-    float Vis_SmithV = NdotL * (NdotV * (1 - a) + a);
-    float Vis_SmithL = NdotV * (NdotL * (1 - a) + a);
-    return 0.5 / (Vis_SmithV + Vis_SmithL);
-}
 
 float Luminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
@@ -68,7 +52,6 @@ void main()
     vec3 eyeRayWS = normalize(eyeWS - originWS);
 
     vec3 normalWS = texture(inNormal, screenUV).xyz;
-    vec3 normalVS = normalize(mat3(transpose(inverse(camera.stereoView[viewIndex]))) * normalWS);
 
     vec3 diffuse = texture(inDiffuse, screenUV).xyz;
 
@@ -88,7 +71,6 @@ void main()
         vec2 offsetUV = rotation * offset[i] * camera.pixelSize.zw;
         vec2 sampleUV = screenUV + offsetUV;
 
-        // vec4 hitInfo = texture(SSRHitsMap, sampleUV); // xy: hitUV, z: hitDepth, w: pdf
         vec4 hitInfo = texelFetch(SSRHitsMap, ivec2(sampleUV * camera.pixelSize.xy), 0); // xy: hitUV, z: hitDepth, w: pdf
         vec3 hitPosWS = StereoWorldSpacePosAtScreenUV(hitInfo.xy);
         vec3 hitPosNormalWS = texture(inNormal, sampleUV).xyz;
@@ -98,12 +80,6 @@ void main()
         float normalWeight = clamp(dot(normalWS, hitPosNormalWS), 0.0f, 1.0f);
         vec3 reflectRayWS = hitPosWS - originWS;
 
-        // vec3 H = normalize(eyeRayWS + reflectRayWS);
-        // float NdotH = clamp(dot(normalWS, H), 0.0f, 1.0f);
-        // float NdotV = clamp(dot(normalWS, eyeRayWS), 0.0f, 1.0f);
-        // float NdotL = clamp(dot(normalWS, reflectRayWS), 0.0f, 1.0f);
-
-        // float brdf = max(0.0f, evalGGX(roughness, NdotH) * Vis_SmithJointApprox(NdotL, NdotV, roughness));
         vec3 brdf = SpecularReflectionMicrofacet(F0, roughness, normalWS, reflectRayWS, eyeRayWS);
         float pdf = max(1e-5, hitInfo.w);
 

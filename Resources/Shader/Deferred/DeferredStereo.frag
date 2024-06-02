@@ -87,7 +87,7 @@ void main() {
 
 			vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
-			Lo += brdf * radiance;
+			// Lo += brdf * radiance;
 		}
 
 		for(int i = 1; i <= scene.directionalLightsCount; i++)
@@ -102,8 +102,8 @@ void main() {
 
 			float shadowValue = shadowFactor(shadowCoords);
 
-			Lo += brdf * radiance * shadowValue;
-			Lo += brdf * radiance;
+			// Lo += brdf * radiance * shadowValue;
+			// Lo += brdf * radiance;
 		}
 
 		vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
@@ -113,7 +113,8 @@ void main() {
 		vec3 irradiance = texture(samplerIrradiance, N).rgb;
 		vec3 diffuseLo = irradiance * (1 - metallic) * diffuse * brdfPreIntegrated.b * INV_M_PI;
 
-		vec3 ambient = (diffuseLo + specular) * 1.0f ;
+		vec3 ambient = (diffuseLo + specular); //  
+		// vec3 ambient = (diffuseLo + specular) * 2.0f ;
 		// vec3 ambient = (specular) * 1.0f ;
 
 		Lo += ambient;

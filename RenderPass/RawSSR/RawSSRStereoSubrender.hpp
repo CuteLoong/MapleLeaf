@@ -9,7 +9,7 @@
 #include "UniformHandler.hpp"
 
 namespace MapleLeaf {
-class StochasticSSRStereoSubrender : public Subrender
+class RawSSRStereoSubrender : public Subrender
 {
 public:
     struct SSRData
@@ -19,7 +19,7 @@ public:
         float zThickness;
         float brdfBias;
 
-        SSRData(int maxRayLength = 120.0f, float maxSteps = 120.0f, float zThickness = 0.01f, float brdfBias = 0.6f)
+        SSRData(int maxRayLength = 120.0f, float maxSteps = 240.0f, float zThickness = 0.01f, float brdfBias = 0.7f)
             : maxRayLength(maxRayLength)
             , maxSteps(maxSteps)
             , zThickness(zThickness)
@@ -27,7 +27,7 @@ public:
         {}
     };
 
-    explicit StochasticSSRStereoSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData = SSRData());
+    explicit RawSSRStereoSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData = SSRData());
 
     void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
@@ -35,15 +35,11 @@ public:
 
 private:
     PipelineCompute pipelineCompute;
-    PipelineCompute pipelineReprojection;
 
     UniformHandler     uniformSSRData;
     UniformHandler     uniformJitterData;
     UniformHandler     uniformCamera;
     DescriptorsHandler descriptorSet;
-
-    UniformHandler     uniformReprojectionCamera;
-    DescriptorsHandler descriptorSetReprojection;
 
     SSRData ssrData;
 

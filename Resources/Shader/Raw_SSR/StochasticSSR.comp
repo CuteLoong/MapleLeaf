@@ -29,8 +29,7 @@ layout(set = 0, binding = 2) uniform UniformJitterData {
 layout(set=0, binding=3) uniform sampler2D inDepth;
 layout(set=0, binding=4) uniform sampler2D inNormal;
 layout(set=0, binding=5) uniform sampler2D inMaterial;
-layout(set=0, binding=6) uniform sampler2D inInstanceID;
-layout(set=0, binding=16) uniform sampler2D inPosition;
+layout(set=0, binding=14) uniform sampler2D inPosition;
 
 layout(set=0, binding=7) uniform sampler2D inMinHiZLeft;
 layout(set=0, binding=8) uniform sampler2D inMinHiZRight;
@@ -41,8 +40,6 @@ layout(set=0, binding=10) uniform sampler2D inMaxHiZRight;
 layout(set=0, binding=11) uniform sampler2D blueNoise;
 layout(set=0, binding=12) writeonly uniform image2D SSRHitsMap;
 layout(set=0, binding=13) writeonly uniform image2D SSRMask;
-layout(set=0, binding=14) writeonly uniform image2D GlossyMV;
-// layout(set=0, binding=15) writeonly uniform image2D DebugMask;
 
 #include <Misc/Camera.glsl>
 #include <Misc/Utils.glsl>
@@ -55,20 +52,19 @@ float calculateFadeAmount(vec2 positionUV, vec2 positionUV2, float tParameter, v
 
     float boundary1 = max(abs(positionUV.x - 0.5f), abs(positionUV.y - 0.5f)) * 2.0f; // distance(positionUV, vec2(0.5f, 0.5f)) * 2.0f;
     float boundary2 = max(abs(positionUV2.x - 0.5f), abs(positionUV2.y - 0.5f)) * 2.0f; // distance(positionUV2, vec2(0.5f, 0.5f)) * 2.0f;
-    float fadeOnEdge = max(1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f), 1.0f - clamp((boundary2 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f));
-    // float fadeOnEdge = 1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
+    // float fadeOnEdge = max(1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f), 1.0f - clamp((boundary2 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f));
+    float fadeOnEdge = 1.0f - clamp((boundary1 - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
 
     float travelled = tParameter;
     float fadeOnDistance = 1.0f - clamp((travelled - FADE_START) / (FADE_END - FADE_START), 0.0f, 1.0f);
 
-    return fadeOnMirror * fadeOnEdge * fadeOnDistance;
+    // return fadeOnMirror * fadeOnEdge * fadeOnDistance;
+    return fadeOnEdge;
 }
 
 vec3 calculateGlossyPositionInAnotherEye(vec3 hitWS, vec3 originWS, vec3 normalWS, int viewIndex)
 {
     vec3 reflectRayWS = hitWS - originWS;
-    // vec3 cameraRay = vec3(camera.cameraStereoPosition[viewIndex]) - originWS;
-    // vec3 halfVector = normalize(reflectRayWS + cameraRay);
 
     vec3 virtualImageWS = hitWS - 2.0f * dot(reflectRayWS, normalize(normalWS)) * normalize(normalWS); 
 
@@ -77,12 +73,6 @@ vec3 calculateGlossyPositionInAnotherEye(vec3 hitWS, vec3 originWS, vec3 normalW
     vec3 virtualImageSSEye2 = virtualImageHSEye2.xyz / virtualImageHSEye2.w;
     virtualImageSSEye2.xy = virtualImageSSEye2.xy * 0.5f + 0.5f;
     virtualImageSSEye2.y = 1.0f - virtualImageSSEye2.y; // flip y
-
-    // vec4 virtualImageHSEye1 =  camera.stereoProjection[viewIndex] * camera.stereoView[viewIndex] * vec4(virtualImageWS, 1.0f);
-
-    // vec3 virtualImageSSEye1 = virtualImageHSEye1.xyz / virtualImageHSEye1.w;
-    // virtualImageSSEye1.xy = virtualImageSSEye1.xy * 0.5f + 0.5f;
-    // virtualImageSSEye1.y = 1.0f - virtualImageSSEye1.y; // flip y
 
     return virtualImageSSEye2;
 }
@@ -208,7 +198,6 @@ void main()
     if (roughness > 0.8f) {
         imageStore(SSRHitsMap, pixel, vec4(-1.0f));
         imageStore(SSRMask, pixel, vec4(0.0f));
-        imageStore(GlossyMV, pixel, vec4(0.0f));
         return;
     }
 
@@ -220,6 +209,7 @@ void main()
     vec3 H = localToWorld(sampleGGX_NDF(roughness*roughness, Xi, pdf), normalWS);
 
     vec3 reflectDirWS = normalize(reflect(viewRayWS, H));
+
     // float VdotN = dot(reflectDirWS, normalWS);
 
     // if(VdotN < 0.0f) {
@@ -266,42 +256,15 @@ void main()
     }
 
     float alphaBlend = 0.0f;
-    vec2 glossyMV = vec2(0.0f);
     if(missed) {
         hitPointSS.xy = vec2(-1.0f);
         hitPointSS.z = 0.0f;
     }
     else {
-        // vec4 hitWS = camera.invStereoView[hitViewIndex] * vec4(StereoViewSpacePosAtStereoUV(hitPointSS.xy, hitViewIndex), 1.0f);
-
-//
-        vec3 hitWS = texture(inPosition, StereoUVToScreenUV(hitPointSS.xy, hitViewIndex)).xyz;
-
-        vec3 glossySS = calculateGlossyPositionInAnotherEye(hitWS.xyz, originWS.xyz, normalWS, viewIndex);
-        bool validMV = glossySS.x >= 0.0f && glossySS.x <= 1.0f && glossySS.y >= 0.0f && glossySS.y <= 1.0f;
-
-        glossySS.xy = StereoUVToScreenUV(glossySS.xy, 1 - viewIndex);
-
-        int rawInstanceID = int(texture(inInstanceID, screenUV).x);
-        int glossyInstanceID = int(texture(inInstanceID, glossySS.xy).x);
-//
-
-        // glossySS.xy = (uvec2(glossySS.xy * camera.pixelSize.xy) + vec2(0.5f, 0.5f)) * camera.pixelSize.zw;
-
-//
-        validMV = validMV && (rawInstanceID == glossyInstanceID);
-
-        glossyMV = validMV ? glossySS.xy - screenUV : vec2(0.0f);
-//
-
-        // glossyMV = glossySS.xy - screenUV;
-
         alphaBlend = calculateFadeAmount(hitPointSS.xy, hitPointSSEye2.xy, tParameter, reflectDirWS, viewRayWS);
         hitPointSS.xy = StereoUVToScreenUV(hitPointSS.xy, hitViewIndex);
     }
 
     imageStore(SSRHitsMap, pixel, vec4(hitPointSS, pdf));
     imageStore(SSRMask, pixel, vec4(alphaBlend));
-    imageStore(GlossyMV, pixel, vec4(glossyMV, hitPointSS.z, 0.0f));
-    // imageStore(DebugMask, pixel, vec4(iterations, 0.0f, 0.0f, 0.0f));
 }

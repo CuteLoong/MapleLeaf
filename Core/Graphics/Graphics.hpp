@@ -42,6 +42,8 @@ public:
     static std::string StringifyResultVk(VkResult result);
     static void        CheckVk(VkResult result);
 
+    void CaptureScreenshot(const std::filesystem::path& filename);
+
 private:
     std::unique_ptr<Renderer>                renderer;
     std::map<std::string, const Descriptor*> attachments;

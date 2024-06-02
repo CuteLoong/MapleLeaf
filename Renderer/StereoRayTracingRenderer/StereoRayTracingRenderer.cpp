@@ -29,7 +29,7 @@ void StereoRayTracingRenderer::Start()
     AddSubrender<StereoRayTracingSubrender>({0, 0});
 
     AddSubrender<RayTracingToneMappingSubrender>({1, 0});
-    AddSubrender<ImguiSubrender>({1, 0});
+    // AddSubrender<ImguiSubrender>({1, 0});
 }
 
 void StereoRayTracingRenderer::Update()

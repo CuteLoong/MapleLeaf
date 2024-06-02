@@ -1,56 +1,20 @@
-#include "StochasticSSRStereoSubrender.hpp"
+#include "SCSSRStereoSubrender.hpp"
 
 #include "Graphics.hpp"
 #include "Image2d.hpp"
 #include "Scenes.hpp"
 
 namespace MapleLeaf {
-StochasticSSRStereoSubrender::StochasticSSRStereoSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData)
+SCSSRStereoSubrender::SCSSRStereoSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData)
     : Subrender(pipelineStage)
     , ssrData(ssrData)
-    , pipelineCompute("Shader/SSR/StochasticSSR.comp", {}, false)
-    , pipelineReprojection("Shader/SSR/ReprojectionStereo.comp", {}, false)
+    , pipelineCompute("Shader/SC_SSR/StochasticSSR.comp", {}, false)
     , blueNoise(Resources::Get()->GetThreadPool().Enqueue(LoadBlueNoise))
 {
     haltonSampler = HaltonSamplePattern::Create(4);
 }
 
-void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
-{
-    const auto& SSRHitsMap                     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
-    const auto& glossyMV                       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("GlossyMV"));
-    const auto& SSRMask                        = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
-    const auto& ReprojectionReflectionColorMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReprojectionReflectionColorMap"));
-
-    auto camera = Scenes::Get()->GetScene()->GetCamera();
-    camera->PushUniforms(uniformReprojectionCamera);
-
-    descriptorSetReprojection.Push("UniformCamera", uniformReprojectionCamera);
-    descriptorSetReprojection.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
-    descriptorSetReprojection.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
-    descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
-    descriptorSetReprojection.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
-    descriptorSetReprojection.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
-    descriptorSetReprojection.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
-    descriptorSetReprojection.Push("SSRHitsMap", SSRHitsMap);
-    descriptorSetReprojection.Push("SSRHitsMask", SSRMask);
-    descriptorSetReprojection.Push("GlossyMV", glossyMV);
-    descriptorSetReprojection.Push("ReprojectionReflectionColorMap", ReprojectionReflectionColorMap);
-
-    if (!descriptorSetReprojection.Update(pipelineReprojection)) return;
-
-    pipelineReprojection.BindPipeline(commandBuffer);
-
-    descriptorSetReprojection.BindDescriptor(commandBuffer, pipelineReprojection);
-
-    pipelineReprojection.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
-
-    ReprojectionReflectionColorMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
-}
-
-void StochasticSSRStereoSubrender::Render(const CommandBuffer& commandBuffer) {}
-
-void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
+void SCSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
 {
     const auto& SSRHitsMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
     const auto& SSRMask    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
@@ -106,9 +70,15 @@ void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
     pipelineCompute.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
 
     SSRHitsMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+    SSRMask->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+    glossyMV->Image2dPipelineBarrierComputeToCompute(commandBuffer);
 }
 
-std::shared_ptr<Image2d> StochasticSSRStereoSubrender::LoadBlueNoise()
+void SCSSRStereoSubrender::Render(const CommandBuffer& commandBuffer) {}
+
+void SCSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+
+std::shared_ptr<Image2d> SCSSRStereoSubrender::LoadBlueNoise()
 {
     auto blueNoiseImage = Image2d::Create("NoiseImage/BlueNoise.tga", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT, false, false);
 

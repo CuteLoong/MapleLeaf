@@ -1,60 +1,30 @@
-#include "StochasticSSRStereoSubrender.hpp"
+#include "StochasticSSRStereoMultiSPPSubrender.hpp"
 
 #include "Graphics.hpp"
 #include "Image2d.hpp"
 #include "Scenes.hpp"
 
 namespace MapleLeaf {
-StochasticSSRStereoSubrender::StochasticSSRStereoSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData)
+StochasticSSRStereoMultiSPPSubrender::StochasticSSRStereoMultiSPPSubrender(const Pipeline::Stage& pipelineStage, SSRData ssrData)
     : Subrender(pipelineStage)
     , ssrData(ssrData)
-    , pipelineCompute("Shader/SSR/StochasticSSR.comp", {}, false)
-    , pipelineReprojection("Shader/SSR/ReprojectionStereo.comp", {}, false)
+    , pipelineCompute("Shader/SSR/StochasticSSRMultiSPP.comp", {}, false)
     , blueNoise(Resources::Get()->GetThreadPool().Enqueue(LoadBlueNoise))
+    , usefulMap(Resources::Get()->GetThreadPool().Enqueue(LoadUsefulMap))
 {
     haltonSampler = HaltonSamplePattern::Create(4);
 }
 
-void StochasticSSRStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
+void StochasticSSRStereoMultiSPPSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+
+void StochasticSSRStereoMultiSPPSubrender::Render(const CommandBuffer& commandBuffer) {}
+
+void StochasticSSRStereoMultiSPPSubrender::PreRender(const CommandBuffer& commandBuffer)
 {
-    const auto& SSRHitsMap                     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
-    const auto& glossyMV                       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("GlossyMV"));
-    const auto& SSRMask                        = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
-    const auto& ReprojectionReflectionColorMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReprojectionReflectionColorMap"));
-
-    auto camera = Scenes::Get()->GetScene()->GetCamera();
-    camera->PushUniforms(uniformReprojectionCamera);
-
-    descriptorSetReprojection.Push("UniformCamera", uniformReprojectionCamera);
-    descriptorSetReprojection.Push("inDepth", Graphics::Get()->GetAttachment("depth"));
-    descriptorSetReprojection.Push("inNormal", Graphics::Get()->GetAttachment("normal"));
-    descriptorSet.Push("inPosition", Graphics::Get()->GetAttachment("position"));
-    descriptorSetReprojection.Push("inDiffuse", Graphics::Get()->GetAttachment("diffuse"));
-    descriptorSetReprojection.Push("inMaterial", Graphics::Get()->GetAttachment("material"));
-    descriptorSetReprojection.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
-    descriptorSetReprojection.Push("SSRHitsMap", SSRHitsMap);
-    descriptorSetReprojection.Push("SSRHitsMask", SSRMask);
-    descriptorSetReprojection.Push("GlossyMV", glossyMV);
-    descriptorSetReprojection.Push("ReprojectionReflectionColorMap", ReprojectionReflectionColorMap);
-
-    if (!descriptorSetReprojection.Update(pipelineReprojection)) return;
-
-    pipelineReprojection.BindPipeline(commandBuffer);
-
-    descriptorSetReprojection.BindDescriptor(commandBuffer, pipelineReprojection);
-
-    pipelineReprojection.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
-
-    ReprojectionReflectionColorMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
-}
-
-void StochasticSSRStereoSubrender::Render(const CommandBuffer& commandBuffer) {}
-
-void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
-{
-    const auto& SSRHitsMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
-    const auto& SSRMask    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
-    const auto& glossyMV   = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("GlossyMV"));
+    const auto& SSRHitsMap       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
+    const auto& SSRMask          = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRMask"));
+    const auto& glossyMV         = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("GlossyMV"));
+    const auto& MultiSSRColorMap = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("MultiSSRColorMap"));
     // const auto& debugMask  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("DebugMask"));
 
     const auto& LeftMinHiZ  = dynamic_cast<const ImageHierarchyZ*>(Graphics::Get()->GetNonRTAttachment("LeftMinHi-z"));
@@ -91,10 +61,14 @@ void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
     descriptorSet.Push("inMaxHiZLeft", LeftMaxHiZ);
     descriptorSet.Push("inMaxHiZRight", RightMaxHiZ);
 
+    descriptorSet.Push("usefulMap", *usefulMap);
     descriptorSet.Push("blueNoise", *blueNoise);
+    descriptorSet.Push("MultiSSRColorMap", MultiSSRColorMap);
     descriptorSet.Push("SSRHitsMap", SSRHitsMap);
     descriptorSet.Push("SSRMask", SSRMask);
     descriptorSet.Push("GlossyMV", glossyMV);
+
+    descriptorSet.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
     // descriptorSet.Push("DebugMask", debugMask);
 
     if (!descriptorSet.Update(pipelineCompute)) return;
@@ -105,13 +79,20 @@ void StochasticSSRStereoSubrender::PreRender(const CommandBuffer& commandBuffer)
 
     pipelineCompute.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
 
-    SSRHitsMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+    SSRHitsMap->Image2dPipelineBarrierComputeToGraphic(commandBuffer);
 }
 
-std::shared_ptr<Image2d> StochasticSSRStereoSubrender::LoadBlueNoise()
+std::shared_ptr<Image2d> StochasticSSRStereoMultiSPPSubrender::LoadBlueNoise()
 {
     auto blueNoiseImage = Image2d::Create("NoiseImage/BlueNoise.tga", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT, false, false);
 
     return blueNoiseImage;
+}
+
+std::shared_ptr<Image2d> StochasticSSRStereoMultiSPPSubrender::LoadUsefulMap()
+{
+    auto usefulMap = Image2d::Create("NoiseImage/ReuseMap1.tga", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false);
+
+    return usefulMap;
 }
 }   // namespace MapleLeaf
