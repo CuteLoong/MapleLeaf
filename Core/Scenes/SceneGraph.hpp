@@ -12,6 +12,11 @@ namespace MapleLeaf {
 class NodeID
 {
 public:
+    struct NodeIDHash
+    {
+        std::size_t operator()(const NodeID& nodeID) const { return std::hash<int32_t>()(nodeID.get()); }
+    };
+
     NodeID() { index = -1; }
     NodeID(uint32_t index)
         : index(index)
@@ -29,6 +34,8 @@ public:
 
     static constexpr int32_t kInvalidID = -1;
     static NodeID            Invalid() { return NodeID(kInvalidID); }
+
+    friend bool operator==(const NodeID& lhs, const NodeID& rhs) { return lhs.index == rhs.index; }
 
 private:
     int32_t index;

@@ -1,6 +1,8 @@
 #include "Transform.hpp"
+#include "AnimationController.hpp"
 #include "Entity.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include <stdio.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
@@ -25,7 +27,6 @@ Transform::Transform(const glm::mat4 modelMatrix)
 
     position = translation;
 
-
     rotation.x = atan2(2.0f * (quaternion.y * quaternion.z + quaternion.w * quaternion.x),
                        quaternion.w * quaternion.w - quaternion.x * quaternion.x - quaternion.y * quaternion.y + quaternion.z * quaternion.z);
     rotation.y = asin(-2.0f * (quaternion.x * quaternion.z - quaternion.w * quaternion.y));
@@ -48,7 +49,33 @@ Transform::~Transform()
 
 void Transform::Update()
 {
-    updateStatus = UpdateStatus::None;
+    if (const auto& ani = this->GetEntity()->GetComponent<AnimationController>(); ani != nullptr && ani->isMatrixChanged()) {
+        glm::mat4 modelMatrix = ani->getLocalMatrix();
+
+        glm::vec3 scale;
+        glm::quat quaternion;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(modelMatrix, scale, quaternion, translation, skew, perspective);
+
+        position = translation;
+
+        rotation.x  = atan2(2.0f * (quaternion.y * quaternion.z + quaternion.w * quaternion.x),
+                           quaternion.w * quaternion.w - quaternion.x * quaternion.x - quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+        rotation.y  = asin(-2.0f * (quaternion.x * quaternion.z - quaternion.w * quaternion.y));
+        rotation.z  = atan2(2.0f * (quaternion.x * quaternion.y + quaternion.w * quaternion.z),
+                           quaternion.w * quaternion.w + quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z);
+        this->scale = scale;
+
+        updateStatus = UpdateStatus::Transformation;
+    }
+    else {
+        if (this->parent != nullptr && this->parent->GetUpdateStatus() == UpdateStatus::Transformation)
+            updateStatus = UpdateStatus::Transformation;
+        else
+            updateStatus = UpdateStatus::None;
+    }
 }
 
 glm::mat4 Transform::GetWorldMatrix() const
@@ -110,10 +137,11 @@ bool Transform::operator!=(const Transform& rhs) const
 Transform operator*(const Transform& lhs, const Transform& rhs)
 {
     glm::vec4 newPosition = glm::vec4(rhs.position, 1.0f);
-    for (uint32_t row = 0; row < 4; row++) {
-        newPosition[row] = lhs.GetWorldMatrix()[row][0] * rhs.position.x + lhs.GetWorldMatrix()[row][1] * rhs.position.y +
-                           lhs.GetWorldMatrix()[row][2] * rhs.position.z + lhs.GetWorldMatrix()[row][3] * 1.0f;
-    }
+    // for (uint32_t row = 0; row < 4; row++) {
+    //     newPosition[row] = lhs.GetWorldMatrix()[row][0] * rhs.position.x + lhs.GetWorldMatrix()[row][1] * rhs.position.y +
+    //                        lhs.GetWorldMatrix()[row][2] * rhs.position.z + lhs.GetWorldMatrix()[row][3] * 1.0f;
+    // }
+    newPosition = lhs.GetWorldMatrix() * newPosition;
     return {glm::vec3(newPosition), lhs.rotation + rhs.rotation, lhs.scale * rhs.scale};
 }
 

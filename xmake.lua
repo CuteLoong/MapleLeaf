@@ -28,7 +28,7 @@ set_configvar("MAPLELEAF_PIPELINE_DEBUG", false)
 set_configvar("MAPLELEAF_VALIDATION_DEBUG", true)
 set_configvar("MAPLELEAF_DESCRIPTOR_DEBUG", false)
 set_configvar("MAPLELEAF_RENDERSTAGE_DEBUG", false)
-set_configvar("MAPLELEAF_RAY_TRACING", false)
+set_configvar("MAPLELEAF_RAY_TRACING", true)
 
 set_configdir("Config") 
 add_configfiles("./config.h.in")
@@ -60,6 +60,7 @@ add_includedirs(
 "Core/Scenes/Light", 
 "Core/Scenes/Shadow", 
 "Core/Scenes/Skybox", 
+"Core/Scenes/Animation",
 "Core/ASScene", 
 "Core/Importers", 
 "Core/Importers/Builder",
@@ -133,6 +134,7 @@ target("Core")
     "Core/Scenes/Light/*.cpp", 
     "Core/Scenes/Shadow/*.cpp", 
     "Core/Scenes/Skybox/*.cpp", 
+    "Core/Scenes/Animation/*.cpp",
     "Core/ASScene/*.cpp", 
     "Core/Importers/*.cpp", 
     "Core/Importers/Builder/*.cpp",

@@ -99,7 +99,7 @@ void main() {
     vec3 brdf = SpecularReflectionMicrofacet(F0, roughness, normalWS, reflectRayWS, eyeRayWS);
     float pdf = max(1e-5, hitInfo.w);
 
-    vec3 weight1 = brdf / pdf;
+    vec3 weight1 = max(brdf / pdf, 0.000001);
     vec4 sampleColor1 = vec4(texture(LightingMap, hitInfo.xy).xyz * weight1, texture(SSRHitsMask, screenUV).x);
 
     // sampleColor1.xyz /= 1.0f + Luminance(sampleColor1.xyz);
@@ -134,7 +134,7 @@ void main() {
         finalColor.rgba = sampleColor1.rgba;
         finalWeight = weight1;
     }
-    finalColor.rgb = finalColor.rgb / (finalWeight + 0.00001);
+    finalColor.rgb = finalColor.rgb / finalWeight;
     // finalColor.rgb /= 1.0f - Luminance(finalColor.xyz);
 
     imageStore(ReprojectionReflectionColorMap, pixel, finalColor);

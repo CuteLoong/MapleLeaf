@@ -70,6 +70,11 @@ glm::vec3 AiCast(const aiVector3D& aiVec)
     return ret;
 }
 
+glm::quat AiCast(const aiQuaternion& q)
+{
+    return glm::quat(q.w, q.x, q.y, q.z);
+}
+
 template<typename T>
 void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& builder)
 {
@@ -125,6 +130,12 @@ void AssimpImporter<T>::Import(const std::filesystem::path& path, Builder& build
     CreateMeshes(data);
 #ifdef MAPLELEAF_SCENE_DEBUG
     Log::Out("Create meshes cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
+    debugStart = Time::Now();
+#endif
+
+    CreateAnimations(data, importMode);
+#ifdef MAPLELEAF_SCENE_DEBUG
+    Log::Out("Create animations cost: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
 
@@ -379,6 +390,87 @@ void AssimpImporter<T>::CreateCameras(ImporterData& data, ImportMode importMode)
         camera->SetFarPlane(pAiCamera->mClipPlaneFar);
 
         data.builder.AddCamera(std::move(camera));
+    }
+}
+
+template<typename T>
+void AssimpImporter<T>::CreateAnimations(ImporterData& data, ImportMode importMode)
+{
+    for (uint32_t i = 0; i < data.pScene->mNumAnimations; i++) {
+        const aiAnimation* pAiAnimation = data.pScene->mAnimations[i];
+        ParseAnimation(data, pAiAnimation, importMode);
+    }
+}
+
+void resetNegativeKeyframeTimes(aiNodeAnim* pAiNode)
+{
+    auto resetTime = [](auto keys, uint32_t count) {
+        if (count > 1) assert(keys[1].mTime >= 0);
+        if (keys[0].mTime < 0) keys[0].mTime = 0;
+    };
+    resetTime(pAiNode->mPositionKeys, pAiNode->mNumPositionKeys);
+    resetTime(pAiNode->mRotationKeys, pAiNode->mNumRotationKeys);
+    resetTime(pAiNode->mScalingKeys, pAiNode->mNumScalingKeys);
+}
+
+template<typename AiType, typename MapleLeafType>
+bool parseAnimationChannel(const AiType* pKeys, uint32_t count, double time, uint32_t& currentIndex, MapleLeafType& falcor)
+{
+    if (currentIndex >= count) return true;
+
+    if (pKeys[currentIndex].mTime == time) {
+        falcor = AiCast(pKeys[currentIndex].mValue);
+        currentIndex++;
+    }
+
+    return currentIndex >= count;
+}
+
+template<typename T>
+void AssimpImporter<T>::ParseAnimation(ImporterData& data, const aiAnimation* pAiAnimation, ImportMode importMode)
+{
+    // assert(pAiAnimation->mNumChannels == 0);
+    double duration       = pAiAnimation->mDuration;
+    double ticksPerSecond = pAiAnimation->mTicksPerSecond;
+
+    // if (importMode == ImportMode::GLTF2) ticksPerSecond = 1000.0;
+    double durationInSeconds = duration / ticksPerSecond;
+
+    for (uint32_t i = 0; i < pAiAnimation->mNumChannels; i++) {
+        aiNodeAnim* pAiNodeAnim = pAiAnimation->mChannels[i];
+        resetNegativeKeyframeTimes(pAiNodeAnim);
+
+        std::vector<std::shared_ptr<Animation>> animations;
+        for (uint32_t i = 0; i < data.GetNodeInstanceCount(pAiNodeAnim->mNodeName.C_Str()); i++) {
+            auto nodeID    = data.getNodeID(pAiNodeAnim->mNodeName.C_Str(), i);
+            auto animation = Animation::create(pAiNodeAnim->mNodeName.C_Str(), nodeID, durationInSeconds);
+            animations.push_back(animation);
+            data.builder.AddAnimation(nodeID, animation);
+        }
+
+        uint32_t            pos = 0, rot = 0, scale = 0;
+        Animation::Keyframe keyframe;
+        bool                done = false;
+
+        auto nextKeyTime = [&]() {
+            double time = -std::numeric_limits<double>::max();
+            if (pos < pAiNodeAnim->mNumPositionKeys) time = std::max(time, pAiNodeAnim->mPositionKeys[pos].mTime);
+            if (rot < pAiNodeAnim->mNumRotationKeys) time = std::max(time, pAiNodeAnim->mRotationKeys[rot].mTime);
+            if (scale < pAiNodeAnim->mNumScalingKeys) time = std::max(time, pAiNodeAnim->mScalingKeys[scale].mTime);
+            assert(time != -std::numeric_limits<double>::max());
+            return time;
+        };
+
+        while (!done) {
+            double time = nextKeyTime();
+            // assert(time == 0 || (time / ticksPerSecond) > keyframe.time);
+            keyframe.time = time / ticksPerSecond;
+
+            done = parseAnimationChannel(pAiNodeAnim->mPositionKeys, pAiNodeAnim->mNumPositionKeys, time, pos, keyframe.translation);
+            done = parseAnimationChannel(pAiNodeAnim->mRotationKeys, pAiNodeAnim->mNumRotationKeys, time, rot, keyframe.rotation) && done;
+            done = parseAnimationChannel(pAiNodeAnim->mScalingKeys, pAiNodeAnim->mNumScalingKeys, time, scale, keyframe.scaling) && done;
+            for (auto pAnimation : animations) pAnimation->addKeyframe(keyframe);
+        }
     }
 }
 

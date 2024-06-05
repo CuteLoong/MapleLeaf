@@ -96,6 +96,8 @@ public:
     const std::array<glm::mat4, 2>& GetInvStereoViewMatrix() const { return invStereoViewMatrix; };
     const std::array<glm::mat4, 2>& GetInvStereoProjectionMatrix() const { return invStereoProjectionMatrix; }
 
+    uint32_t frameID;   // this camera's frame id
+
 protected:
     std::string name;
 
@@ -118,7 +120,6 @@ protected:
     glm::mat4 invViewMatrix;
     glm::mat4 invProjectionMatrix;
 
-    uint32_t frameID;   // this camera's frame id
 
     /* frustum's four vector, start from camera position
      *0    1

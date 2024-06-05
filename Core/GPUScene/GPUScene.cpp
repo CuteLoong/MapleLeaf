@@ -66,6 +66,7 @@ void GPUScene::Update()
     // TODO UpdateMaterial and instance Add or Delete
 
     bool UpdateGPUScene = false;
+    bool UpdateMatrix   = false;
     for (uint32_t i = 0; i < instances.size(); i++) {
         GPUInstance& instance = instances[i];
         instance.Update();
@@ -83,6 +84,7 @@ void GPUScene::Update()
         }
 
         UpdateGPUScene |= (instance.GetInstanceStatus() == GPUInstance::Status::ModelChanged);
+        UpdateMatrix |= (instance.GetInstanceStatus() == GPUInstance::Status::MatrixChanged);
     }
 
     if (UpdateGPUScene) {
@@ -98,7 +100,7 @@ void GPUScene::Update()
     // instancesHandler.Push(instancesData.data(), sizeof(InstanceData) * instancesData.size());
     // materialsHandler.Push(materialsData.data(), sizeof(MaterialData) * materialsData.size());
 
-    if (UpdateGPUScene) {
+    if (UpdateGPUScene || UpdateMatrix) {
         instancesBuffer = std::make_unique<StorageBuffer>(sizeof(InstanceData) * instancesData.size(), instancesData.data());
         materialsBuffer = std::make_unique<StorageBuffer>(sizeof(MaterialData) * materialsData.size(), materialsData.data());
     }

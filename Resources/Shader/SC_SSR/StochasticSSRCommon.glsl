@@ -134,6 +134,7 @@ void minMaxHiZTraversalLoop(vec2 step, vec2 stepOffset, vec2 stepEye2, vec2 step
             tParameter = tPixel;
             mipLevel = min(ssrData.hiZMaxLevel, mipLevel + 2.0f);
         }
+        
         if(iterations <= 10 && mipLevel < 0.0f && selfCollisionNumSkip) {
             mipLevel = min(ssrData.hiZMaxLevel, mipLevel + 2.0f);
             tParameter = tPixel;

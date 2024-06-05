@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnimationController.hpp"
 #include "AssimpImporter.hpp"
 #include "Camera.hpp"
 #include "DefaultBuilder.hpp"
@@ -15,7 +16,7 @@ namespace MapleLeaf {
 class SceneBuilder : public Scene
 {
 public:
-    SceneBuilder(const std::filesystem::path path = "F:/SC-SSR-Scene/Pica/Pica.gltf")   // "F:/SC-SSR-Scene/Wine5/Wine.gltf"
+    SceneBuilder(const std::filesystem::path path = "F:/SC-SSR-Scene/Sun/Sun.gltf")   // "F:/SC-SSR-Scene/Wine5/Wine.gltf"
         : Scene()
         , path(path)
     {
@@ -27,10 +28,16 @@ public:
         assimpImporter.Import(path, builder);
 
         auto shadows = Scenes::Get()->GetScene()->GetSystem<ShadowSystem>();
-        for (const auto& node : builder.sceneGraph) {
-            auto entity = CreateEntity();
+        for (uint32_t index = 0; index < builder.sceneGraph.size(); index++) {
+            const auto& node   = builder.sceneGraph[index];
+            auto        entity = CreateEntity();
             entity->SetName(node.name);
-            entity->AddComponent(std::move(std::make_unique<Transform>(*node.transform)));
+            std::unique_ptr<Transform> transform;
+            transform.reset(node.transform);
+            // entity->AddComponent(std::move(std::make_unique<Transform>(*node.transform)));
+            entity->AddComponent(std::move(transform));
+
+            if (builder.animations.find(index) != builder.animations.end()) entity->AddComponent<AnimationController>(builder.animations[index]);
             if (!node.meshes.empty()) {
                 for (int i = 0; i < node.meshes.size(); i++) {
                     // for every instance, instances use the same model, but maybe use different mat

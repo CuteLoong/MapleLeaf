@@ -85,6 +85,7 @@ private:
 
     void CreateSceneGraph(ImporterData& data);
     void ParseNode(ImporterData& data, const aiNode* pCurrent, bool hasBoneAncestor);
+    void ParseAnimation(ImporterData& data, const aiAnimation* pAiAnimation, ImportMode importMode);
 
     void CreateMeshes(ImporterData& data);
 
@@ -92,5 +93,6 @@ private:
     void CreateCameras(ImporterData& data, ImportMode importMode);
     void CreateDirLight(ImporterData& data, const aiLight* pAiLight);
     void CreatePointLight(ImporterData& data, const aiLight* pAiLight);
+    void CreateAnimations(ImporterData& data, ImportMode importMode);
 };
 }   // namespace MapleLeaf

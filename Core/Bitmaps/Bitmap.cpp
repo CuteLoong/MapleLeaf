@@ -62,7 +62,7 @@ void Bitmap::Write(const std::filesystem::path& filename) const
     std::ofstream os(filename, std::ios::binary | std::ios::out);
     int32_t       len;
 
-    ConvertBGRAtoRGBA(data.get(), size.x, size.y);
+    // ConvertBGRAtoRGBA(data.get(), size.x, size.y);
     std::unique_ptr<uint8_t[]> png(stbi_write_png_to_mem(data.get(), size.x * bytesPerPixel, size.x, size.y, bytesPerPixel, &len));
     os.write(reinterpret_cast<char*>(png.get()), len);
 }

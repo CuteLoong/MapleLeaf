@@ -35,7 +35,7 @@ void Scene::Update()
     });
 
     entities.Update();
-    camera->Update();
+    // camera->Update();
 }
 
 void Scene::SetExtents(const glm::vec3& maxExtent, const glm::vec3& minExtent, const glm::mat4& transfrom)

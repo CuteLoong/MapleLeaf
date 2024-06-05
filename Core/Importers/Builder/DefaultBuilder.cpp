@@ -30,6 +30,12 @@ void Builder::AddCamera(std::unique_ptr<Camera>&& camera)
     cameras.push_back(std::move(camera));
 }
 
+void Builder::AddAnimation(NodeID nodeID, std::shared_ptr<Animation>& animation)
+{
+    assert(animation != nullptr);
+    animations[nodeID.get()] = std::move(animation);
+}
+
 Mesh* Builder::GetMesh(const uint32_t index)
 {
     if (index >= meshes.size()) {
