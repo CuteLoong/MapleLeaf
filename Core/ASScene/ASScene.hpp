@@ -14,8 +14,8 @@ public:
     void Start();
     void Update();
 
-    void BuildBLAS(VkBuildAccelerationStructureFlagBitsKHR flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
-    void BuildTLAS(VkBuildAccelerationStructureFlagBitsKHR flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+    void BuildBLAS(VkBuildAccelerationStructureFlagsKHR flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR, bool update = false);
+    void BuildTLAS(VkBuildAccelerationStructureFlagsKHR flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR, bool update = false);
 
     const std::vector<std::unique_ptr<AccelerationStruct>>& GetBottomLevelAccelerationStructs() const { return bottomLevelaccelerationStructs; }
     const std::unique_ptr<AccelerationStruct>&              GetBottomLevelAccelerationStruct(uint32_t index) const

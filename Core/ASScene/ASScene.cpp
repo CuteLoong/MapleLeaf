@@ -26,9 +26,13 @@ void ASScene::Start()
     BuildTLAS();
 }
 
-void ASScene::Update() {}
+void ASScene::Update()
+{
+    // BuildBLAS(VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR, true);
+    BuildTLAS(VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR, true);
+}
 
-void ASScene::BuildBLAS(VkBuildAccelerationStructureFlagBitsKHR flags)
+void ASScene::BuildBLAS(VkBuildAccelerationStructureFlagsKHR flags, bool update)
 {
     const auto&  models      = Resources::Get()->FindAll<Model>();
     VkDeviceSize ASTotalSize = 0;
@@ -42,7 +46,7 @@ void ASScene::BuildBLAS(VkBuildAccelerationStructureFlagBitsKHR flags)
         VkAccelerationStructureBuildGeometryInfoKHR geometryInfo{};
         geometryInfo.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
         geometryInfo.type          = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-        geometryInfo.mode          = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+        geometryInfo.mode          = update ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
         geometryInfo.flags         = model->GetBLASInput()->flags | flags;
         geometryInfo.geometryCount = 1;
         geometryInfo.pGeometries   = &model->GetBLASInput()->geometry;
@@ -72,7 +76,7 @@ void ASScene::BuildBLAS(VkBuildAccelerationStructureFlagBitsKHR flags)
     }
 }
 
-void ASScene::BuildTLAS(VkBuildAccelerationStructureFlagBitsKHR flags)
+void ASScene::BuildTLAS(VkBuildAccelerationStructureFlagsKHR flags, bool update)
 {
     const auto& meshes = Scenes::Get()->GetScene()->GetComponents<Mesh>();
 
