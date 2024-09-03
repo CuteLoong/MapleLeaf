@@ -59,8 +59,8 @@ void StereoRayTracingSubrender::PreRender(const CommandBuffer& commandBuffer)
     uniformSceneData.Push("pointLightsCount", pointLights.size() - 1);
     uniformSceneData.Push("directionalLightsCount", directionalLights.size() - 1);
 
-    uniformFrameData.Push("spp", 1024);
-    uniformFrameData.Push("maxDepth", 2);
+    uniformFrameData.Push("spp", 2);
+    uniformFrameData.Push("maxDepth", 1);
 
     descriptorSet.Push("topLevelAS", AS);
     descriptorSet.Push("UniformFrameData", uniformFrameData);

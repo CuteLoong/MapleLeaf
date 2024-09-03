@@ -43,8 +43,8 @@ void Camera::Update()
     // if (frameID != 0 && frameID < 16440 && frameID % 120 == 0) {
     //     Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
     // }
-    // if (frameID != 0 && frameID < 548 && frameID % 4 == 0) Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 4) + ".png");
-    // if (frameID == 120) {
+    // if (frameID != 0 && frameID < 884 && frameID % 4 == 0) Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 4) +
+    // ".png"); if (frameID == 120) {
     //     Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
     // }
 }

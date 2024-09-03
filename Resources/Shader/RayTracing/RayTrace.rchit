@@ -174,46 +174,51 @@ void main()
 	vec3 Lo = vec3(0.0f);
 	vec3 F0 = vec3(0.04f);
 	F0 = mix(F0, diffuse.rgb, metallic);
-	for(int i = 1; i <= uniformSceneData.pointLightsCount; i++) {
-		PointLight light = bufferPointLights.lights[i];
-		vec3 L = normalize(light.position - worldPosition);
-		float d = length(L);
-		L = normalize(L);
+	// for(int i = 1; i <= uniformSceneData.pointLightsCount; i++) {
+	// 	PointLight light = bufferPointLights.lights[i];
+	// 	vec3 L = normalize(light.position - worldPosition);
+	// 	float d = length(L);
+	// 	L = normalize(L);
 
-		float NoL = clamp(dot(worldNormal, L), 0.0f, 1.0f);
+	// 	float NoL = clamp(dot(worldNormal, L), 0.0f, 1.0f);
 
-		vec3 radiance = light.color.rgb * calcAttenuation(d, light.attenuation.xyz);
+	// 	vec3 radiance = light.color.rgb * calcAttenuation(d, light.attenuation.xyz);
 
-		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
+	// 	vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
 
-		// Lo += brdf * radiance;
-	}
+	// 	// Lo += brdf * radiance;
+	// }
 
-	for(int i = 1; i <= uniformSceneData.directionalLightsCount; i++) {
-		DirectionalLight light = bufferDirectionalLights.lights[i];
-		vec3 L = normalize(-light.direction);
+	// for(int i = 1; i <= uniformSceneData.directionalLightsCount; i++) {
+	// 	DirectionalLight light = bufferDirectionalLights.lights[i];
+	// 	vec3 L = normalize(-light.direction);
 
-		float NoL = clamp(dot(worldNormal, L), 0.0f, 1.0f);
+	// 	float NoL = clamp(dot(worldNormal, L), 0.0f, 1.0f);
 
-		vec3 radiance = light.color.rgb;
+	// 	vec3 radiance = light.color.rgb;
 
-		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
+	// 	vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse.rgb, roughness, worldNormal, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, worldNormal, L, V);
 
-		// Lo += brdf * radiance;
-	}
+	// 	// Lo += brdf * radiance;
+	// }
 
 	float NdotV = clamp(dot(worldNormal, V), 0.0f, 1.0f);
 	vec3 R = reflect(-V, worldNormal);
 
-	vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
-	vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
-	vec3 specular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
+	if(prd.depth == 0) {
+		Lo += vec3(0.0f);
+	}
+	else {
+		vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
+		vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
+		vec3 specular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
 
-	vec3 irradiance = texture(samplerIrradiance, worldNormal).rgb;
-	vec3 diffuseLo = irradiance * (1 - metallic) * diffuse.rgb * brdfPreIntegrated.b * INV_M_PI;
+		vec3 irradiance = texture(samplerIrradiance, worldNormal).rgb;
+		vec3 diffuseLo = irradiance * (1 - metallic) * diffuse.rgb * brdfPreIntegrated.b * INV_M_PI;
 
-	// Lo += (specular + diffuseLo);
-	Lo += prd.depth == 0 ? (specular + diffuseLo) : (specular + diffuseLo) * 4.0f;
+		// Lo += (specular + diffuseLo);
+		Lo += prd.depth == 0 ? (specular + diffuseLo) : (specular + diffuseLo) * 2.0f;
+	}
 
 	vec2 Xi = vec2(TinyEncryptionRandom(prd.randomSeed), TinyEncryptionRandom(prd.randomSeed));
 

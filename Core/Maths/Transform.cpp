@@ -76,6 +76,7 @@ void Transform::Update()
         else
             updateStatus = UpdateStatus::None;
     }
+    // updateStatus = UpdateStatus::None;
 }
 
 glm::mat4 Transform::GetWorldMatrix() const
