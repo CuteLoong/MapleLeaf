@@ -8,10 +8,11 @@
 #include "String.hpp"
 #include "UniformBuffer.hpp"
 
+#include "glslang/Include/Types.h"
 #include "glslang/Public/ShaderLang.h"
 #include "glslang/SPIRV/GlslangToSpv.h"
-#include "glslang/Include/Types.h"
 #include <regex>
+
 
 #include "config.h"
 

@@ -35,6 +35,8 @@ public:
     const glm::vec3& GetLocalScale() const { return scale; }
     void             SetLocalScale(const glm::vec3& localScale) { scale = localScale; }
 
+    glm::mat4 GetPrevWorldMatrix() const { return prevWorldMatrix; }
+
     Transform* GetParent() const { return parent; }
     void       SetParent(Transform* parent);
     void       SetParent(Entity* parent);
@@ -55,14 +57,14 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const Transform& transform);
 
 private:
-    
-
     void AddChild(Transform* child);
     void RemoveChild(Transform* child);
 
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
+
+    glm::mat4 prevWorldMatrix;
 
     Transform*              parent = nullptr;
     std::vector<Transform*> children;

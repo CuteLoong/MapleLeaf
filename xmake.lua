@@ -28,7 +28,7 @@ set_configvar("MAPLELEAF_PIPELINE_DEBUG", false)
 set_configvar("MAPLELEAF_VALIDATION_DEBUG", true)
 set_configvar("MAPLELEAF_DESCRIPTOR_DEBUG", false)
 set_configvar("MAPLELEAF_RENDERSTAGE_DEBUG", false)
-set_configvar("MAPLELEAF_RAY_TRACING", true)
+set_configvar("MAPLELEAF_RAY_TRACING", false)
 
 set_configdir("Config") 
 add_configfiles("./config.h.in")

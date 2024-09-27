@@ -60,6 +60,9 @@ void RawSSRFilterSubrender::PostRender(const CommandBuffer& commandBuffer)
     const auto& SSRHitsMap       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("SSRHitsMap"));
     const auto& ReflectionMap    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("ReflectionMap"));
 
+    SSRHitsMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+    ReflectionMap->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCameraTemporalFilter);
 

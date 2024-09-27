@@ -16,12 +16,13 @@ GPUInstance::GPUInstance(Mesh* mesh, uint32_t instanceID, uint32_t materialID)
     , materialID(materialID)
     , instanceStatus(Status::None)
 {
-    model        = mesh->GetModel();
-    modelMatrix  = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
-    AABBLocalMin = model->GetMinExtents();
-    AABBLocalMax = model->GetMaxExtents();
-    indexCount   = model->GetIndexCount();
-    vertexCount  = model->GetVertexCount();
+    model           = mesh->GetModel();
+    modelMatrix     = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
+    prevModelMatrix = modelMatrix;   // maybe not correct
+    AABBLocalMin    = model->GetMinExtents();
+    AABBLocalMax    = model->GetMaxExtents();
+    indexCount      = model->GetIndexCount();
+    vertexCount     = model->GetVertexCount();
 
     if (!modelOffset.count(model)) {
         indexOffset  = indicesArray.size();
@@ -40,8 +41,9 @@ GPUInstance::GPUInstance(Mesh* mesh, uint32_t instanceID, uint32_t materialID)
 void GPUInstance::Update()
 {
     if (mesh->GetEntity()->GetComponent<Transform>()->GetUpdateStatus() == Transform::UpdateStatus::Transformation) {
-        instanceStatus = Status::MatrixChanged;
-        modelMatrix    = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
+        instanceStatus  = Status::MatrixChanged;
+        modelMatrix     = mesh->GetEntity()->GetComponent<Transform>()->GetWorldMatrix();
+        prevModelMatrix = mesh->GetEntity()->GetComponent<Transform>()->GetPrevWorldMatrix();
     }
 
     if (mesh->GetUpdateStatus() == Mesh::UpdateStatus::MeshAlter) {

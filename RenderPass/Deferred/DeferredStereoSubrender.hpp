@@ -3,6 +3,7 @@
 #include "DescriptorHandler.hpp"
 #include "Future.hpp"
 #include "ImageCube.hpp"
+#include "PipelineCompute.hpp"
 #include "PipelineGraphics.hpp"
 #include "Subrender.hpp"
 #include "UniformHandler.hpp"
@@ -34,6 +35,7 @@ private:
     };
 
     PipelineGraphics pipeline;
+    PipelineCompute  pipelineInterpolation;
 
     DescriptorsHandler descriptorSet;
     UniformHandler     uniformScene;

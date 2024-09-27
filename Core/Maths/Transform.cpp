@@ -13,7 +13,8 @@ Transform::Transform(const glm::vec3& position, const glm::vec3& rotation, const
     , rotation(rotation)
     , scale(scale)
 {
-    updateStatus = UpdateStatus::Transformation;
+    prevWorldMatrix = GetWorldMatrix();
+    updateStatus    = UpdateStatus::Transformation;
 }
 
 Transform::Transform(const glm::mat4 modelMatrix)
@@ -35,7 +36,8 @@ Transform::Transform(const glm::mat4 modelMatrix)
     // rotation    = glm::eulerAngles(quaternion);
     this->scale = scale;
 
-    updateStatus = UpdateStatus::Transformation;
+    prevWorldMatrix = GetWorldMatrix();
+    updateStatus    = UpdateStatus::Transformation;
 }
 
 Transform::~Transform()
@@ -49,6 +51,7 @@ Transform::~Transform()
 
 void Transform::Update()
 {
+    prevWorldMatrix = GetWorldMatrix();
     if (const auto& ani = this->GetEntity()->GetComponent<AnimationController>(); ani != nullptr && ani->isMatrixChanged()) {
         glm::mat4 modelMatrix = ani->getLocalMatrix();
 

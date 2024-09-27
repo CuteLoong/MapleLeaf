@@ -35,6 +35,7 @@ void GPUScene::Start()
 
     for (auto& instance : instances) {
         instancesData.push_back(InstanceData(instance.modelMatrix,
+                                             instance.prevModelMatrix,
                                              instance.AABBLocalMin,
                                              instance.indexCount,
                                              instance.AABBLocalMax,
@@ -55,6 +56,8 @@ void GPUScene::Start()
 
     instancesBuffer = std::make_unique<StorageBuffer>(sizeof(InstanceData) * instancesData.size(), instancesData.data());
     materialsBuffer = std::make_unique<StorageBuffer>(sizeof(MaterialData) * materialsData.size(), materialsData.data());
+
+    drawCullingIndirectBuffer = std::make_unique<IndirectBuffer>(instances.size() * sizeof(VkDrawIndexedIndirectCommand));
 }
 
 void GPUScene::Update()
@@ -73,6 +76,7 @@ void GPUScene::Update()
 
         if (instance.GetInstanceStatus() == GPUInstance::Status::ModelChanged || instance.GetInstanceStatus() == GPUInstance::Status::MatrixChanged) {
             instancesData[i] = InstanceData(instance.modelMatrix,
+                                            instance.prevModelMatrix,
                                             instance.AABBLocalMin,
                                             instance.indexCount,
                                             instance.AABBLocalMax,
@@ -109,7 +113,10 @@ void GPUScene::Update()
     Log::Out("Update StorageBuffer Data costs: ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
     debugStart = Time::Now();
 #endif
-    drawCullingIndirectBuffer = std::make_unique<IndirectBuffer>(instances.size() * sizeof(VkDrawIndexedIndirectCommand));
+    // add instance need to recreate drawCullingIndirectBuffer
+    if (UpdateGPUScene) {
+        drawCullingIndirectBuffer = std::make_unique<IndirectBuffer>(instances.size() * sizeof(VkDrawIndexedIndirectCommand));
+    }
 }
 
 void GPUScene::PushDescriptors(DescriptorsHandler& descriptorSet)

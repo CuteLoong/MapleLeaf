@@ -26,7 +26,10 @@ void DefaultMaterial::CreatePipeline(const Shader::VertexInput& vertexInput)
 
 void DefaultMaterial::PushUniforms(UniformHandler& uniformObject, const Transform* transform)
 {
-    if (transform) uniformObject.Push("transform", transform->GetWorldMatrix());
+    if (transform) {
+        uniformObject.Push("transform", transform->GetWorldMatrix());
+        uniformObject.Push("prevTransform", transform->GetPrevWorldMatrix());
+    }
 
     uniformObject.Push("baseDiffuse", baseDiffuse);
     uniformObject.Push("metallic", metallic);

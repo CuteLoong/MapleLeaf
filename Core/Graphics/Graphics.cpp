@@ -101,7 +101,7 @@ void Graphics::Update()
                 continue;
             }
 
-            auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
+            auto& commandBuffer = surface->commandBuffers[surface->currentFrameIndex];
 
             // preRender
             for (const auto& subpass : renderStage->GetSubpasses()) {
@@ -118,7 +118,7 @@ void Graphics::Update()
                 // Renders subpass subrender pipelines.
                 renderer->subrenderHolder.RenderStage(stage, *commandBuffer);
 
-                if (subpass.GetBinding() != renderStage->GetSubpasses().back().GetBinding())
+                if (subpass.GetBinding() != renderStage->GetSubpasses().back().GetBinding()) 
                     vkCmdNextSubpass(*commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
             }
             EndRenderpass(*renderStage);
@@ -246,7 +246,7 @@ bool Graphics::StartRecordCommandBuffer(RenderStage& renderStage)
         return false;
     }
 
-    auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
+    auto& commandBuffer = surface->commandBuffers[surface->currentFrameIndex];
 
     if (!commandBuffer->IsRunning()) commandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
@@ -255,7 +255,7 @@ bool Graphics::StartRecordCommandBuffer(RenderStage& renderStage)
 
 void Graphics::StartRenderpass(RenderStage& renderStage)
 {
-    auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
+    auto& commandBuffer = surface->commandBuffers[surface->currentFrameIndex];
 
     VkRect2D renderArea = {};
     renderArea.offset   = {renderStage.GetRenderArea().GetOffset().x, renderStage.GetRenderArea().GetOffset().y};
@@ -324,14 +324,14 @@ void Graphics::StartRenderpass(RenderStage& renderStage)
 
 void Graphics::EndRenderpass(RenderStage& renderStage)
 {
-    auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
+    auto& commandBuffer = surface->commandBuffers[surface->currentFrameIndex];
     vkCmdEndRenderPass(*commandBuffer);
 }
 
 void Graphics::EndRecordCommandBuffer(RenderStage& renderStage)
 {
     auto  presentQueue  = logicalDevice->GetPresentQueue();
-    auto& commandBuffer = surface->commandBuffers[swapchain->GetActiveImageIndex()];
+    auto& commandBuffer = surface->commandBuffers[surface->currentFrameIndex];
 
     if (!renderStage.HasSwapchain()) return;
 

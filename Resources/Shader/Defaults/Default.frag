@@ -4,6 +4,7 @@
 
 layout(set = 0, binding = 1) uniform UniformObject {
 	mat4 transform;
+	mat4 prevTransform;
 
 	vec4 baseDiffuse;
 	float metallic;

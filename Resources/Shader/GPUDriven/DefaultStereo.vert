@@ -6,6 +6,7 @@
 struct GPUInstanceData
 {
     mat4 modelMatrix;
+    mat4 prevModelMatrix;
     vec3 AABBLocalMin;
     uint indexCount;
     vec3 AABBLocalMax;
@@ -30,6 +31,7 @@ layout(location = 1) out vec2 outUV;
 layout(location = 2) out vec3 outNormal;
 layout(location = 3) out flat uint outMaterialId;
 layout(location = 4) out flat uint outInstanceId;
+layout(location = 5) out vec3 outPrevPosition;
 
 void main()
 {
@@ -41,6 +43,7 @@ void main()
     vec4 normal = vec4(inNormal, 0.0f);
 
     vec4 worldPosition = instanceData.modelMatrix * position;
+    vec4 prevWorldPosition = instanceData.prevModelMatrix * position;
     mat3 normalMatrix = transpose(inverse(mat3(instanceData.modelMatrix)));
 
     gl_Position = worldPosition;
@@ -50,4 +53,5 @@ void main()
 	outNormal = normalMatrix * normalize(normal.xyz);
     outMaterialId = materialId;
     outInstanceId = instanceIndex;
+    outPrevPosition = prevWorldPosition.xyz;
 }

@@ -11,6 +11,7 @@
 #include "HBAOStereoWithThickSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
+#include "IndirectDrawPrevMV.hpp"
 #include "IndirectDrawStereoBackSubrender.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
 #include "MeshesSubrender.hpp"
@@ -49,7 +50,8 @@ RawSSRRenderer::RawSSRRenderer()
         {"BRDFWeightMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"TemporalSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"DebugMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"PrevSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+        {"PrevSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"PrevLighting", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -58,15 +60,22 @@ RawSSRRenderer::RawSSRRenderer()
     std::vector<SubpassType> renderpassSubpasses0 = {{0, {}, {0}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments0, renderpassSubpasses0, Viewport({4096, 4096})));
 
+    std::vector<Attachment>  renderpassPrevMVAttachments{{0, "prevDepth", Attachment::Type::Depth, false},
+                                                         {1, "prevMotionVector", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+    std::vector<SubpassType> renderpassPrevMVSubpasses = {{0, {}, {0, 1}}};
+
+    AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::STEREO, renderpassPrevMVAttachments, renderpassPrevMVSubpasses));
+
     // attachment 一定不能跨index,必须要是连续的,不然会导致framebuffer读取view时索引越界,且renderpass的attachment索引也会对不上
     std::vector<Attachment> renderpassAttachments1{{0, "depth", Attachment::Type::Depth, false},
                                                    {1, "position", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                    {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                   {5, "instanceId", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_NEAREST}};
+                                                   {5, "motionVector", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                   {6, "instanceId", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_NEAREST}};
 
-    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {1, 2, 3, 4}}, {1, {}, {0, 1, 2, 3, 4, 5}}};
+    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {1, 2, 3, 4}}, {1, {}, {0, 1, 2, 3, 4, 5, 6}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::STEREO, renderpassAttachments1, renderpassSubpasses1));
 
     std::vector<Attachment>  renderpassAttachments2{{0, "backDepth", Attachment::Type::Depth, false}};
@@ -99,17 +108,19 @@ void RawSSRRenderer::Start()
 {
     AddSubrender<ShadowSubrender>({0, 0});
 
-    // AddSubrender<SkyboxSubrender>({1, 0});
-    AddSubrender<IndirectDrawStereoSubrender>({1, 1});       // Hi-z min and G-Buffer
-    AddSubrender<IndirectDrawStereoBackSubrender>({2, 0});   // Hi-z max
-    AddSubrender<DeferredStereoSubrender>({3, 0});
+    AddSubrender<IndirectDrawPrevMV>({1, 0});
 
-    AddSubrender<RawSSRStereoSubrender>({4, 0});
-    AddSubrender<RawSSRFilterSubrender>({4, 1});
+    // AddSubrender<SkyboxSubrender>({2, 0});
+    AddSubrender<IndirectDrawStereoSubrender>({2, 1});       // Hi-z min and G-Buffer
+    AddSubrender<IndirectDrawStereoBackSubrender>({3, 0});   // Hi-z max
+    AddSubrender<DeferredStereoSubrender>({4, 0});
 
-    AddSubrender<ResolvedSubrender>({5, 0});
-    AddSubrender<ToneMapingSubrender>({5, 1});
-    // AddSubrender<ImguiSubrender>({5, 1});
+    AddSubrender<RawSSRStereoSubrender>({5, 0});
+    AddSubrender<RawSSRFilterSubrender>({5, 1});
+
+    AddSubrender<ResolvedSubrender>({6, 0});
+    AddSubrender<ToneMapingSubrender>({6, 1});
+    // AddSubrender<ImguiSubrender>({6, 1});
 }
 
 void RawSSRRenderer::Update()

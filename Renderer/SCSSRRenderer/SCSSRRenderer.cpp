@@ -55,7 +55,8 @@ SCSSRRenderer::SCSSRRenderer()
         {"TemporalSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"DebugMask", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"PrevSSRColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"ReuseMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM}};
+        {"ReuseMap", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R8G8B8A8_UNORM},
+        {"PrevLighting", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -70,9 +71,10 @@ SCSSRRenderer::SCSSRRenderer()
                                                    {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {4, "material", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                   {6, "motionVector", Attachment::Type::Image, false, VK_FORMAT_R16G16_SFLOAT},
                                                    {5, "instanceId", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_NEAREST}};
 
-    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {1, 2, 3, 4}}, {1, {}, {0, 1, 2, 3, 4, 5}}};
+    std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {1, 2, 3, 4}}, {1, {}, {0, 1, 2, 3, 4, 5, 6}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::STEREO, renderpassAttachments1, renderpassSubpasses1));
 
     std::vector<Attachment>  renderpassAttachments2{{0, "backDepth", Attachment::Type::Depth, false}};

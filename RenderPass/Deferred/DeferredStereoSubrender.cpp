@@ -1,4 +1,5 @@
 #include "DeferredStereoSubrender.hpp"
+#include "ImageDepth.hpp"
 #include "Light.hpp"
 #include "Scenes.hpp"
 #include "ShadowSystem.hpp"
@@ -12,6 +13,7 @@ DeferredStereoSubrender::DeferredStereoSubrender(const Pipeline::Stage& pipeline
     : Subrender(pipelineStage)
     , pipeline(pipelineStage, {"Shader/Deferred/Deferred.vert", "Shader/Deferred/DeferredStereo.frag"}, {}, {}, PipelineGraphics::Mode::Polygon,
                PipelineGraphics::Depth::None)
+    , pipelineInterpolation("Shader/SSR/SSRStereoTemporalFilter.comp", {}, false)
     , brdf(Resources::Get()->GetThreadPool().Enqueue(ComputeBRDF, 512))
 {}
 
@@ -91,7 +93,22 @@ void DeferredStereoSubrender::Render(const CommandBuffer& commandBuffer)
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void DeferredStereoSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+void DeferredStereoSubrender::PostRender(const CommandBuffer& commandBuffer)
+{
+
+    const auto& PrevLighting = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
+    const auto& depth        = dynamic_cast<const ImageDepth*>(Graphics::Get()->GetAttachment("depth"));
+    const auto& prevDepth    = dynamic_cast<const ImageDepth*>(Graphics::Get()->GetAttachment("prevDepth"));
+    const auto& lighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
+
+    lighting->Image2dPipelineBarrierGraphicToCompute(commandBuffer);
+
+
+
+    PrevLighting->CopyImage2d(commandBuffer, *lighting);
+    // PrevLighting->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+    // prevDepth->CopyImageDepth(commandBuffer, *depth);
+}
 
 std::unique_ptr<Image2d> DeferredStereoSubrender::ComputeBRDF(uint32_t size)
 {

@@ -12,6 +12,7 @@ layout(set = 0, binding = 0) uniform UniformScene
 layout(set = 0, binding = 1) uniform UniformObject
 {
     mat4 transform;
+    mat4 prevTransform;
 
     vec4  baseDiffuse;
     float metallic;
@@ -38,6 +39,7 @@ void main()
 	vec4 normal = vec4(inNormal, 0.0f);
 
     vec4 worldPosition = object.transform * position;
+    vec4 prevWorldPosition = object.prevTransform * position;
     mat3 normalMatrix = transpose(inverse(mat3(object.transform)));
 
     gl_Position = scene.projection * scene.view * worldPosition;

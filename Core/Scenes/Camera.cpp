@@ -33,7 +33,7 @@ void Camera::Update()
         UpdateByTransform();
     }
     else {
-        // UpdateByInput();
+        UpdateByInput();
         // UpdateByCPU();
     }
 

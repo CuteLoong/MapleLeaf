@@ -42,6 +42,7 @@ private:
     struct InstanceData
     {
         glm::mat4 modelMatrix;
+        glm::mat4 prevModelMatrix;
         glm::vec3 AABBLocalMin;
         uint32_t  indexCount;
         glm::vec3 AABBLocalMax;
@@ -51,9 +52,10 @@ private:
         uint32_t  instanceID;
         uint32_t  materialID;
 
-        InstanceData(glm::mat4 modelMatrix, glm::vec3 AABBLocalMin, uint32_t indexCount, glm::vec3 AABBLocalMax, uint32_t indexOffset,
-                     uint32_t vertexCount, uint32_t vertexOffset, uint32_t instanceID, uint32_t materialID)
+        InstanceData(glm::mat4 modelMatrix, glm::mat4 prevModelMatrix, glm::vec3 AABBLocalMin, uint32_t indexCount, glm::vec3 AABBLocalMax,
+                     uint32_t indexOffset, uint32_t vertexCount, uint32_t vertexOffset, uint32_t instanceID, uint32_t materialID)
             : modelMatrix(modelMatrix)
+            , prevModelMatrix(prevModelMatrix)
             , AABBLocalMin(AABBLocalMin)
             , indexCount(indexCount)
             , AABBLocalMax(AABBLocalMax)

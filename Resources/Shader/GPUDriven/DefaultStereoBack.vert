@@ -6,6 +6,7 @@
 struct GPUInstanceData
 {
     mat4 modelMatrix;
+    mat4 prevModelMatrix;
     vec3 AABBLocalMin;
     uint indexCount;
     vec3 AABBLocalMax;

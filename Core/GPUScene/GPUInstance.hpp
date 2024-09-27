@@ -10,8 +10,8 @@ class GPUInstance
 public:
     enum class Status
     {
-        None = 0,
-        ModelChanged = 1,
+        None          = 0,
+        ModelChanged  = 1,
         MatrixChanged = 2
     };
 
@@ -23,11 +23,12 @@ public:
     Status GetInstanceStatus() const { return instanceStatus; }
 
 private:
-    Mesh*  mesh;   // relevent mesh
+    Mesh*                  mesh;   // relevent mesh
     std::shared_ptr<Model> model;
     Status                 instanceStatus;
 
     glm::mat4 modelMatrix;
+    glm::mat4 prevModelMatrix;
     glm::vec3 AABBLocalMin;
     uint32_t  indexCount;
     glm::vec3 AABBLocalMax;
