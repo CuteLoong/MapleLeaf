@@ -4,6 +4,7 @@
 #include "PhysicalDevice.hpp"
 
 #include "config.h"
+#include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
 const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -11,6 +12,7 @@ const std::vector<const char*> LogicalDevice::DeviceExtensions = {VK_KHR_SWAPCHA
                                                                   VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
                                                                   VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
                                                                   VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+                                                                  VK_EXT_SHADER_ATOMIC_FLOAT_EXTENSION_NAME,
 #ifdef MAPLELEAF_RAY_TRACING
                                                                   VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
                                                                   VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
@@ -149,6 +151,13 @@ void LogicalDevice::CreateLogicalDevice()
         enabledFeatures.shaderInt64 = VK_TRUE;
     else
         Log::Warning("Selected GPU does not support shaderInt64!\n");
+
+    // VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT shaderAtomicFloat2Features = {};
+    // shaderAtomicFloat2Features.sType                                         =
+    // VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT; shaderAtomicFloat2Features.shaderBufferFloat32AtomicMinMax = VK_TRUE;
+    // shaderAtomicFloat2Features.shaderSharedFloat32AtomicMinMax               = VK_TRUE;
+    // shaderAtomicFloat2Features.shaderImageFloat32AtomicMinMax                = VK_TRUE;
+    // shaderAtomicFloat2Features.pNext                                         = nullptr;
 
     // add deviceAddress feature
     VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};

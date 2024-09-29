@@ -33,7 +33,7 @@ set_configvar("MAPLELEAF_RAY_TRACING", false)
 set_configdir("Config") 
 add_configfiles("./config.h.in")
 
-add_requires("volk", "glm", "glfw", "spirv-tools", "glslang", "assimp", "stb", "boost")
+add_requires("volk 1.3.268", "glm", "glfw", "spirv-tools 1.3.268", "glslang", "assimp", "stb", "boost")
 add_requires("imgui", {configs = {glfw_vulkan = true}})
 add_packages("glm", "glfw", "volk", "spirv-tools", "glslang", "assimp", "stb", "boost", "imgui")
 add_includedirs(
@@ -85,7 +85,8 @@ add_includedirs(
 "RenderPass/RawSSR",
 "RenderPass/SCSSR",
 "RenderPass/Skybox",
-"RenderPass/RayTracing"
+"RenderPass/RayTracing",
+"RenderPass/Interpolation"
 )
 
 target("RenderPass")
@@ -104,7 +105,8 @@ target("RenderPass")
     "RenderPass/RawSSR/*.cpp",
     "RenderPass/SCSSR/*.cpp",
     "RenderPass/Skybox/*.cpp",
-    "RenderPass/RayTracing/*.cpp"
+    "RenderPass/RayTracing/*.cpp",
+    "RenderPass/Interpolation/*.cpp"
     )
 target_end()
 

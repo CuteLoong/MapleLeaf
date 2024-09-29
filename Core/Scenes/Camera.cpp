@@ -33,7 +33,7 @@ void Camera::Update()
         UpdateByTransform();
     }
     else {
-        UpdateByInput();
+        // UpdateByInput();
         // UpdateByCPU();
     }
 
@@ -51,27 +51,28 @@ void Camera::Update()
 
 void Camera::UpdateByCPU()
 {
-    // if (frameID != 0 && frameID < 14400 && frameID % 120 == 0) position = position + 0.1f * forward;
+    position = position + 0.2f * right;
     // if (frameID != 0 && frameID < 14520 && frameID % 120 == 0) {
     //     position = position - 0.2f * right;
     // } // Room
-    if (frameID != 0 && frameID < 14520 && frameID % 120 == 0) {
-        rotation.y += glm::radians(5.0f / 60.0f);
-        rotation.x += 0.0f;
-        rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
-        glm::mat4 rotationMatrix = glm::mat4(1.0f);
-        rotationMatrix           = glm::rotate(rotationMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-        rotationMatrix           = glm::rotate(rotationMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-        rotationMatrix           = glm::rotate(rotationMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-        forward                  = rotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    // if (frameID != 0 && frameID < 14520 && frameID % 120 == 0) {
+    //     rotation.y += glm::radians(5.0f / 60.0f);
+    //     rotation.x += 0.0f;
+    //     rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
-        forward = glm::normalize(forward);
-        right   = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-        up      = glm::normalize(glm::cross(right, forward));
+    //     glm::mat4 rotationMatrix = glm::mat4(1.0f);
+    //     rotationMatrix           = glm::rotate(rotationMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    //     rotationMatrix           = glm::rotate(rotationMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    //     rotationMatrix           = glm::rotate(rotationMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    //     forward                  = rotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
 
-        position = position + 0.5f * forward;
-    }
+    //     forward = glm::normalize(forward);
+    //     right   = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    //     up      = glm::normalize(glm::cross(right, forward));
+
+    //     position = position + 0.5f * forward;
+    // }
 
 
     // if (frameID != 0 && frameID <= 7260 && frameID % 120 == 0) {

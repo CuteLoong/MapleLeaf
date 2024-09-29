@@ -4,6 +4,7 @@
 #include "Descriptor.hpp"
 #include "glm/glm.hpp"
 #include "volk.h"
+#include "vulkan/vulkan_core.h"
 #include <vector>
 
 namespace MapleLeaf {
@@ -36,9 +37,10 @@ public:
     const VkSampler&      GetSampler() const { return sampler; }
     const VkImageView&    GetView() const { return view; }
 
-    static uint32_t GetMipLevels(const VkExtent3D& extent);
-    static uint32_t FindMemoryType(uint32_t typeFilter, const VkMemoryPropertyFlags& requiredProperties);
-    static VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    static uint32_t            GetMipLevels(const VkExtent3D& extent);
+    static uint32_t            FindMemoryType(uint32_t typeFilter, const VkMemoryPropertyFlags& requiredProperties);
+    static VkFormat            FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    static VkSamplerMipmapMode GetMipmapMode(VkFilter filter, VkFormat format);
 
     static bool HasDepth(VkFormat format);
     static bool HasStencil(VkFormat format);

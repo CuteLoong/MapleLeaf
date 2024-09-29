@@ -1,5 +1,6 @@
 #include "Image.hpp"
 #include "Graphics.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
 constexpr static float ANISOTROPY = 16.0f;
@@ -96,6 +97,17 @@ VkFormat Image::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkI
     return VK_FORMAT_UNDEFINED;
 }
 
+VkSamplerMipmapMode GetMipmapMode(VkFilter filter, VkFormat format)
+{
+    static const std::vector<VkFormat> NEAREST_FORMATS = {
+        VK_FORMAT_R32_UINT, VK_FORMAT_R32_SINT, VK_FORMAT_R16_SINT, VK_FORMAT_R16_UINT, VK_FORMAT_R8_UINT, VK_FORMAT_R8_SINT};
+
+    if (filter == VK_FILTER_NEAREST || std::find(NEAREST_FORMATS.begin(), NEAREST_FORMATS.end(), format) != std::end(NEAREST_FORMATS)) {
+        return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    }
+    return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+}
+
 bool Image::HasDepth(VkFormat format)
 {
     static const std::vector<VkFormat> DEPTH_FORMATS = {VK_FORMAT_D16_UNORM,
@@ -151,11 +163,12 @@ void Image::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAdd
     auto physicalDevice = Graphics::Get()->GetPhysicalDevice();
     auto logicalDevice  = Graphics::Get()->GetLogicalDevice();
 
-    VkSamplerCreateInfo samplerCreateInfo     = {};
-    samplerCreateInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerCreateInfo.magFilter               = filter;
-    samplerCreateInfo.minFilter               = filter;
-    samplerCreateInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    VkSamplerCreateInfo samplerCreateInfo = {};
+    samplerCreateInfo.sType               = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerCreateInfo.magFilter           = filter;
+    samplerCreateInfo.minFilter           = filter;
+    samplerCreateInfo.mipmapMode =
+        filter == VK_FILTER_NEAREST ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR;   // Need use find mipmap mode.
     samplerCreateInfo.addressModeU            = addressMode;
     samplerCreateInfo.addressModeV            = addressMode;
     samplerCreateInfo.addressModeW            = addressMode;

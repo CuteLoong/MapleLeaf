@@ -12,9 +12,11 @@ Transform::Transform(const glm::vec3& position, const glm::vec3& rotation, const
     : position(position)
     , rotation(rotation)
     , scale(scale)
+    , prevPosition(position)
+    , prevRotation(rotation)
+    , prevScale(scale)
 {
-    prevWorldMatrix = GetWorldMatrix();
-    updateStatus    = UpdateStatus::Transformation;
+    updateStatus = UpdateStatus::Transformation;
 }
 
 Transform::Transform(const glm::mat4 modelMatrix)
@@ -36,9 +38,22 @@ Transform::Transform(const glm::mat4 modelMatrix)
     // rotation    = glm::eulerAngles(quaternion);
     this->scale = scale;
 
-    prevWorldMatrix = GetWorldMatrix();
-    updateStatus    = UpdateStatus::Transformation;
+    prevPosition = position;
+    prevRotation = rotation;
+    prevScale    = scale;
+
+    updateStatus = UpdateStatus::Transformation;
 }
+
+Transform::Transform(const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale, const glm::vec3 prevPosition,
+                     const glm::vec3 prevRotation, const glm::vec3 prevScale)
+    : position(position)
+    , rotation(rotation)
+    , scale(scale)
+    , prevPosition(prevPosition)
+    , prevRotation(prevRotation)
+    , prevScale(prevScale)
+{}
 
 Transform::~Transform()
 {
@@ -51,7 +66,10 @@ Transform::~Transform()
 
 void Transform::Update()
 {
-    prevWorldMatrix = GetWorldMatrix();
+    prevPosition = position;
+    prevRotation = rotation;
+    prevScale    = scale;
+
     if (const auto& ani = this->GetEntity()->GetComponent<AnimationController>(); ani != nullptr && ani->isMatrixChanged()) {
         glm::mat4 modelMatrix = ani->getLocalMatrix();
 
@@ -79,7 +97,6 @@ void Transform::Update()
         else
             updateStatus = UpdateStatus::None;
     }
-    // updateStatus = UpdateStatus::None;
 }
 
 glm::mat4 Transform::GetWorldMatrix() const
@@ -99,6 +116,22 @@ glm::mat4 Transform::GetWorldMatrix() const
     return translationMatrix * rotationMatrix * scaleMatrix;
 }
 
+glm::mat4 Transform::GetPrevWorldMatrix() const
+{
+    auto worldTransform = GetWorldTransform();
+
+    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), worldTransform->prevScale);
+
+    glm::mat4 rotationMatrix = glm::mat4(1.0f);
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->prevRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->prevRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrix           = glm::rotate(rotationMatrix, worldTransform->prevRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), worldTransform->prevPosition);
+
+    return translationMatrix * rotationMatrix * scaleMatrix;
+}
+
 glm::vec3 Transform::GetPosition() const
 {
     return GetWorldTransform()->position;
@@ -112,6 +145,21 @@ glm::vec3 Transform::GetRotation() const
 glm::vec3 Transform::GetScale() const
 {
     return GetWorldTransform()->scale;
+}
+
+glm::vec3 Transform::GetPrevPosition() const
+{
+    return GetWorldTransform()->prevPosition;
+}
+
+glm::vec3 Transform::GetPrevRotation() const
+{
+    return GetWorldTransform()->prevRotation;
+}
+
+glm::vec3 Transform::GetPrevScale() const
+{
+    return GetWorldTransform()->prevScale;
 }
 
 void Transform::SetParent(Transform* parent)
@@ -146,7 +194,16 @@ Transform operator*(const Transform& lhs, const Transform& rhs)
     //                        lhs.GetWorldMatrix()[row][2] * rhs.position.z + lhs.GetWorldMatrix()[row][3] * 1.0f;
     // }
     newPosition = lhs.GetWorldMatrix() * newPosition;
-    return {glm::vec3(newPosition), lhs.rotation + rhs.rotation, lhs.scale * rhs.scale};
+
+    glm::vec4 prevNewPosition = glm::vec4(rhs.prevPosition, 1.0f);
+    prevNewPosition           = lhs.GetPrevWorldMatrix() * prevNewPosition;
+
+    return {glm::vec3(newPosition),
+            lhs.rotation + rhs.rotation,
+            lhs.scale * rhs.scale,
+            glm::vec3(prevNewPosition),
+            lhs.prevRotation + rhs.prevRotation,
+            lhs.prevScale * rhs.prevScale};
 }
 
 Transform& Transform::operator*=(const Transform& rhs)
@@ -156,7 +213,8 @@ Transform& Transform::operator*=(const Transform& rhs)
 
 std::ostream& operator<<(std::ostream& stream, const Transform& transform)
 {
-    return stream << transform.position << ", " << transform.rotation << ", " << transform.scale;
+    return stream << transform.position << ", " << transform.rotation << ", " << transform.scale << ", " << transform.prevPosition << ", "
+                  << transform.prevRotation << ", " << transform.prevScale;
 }
 
 const Transform* Transform::GetWorldTransform() const

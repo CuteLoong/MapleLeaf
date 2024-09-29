@@ -63,6 +63,7 @@ public:
                      bool anisotropic = false, bool mipmap = false);
 
     void CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d) const;
+    void ClearImage2d(const CommandBuffer& commandBuffer, const glm::vec4& color) const;
 
     void Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const;
     void Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const;

@@ -464,8 +464,17 @@ void Shader::CreateReflection()
                     Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
                 break;
             case 0x8B5E:   // GL_SAMPLER_2D
+            case 0x8DCA:   // GL_INT_SAMPLER_2D
             case 0x8DD2:   // GL_USAMPLER_2D
+                descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorSetLayouts[descriptorSetIndex].emplace_back(
+                    Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
+                break;
             case 0x904D:   // GL_IMAGE_2D
+                descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                descriptorSetLayouts[descriptorSetIndex].emplace_back(
+                    Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
+                break;
             case 0x8DC1:   // GL_TEXTURE_2D_ARRAY
             case 0x9108:   // GL_SAMPLER_2D_MULTISAMPLE
             case 0x9055:   // GL_IMAGE_2D_MULTISAMPLE
@@ -479,6 +488,12 @@ void Shader::CreateReflection()
                 descriptorType = uniform.writeOnly ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptorSetLayouts[descriptorSetIndex].emplace_back(
                     ImageCube::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
+                break;
+            case 0x9058:   // GL_INT_IMAGE_2D
+            case 0x9063:   // GL_UNSIGNED_INT_IMAGE_2D
+                descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                descriptorSetLayouts[descriptorSetIndex].emplace_back(
+                    Image2d::GetDescriptorSetLayout(static_cast<uint32_t>(uniform.binding), descriptorType, uniform.stageFlags, descriptorCount));
                 break;
             default: break;
             }

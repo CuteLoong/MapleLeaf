@@ -1,5 +1,6 @@
 #include "Image2d.hpp"
 #include "Buffer.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace MapleLeaf {
 std::shared_ptr<Image2d> Image2d::Create(const std::filesystem::path& filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic,
@@ -132,6 +133,20 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
                              0);
 }
 
+void Image2d::ClearImage2d(const CommandBuffer& commandBuffer, const glm::vec4& color) const
+{
+    VkImageSubresourceRange subresourceRange = {};
+    subresourceRange.aspectMask              = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresourceRange.baseMipLevel            = 0;
+    subresourceRange.levelCount              = mipLevels;
+    subresourceRange.baseArrayLayer          = 0;
+    subresourceRange.layerCount              = arrayLayers;
+
+    VkClearColorValue clearColor = {};
+    std::memcpy(clearColor.float32, &color, sizeof(color));
+
+    vkCmdClearColorImage(commandBuffer.GetCommandBuffer(), image, layout, &clearColor, 1, &subresourceRange);
+}
 
 void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
 {

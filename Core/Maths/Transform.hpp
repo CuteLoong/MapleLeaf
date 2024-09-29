@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.hpp"
+#include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 
 namespace MapleLeaf {
@@ -22,9 +23,14 @@ public:
     void Update() override;
 
     glm::mat4 GetWorldMatrix() const;
+    glm::mat4 GetPrevWorldMatrix() const;
+
     glm::vec3 GetPosition() const;
     glm::vec3 GetRotation() const;
     glm::vec3 GetScale() const;
+    glm::vec3 GetPrevPosition() const;
+    glm::vec3 GetPrevRotation() const;
+    glm::vec3 GetPrevScale() const;
 
     const glm::vec3& GetLocalPosition() const { return position; }
     void             SetLocalPosition(const glm::vec3& localPosition) { position = localPosition; }
@@ -35,7 +41,6 @@ public:
     const glm::vec3& GetLocalScale() const { return scale; }
     void             SetLocalScale(const glm::vec3& localScale) { scale = localScale; }
 
-    glm::mat4 GetPrevWorldMatrix() const { return prevWorldMatrix; }
 
     Transform* GetParent() const { return parent; }
     void       SetParent(Transform* parent);
@@ -57,6 +62,9 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const Transform& transform);
 
 private:
+    Transform(const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale, const glm::vec3 prevPosition, const glm::vec3 prevRotation,
+              const glm::vec3 prevScale);
+
     void AddChild(Transform* child);
     void RemoveChild(Transform* child);
 
@@ -64,7 +72,9 @@ private:
     glm::vec3 rotation;
     glm::vec3 scale;
 
-    glm::mat4 prevWorldMatrix;
+    glm::vec3 prevPosition;
+    glm::vec3 prevRotation;
+    glm::vec3 prevScale;
 
     Transform*              parent = nullptr;
     std::vector<Transform*> children;
