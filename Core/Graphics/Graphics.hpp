@@ -43,6 +43,7 @@ public:
     static void        CheckVk(VkResult result);
 
     void CaptureScreenshot(const std::filesystem::path& filename);
+    void CaptureImage2d(const std::filesystem::path filename, const Image2d* image);
 
 private:
     std::unique_ptr<Renderer>                renderer;

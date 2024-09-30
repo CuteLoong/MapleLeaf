@@ -118,7 +118,7 @@ void Graphics::Update()
                 // Renders subpass subrender pipelines.
                 renderer->subrenderHolder.RenderStage(stage, *commandBuffer);
 
-                if (subpass.GetBinding() != renderStage->GetSubpasses().back().GetBinding()) 
+                if (subpass.GetBinding() != renderStage->GetSubpasses().back().GetBinding())
                     vkCmdNextSubpass(*commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
             }
             EndRenderpass(*renderStage);
@@ -438,5 +438,33 @@ void Graphics::CaptureScreenshot(const std::filesystem::path& filename)
 #ifdef MAPLELEAF_GRAPHIC_DEBUG
     Log::Out("Screenshot ", filename, " created in ", (Time::Now() - debugStart).AsMilliseconds<float>(), "ms\n");
 #endif
+}
+
+void Graphics::CaptureImage2d(const std::filesystem::path filename, const Image2d* image)
+{
+    VkImage        dstImage;
+    VkDeviceMemory dstImageMemory;
+    auto           supportsBlit =
+        Image::CopyImage(image->GetImage(), dstImage, dstImageMemory, image->GetFormat(), image->GetExtent(), image->GetLayout(), 0, 0);
+
+    VkImageSubresource imageSubresource = {};
+    imageSubresource.aspectMask         = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageSubresource.mipLevel           = 0;
+    imageSubresource.arrayLayer         = 0;
+
+    VkSubresourceLayout dstSubresourceLayout;
+    vkGetImageSubresourceLayout(*logicalDevice, dstImage, &imageSubresource, &dstSubresourceLayout);
+
+    Bitmap bitmap(std::make_unique<uint8_t[]>(dstSubresourceLayout.size), glm::uvec2(image->GetExtent().width, image->GetExtent().height));
+
+    void* data;
+    vkMapMemory(*logicalDevice, dstImageMemory, dstSubresourceLayout.offset, dstSubresourceLayout.size, 0, &data);
+    std::memcpy(bitmap.GetData().get(), data, static_cast<size_t>(dstSubresourceLayout.size));
+    vkUnmapMemory(*logicalDevice, dstImageMemory);
+
+    vkFreeMemory(*logicalDevice, dstImageMemory, nullptr);
+    vkDestroyImage(*logicalDevice, dstImage, nullptr);
+
+    bitmap.Write(filename);
 }
 }   // namespace MapleLeaf

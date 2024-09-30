@@ -74,6 +74,7 @@ void main()
 	vec3 vPos = (hPos.xyz / hPos.w + 1.0f) * 0.5f;
 	vec3 prevVPos = (prevHPos.xyz / prevHPos.w + 1.0f) * 0.5f;
 	vec3 mv = vPos - prevVPos;
+	mv.y = -mv.y;
 	outMotionVetcor = vec4(mv, 1.0f);
 
 	outPosition = vec4(inPosition, 1.0f);

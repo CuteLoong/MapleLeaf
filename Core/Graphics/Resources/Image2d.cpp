@@ -1,6 +1,6 @@
 #include "Image2d.hpp"
 #include "Buffer.hpp"
-#include "vulkan/vulkan_core.h"
+
 
 namespace MapleLeaf {
 std::shared_ptr<Image2d> Image2d::Create(const std::filesystem::path& filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic,

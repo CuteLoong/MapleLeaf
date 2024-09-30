@@ -7,6 +7,10 @@
 
 layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
 
+layout(push_constant) uniform PushObject {
+	float alpha;
+} object;
+
 layout(set=0, binding=1) uniform sampler2D depth;
 layout(set=0, binding=2) uniform sampler2D prevDepth;
 layout(set=0, binding=3) uniform sampler2D motionVector;
@@ -17,7 +21,7 @@ layout(set=0, binding=6, r32i) uniform iimage2D One2ZeroDepth_Int;
 
 #include <Misc/Camera.glsl>
 
-#define alpha 0.6
+// #define alpha 0.6
 
 vec2 ScreenUVToStereoUV(vec2 uv, int viewIndex)
 {
@@ -58,8 +62,8 @@ void main()
     float current_depth = texture(depth, screenUV).r;
     float prev_depth = texture(prevDepth, screenUV).r;
 
-    vec2 zero2oneUV = (stereoUV + prevMV * alpha);
-    vec2 one2zeroUV = (stereoUV - mv * (1.0 - alpha));
+    vec2 zero2oneUV = (stereoUV + prevMV * object.alpha);
+    vec2 one2zeroUV = (stereoUV - mv * (1.0 - object.alpha));
 
     vec2 zero2onePixel = StereoUVToScreenUV(zero2oneUV, viewIndex) * camera.pixelSize.xy;
     vec2 one2zeroPixel = StereoUVToScreenUV(one2zeroUV, viewIndex) * camera.pixelSize.xy;

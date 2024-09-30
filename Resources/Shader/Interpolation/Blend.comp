@@ -5,6 +5,10 @@
 
 layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
 
+layout(push_constant) uniform PushObject {
+	float alpha;
+} object;
+
 layout(set=0, binding=1) uniform sampler2D Zero2OneColor;
 layout(set=0, binding=2) uniform sampler2D Zero2OneDepth;
 layout(set=0, binding=3) uniform sampler2D One2ZeroColor;
@@ -15,7 +19,7 @@ layout(set=0, binding=6, r32f) writeonly uniform image2D AlphaDepth;
 
 #include <Misc/Camera.glsl>
 
-#define alpha 0.6
+// #define alpha 0.6
 #define thresholdDepth 0.0028
 #define thresholdColor 0.13
 
@@ -55,12 +59,12 @@ void main()
         alphaColor = deltaDepth > thresholdDepth ? zero2oneInterpolatedColor : one2zeroInterpolatedColor;
     }
     if(depthCondition && colorCondition) {
-        alphaDepth = alpha < 0.5 ? zero2oneInterpolatedDepth : one2zeroInterpolatedDepth;
-        alphaColor = alpha < 0.5 ? zero2oneInterpolatedColor : one2zeroInterpolatedColor;
+        alphaDepth = object.alpha < 0.5 ? zero2oneInterpolatedDepth : one2zeroInterpolatedDepth;
+        alphaColor = object.alpha < 0.5 ? zero2oneInterpolatedColor : one2zeroInterpolatedColor;
     }
     if(depthCondition && !colorCondition) {
-        alphaDepth = mix(zero2oneInterpolatedDepth, one2zeroInterpolatedDepth, alpha);
-        alphaColor = mix(zero2oneInterpolatedColor, one2zeroInterpolatedColor, alpha);
+        alphaDepth = mix(zero2oneInterpolatedDepth, one2zeroInterpolatedDepth, object.alpha);
+        alphaColor = mix(zero2oneInterpolatedColor, one2zeroInterpolatedColor, object.alpha);
     }
 
     imageStore(AlphaColor, pixel, vec4(alphaColor, 1.0f));
