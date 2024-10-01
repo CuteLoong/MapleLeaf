@@ -34,7 +34,7 @@ void Camera::Update()
     }
     else {
         // UpdateByInput();
-        // UpdateByCPU();
+        UpdateByCPU();
     }
 
     UpdateCameraInfo();
