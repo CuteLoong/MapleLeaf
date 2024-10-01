@@ -34,9 +34,9 @@ void InterpolationSubrender::PreRender(const CommandBuffer& commandBuffer)
     const auto& Zero2OneDepth     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2OneDepth"));
     const auto& One2ZeroDepth     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("One2ZeroDepth"));
 
-    if (frameID == 12) {
-        Graphics::Get()->CaptureImage2d("Screenshots/lighting20_12.png", lighting);
-    }
+    // if (frameID == 12) {
+    //     Graphics::Get()->CaptureImage2d("Screenshots/lighting20_12.png", lighting);
+    // }
 
     pushHandlerWarpDepth.Push("alpha", static_cast<float>(0.0));
     pushHandlerWarpColor.Push("alpha", static_cast<float>(0.0));
@@ -58,7 +58,6 @@ void InterpolationSubrender::PreRender(const CommandBuffer& commandBuffer)
     descriptorSetWarpDepth.Push("prevMotionVector", prevMotionVector);
     descriptorSetWarpDepth.Push("motionVector", motionVector);
     descriptorSetWarpDepth.Push("PushObject", pushHandlerWarpDepth);
-
 
     descriptorSetWarpDepth.Push("Zero2OneDepth_Int", Zero2OneDepth_Int);
     descriptorSetWarpDepth.Push("One2ZeroDepth_Int", One2ZeroDepth_Int);
@@ -139,10 +138,10 @@ void InterpolationSubrender::PostRender(const CommandBuffer& commandBuffer)
 
     pipelineBlend.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
 
-    // if (frameID == 9) {
-    //     ComputeBlend();
-    //     exit(0);
-    // }
+    if (frameID == 9) {
+        ComputeBlend();
+        exit(0);
+    }
 }
 
 void InterpolationSubrender::ComputeBlend()

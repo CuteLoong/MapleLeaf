@@ -19,7 +19,7 @@ void AnimationController::Update()
     // if (camera->frameID % 120 != 0) {
     //     return;
     // }
-    double currentTime = (1.0 / 20.0) * camera->frameID;
+    double currentTime = (1.0 / 10.0) * camera->frameID;
 
     double time = mLoopAnimations ? fmod(currentTime, mGlobalAnimationLength) : currentTime;
 

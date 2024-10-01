@@ -47,6 +47,7 @@ void main()
     float one2zeroInterpolatedDepth = texture(One2ZeroDepth, screenUV).r;
 
     float deltaDepth = Linear01Depth(zero2oneInterpolatedDepth) - Linear01Depth(one2zeroInterpolatedDepth);
+    // float deltaDepth = zero2oneInterpolatedDepth - one2zeroInterpolatedDepth;
     float deltaColor = Luminance(zero2oneInterpolatedColor) - Luminance(one2zeroInterpolatedColor);
 
     float alphaDepth = 0.0f;

@@ -1,0 +1,111 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_shader_atomic_float : enable
+
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
+
+layout(push_constant) uniform PushObject {
+	float alpha;
+} object;
+
+layout(set=0, binding=1) uniform sampler2D lighting;
+layout(set=0, binding=2) uniform sampler2D prevLighting;
+layout(set=0, binding=3) uniform sampler2D depth;
+layout(set=0, binding=4) uniform sampler2D prevDepth;
+layout(set=0, binding=5) uniform sampler2D Zero2AlphaMV;
+layout(set=0, binding=6) uniform sampler2D Alpha2OneMV;
+
+layout(set=0, binding=7) writeonly uniform image2D AlphaColor;
+layout(set=0, binding=8, r32f) writeonly uniform image2D AlphaDepth;
+
+#include <Misc/Camera.glsl>
+
+#define thresholdDepth 0.0028
+#define thresholdColor 0.13
+
+vec2 ScreenUVToStereoUV(vec2 uv, int viewIndex)
+{
+    int pixelOffset = int(camera.stereoPixelSize.x * viewIndex);
+    float rawX = uv.x * camera.pixelSize.x;
+    float jitterX = rawX - int(rawX);
+
+    int pixelX = int(rawX) - pixelOffset;
+    vec2 stereoUV = vec2((pixelX + jitterX) * camera.stereoPixelSize.z, uv.y);
+    return stereoUV;
+}
+
+vec2 StereoUVToScreenUV(vec2 stereoUV, int viewIndex)
+{
+    stereoUV.x = clamp(stereoUV.x, 0.0f, 1.0f);
+    int pixelOffset = int(camera.stereoPixelSize.x * viewIndex);
+    float rawX = stereoUV.x * camera.stereoPixelSize.x;
+    float jitterX = int(rawX) == 0 ? 0.5f : rawX - int(rawX);
+
+    int pixelX = int(rawX) + pixelOffset;
+    vec2 uv = vec2((pixelX + jitterX) * camera.pixelSize.z, stereoUV.y);
+    return uv;
+}
+
+float Linear01Depth(float z) {
+    z = z * 0.5 + 0.5; // NDC to [0, 1]
+    return 1.0 / (camera.zBufferParams.x * z + camera.zBufferParams.y);
+}
+
+float Luminance(vec3 color) {
+    return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if(pixel.x >= camera.pixelSize.x || pixel.y >= camera.pixelSize.y)
+        return;
+
+    int viewIndex = pixel.x < (camera.pixelSize.x / 2) ? 0 : 1;
+    vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
+    vec2 stereoUV = ScreenUVToStereoUV(screenUV, viewIndex);
+
+    vec2 prevMV = texelFetch(Zero2AlphaMV, pixel, 0).xy;
+    vec2 mv = texelFetch(Alpha2OneMV, pixel, 0).xy;
+
+    vec2 zeroScreenUV = StereoUVToScreenUV(stereoUV - prevMV, viewIndex);
+    vec2 oneScreenUV = StereoUVToScreenUV(stereoUV + mv, viewIndex);
+
+    vec3 zeroColor = texture(prevLighting, zeroScreenUV).xyz;
+    vec3 oneColor = texture(lighting, oneScreenUV).xyz;
+
+    float zeroDepth = texture(prevDepth, zeroScreenUV).r;
+    float oneDepth = texture(depth, oneScreenUV).r;
+
+    float deltaDepth = Linear01Depth(zeroDepth) - Linear01Depth(oneDepth);
+    // float deltaDepth = zeroDepth - oneDepth;
+    float deltaColor = Luminance(zeroColor) - Luminance(oneColor);
+
+    float alphaDepth = 0.0f;
+    vec3 alphaColor = vec3(0.0f);
+
+    bool depthCondition = abs(deltaDepth) < thresholdDepth;
+    bool colorCondition = abs(deltaColor) < thresholdColor;
+
+    if(!depthCondition) {
+        alphaDepth = deltaDepth > thresholdDepth ? zeroDepth : oneDepth;
+        alphaColor = deltaDepth > thresholdDepth ? zeroColor : oneColor;
+    }
+
+    if(depthCondition && colorCondition) {
+        alphaDepth = object.alpha < 0.5 ? zeroDepth : oneDepth;
+        alphaColor = object.alpha < 0.5 ? zeroColor : oneColor;
+    }
+
+    if(depthCondition && !colorCondition) {
+        alphaDepth = mix(zeroDepth, oneDepth, object.alpha);
+        alphaColor = mix(zeroColor, oneColor, object.alpha);
+    }
+
+    imageStore(AlphaColor, pixel, vec4(alphaColor, 1.0f));
+    imageStore(AlphaDepth, pixel, vec4(alphaDepth));
+
+}

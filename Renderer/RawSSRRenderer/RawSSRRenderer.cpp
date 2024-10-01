@@ -14,6 +14,7 @@
 #include "IndirectDrawPrevMV.hpp"
 #include "IndirectDrawStereoBackSubrender.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
+#include "InterpolationBackWarpSubrender.hpp"
 #include "InterpolationSubrender.hpp"
 #include "MeshesSubrender.hpp"
 #include "NonRTAttachmentsHandler.hpp"
@@ -29,8 +30,6 @@
 #include "StereoMaskSubrender.hpp"
 #include "StochasticSSRStereoMultiSPPSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
-#include "vulkan/vulkan_core.h"
-
 
 namespace Test {
 RawSSRRenderer::RawSSRRenderer()
@@ -61,7 +60,9 @@ RawSSRRenderer::RawSSRRenderer()
         {"One2ZeroDepth_Int", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SINT, VK_FILTER_NEAREST},
         {"Zero2OneDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
         {"One2ZeroDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
-        {"AlphaDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT}};
+        {"AlphaDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
+        {"Zero2AlphaMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"Alpha2OneMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -134,7 +135,8 @@ void RawSSRRenderer::Start()
     AddSubrender<IndirectDrawStereoBackSubrender>({3, 0});   // Hi-z max
     AddSubrender<DeferredStereoSubrender>({4, 0});
 
-    AddSubrender<InterpolationSubrender>({5, 0});
+    AddSubrender<InterpolationBackWarpSubrender>({5, 0});
+    // AddSubrender<InterpolationSubrender>({5, 0});
 
     AddSubrender<RawSSRStereoSubrender>({6, 0});
     AddSubrender<RawSSRFilterSubrender>({6, 1});

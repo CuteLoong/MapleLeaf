@@ -15,13 +15,13 @@ layout(set=0, binding=1) uniform sampler2D depth;
 layout(set=0, binding=2) uniform sampler2D prevDepth;
 layout(set=0, binding=3) uniform sampler2D motionVector;
 layout(set=0, binding=4) uniform sampler2D prevMotionVector;
+layout(set=0, binding=5) uniform isampler2D Zero2OneDepth_Int;
+layout(set=0, binding=6) uniform isampler2D One2ZeroDepth_Int;
 
-layout(set=0, binding=5, r32i) uniform iimage2D Zero2OneDepth_Int;
-layout(set=0, binding=6, r32i) uniform iimage2D One2ZeroDepth_Int;
+layout(set=0, binding=7, rgba32f) uniform image2D Zero2AlphaMV;
+layout(set=0, binding=8, rgba32f) uniform image2D Alpha2OneMV;
 
 #include <Misc/Camera.glsl>
-
-// #define alpha 0.6
 
 vec2 ScreenUVToStereoUV(vec2 uv, int viewIndex)
 {
@@ -62,15 +62,18 @@ void main()
     float current_depth = texture(depth, screenUV).r;
     float prev_depth = texture(prevDepth, screenUV).r;
 
-    vec2 zero2alphaUV = StereoUVToScreenUV(stereoUV + prevMV, viewIndex);
-    vec2 one2alphaUV = StereoUVToScreenUV(stereoUV - mv, viewIndex);
+    vec2 zero2oneUV = StereoUVToScreenUV(stereoUV + prevMV, viewIndex);
+    vec2 one2zeroUV = StereoUVToScreenUV(stereoUV - mv, viewIndex);
 
-    vec2 zero2alphaPixel = zero2alphaUV * camera.pixelSize.xy;
-    vec2 one2alphaPixel = one2alphaUV * camera.pixelSize.xy;
+    vec2 zero2onePixel = zero2oneUV * camera.pixelSize.xy;
+    vec2 one2zeroPixel = one2zeroUV * camera.pixelSize.xy;
 
     int current_depth_int = floatBitsToInt(current_depth);
     int prev_depth_int = floatBitsToInt(prev_depth);
 
-    imageAtomicMin(Zero2OneDepth_Int, ivec2(zero2alphaPixel), prev_depth_int);
-    imageAtomicMin(One2ZeroDepth_Int, ivec2(one2alphaPixel), current_depth_int);
+    int rawDepth_021 = texture(Zero2OneDepth_Int, zero2oneUV).r;
+    int rawDepth_120 = texture(One2ZeroDepth_Int, one2zeroUV).r;
+
+    if(rawDepth_021 == prev_depth_int) imageStore(Zero2AlphaMV, ivec2(zero2onePixel), vec4(prevMV, 0.0f, 1.0f));
+    if(rawDepth_120 == current_depth_int) imageStore(Alpha2OneMV, ivec2(one2zeroPixel), vec4(mv, 0.0f, 1.0f));
 }
