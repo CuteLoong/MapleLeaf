@@ -22,14 +22,17 @@ private:
     PipelineCompute pipelineWarpDepth;
     PipelineCompute pipelineWarpColor;
     PipelineCompute pipelineBlend;
+    PipelineCompute pipelineFinement;
 
     DescriptorsHandler descriptorSetWarpDepth;
     DescriptorsHandler descriptorSetWarpColor;
     DescriptorsHandler descriptorSetBlend;
+    DescriptorsHandler descriptorSetFinement;
 
     UniformHandler uniformCameraWarpDepth;
     UniformHandler uniformCameraWarpColor;
     UniformHandler uniformCameraBlend;
+    UniformHandler uniformCameraFinement;
 
     PushHandler pushHandlerWarpDepth;
     PushHandler pushHandlerWarpColor;

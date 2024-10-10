@@ -1,7 +1,9 @@
 #include "InterpolationBackWarpSubrender.hpp"
 
+#include "DescriptorHandler.hpp"
 #include "Graphics.hpp"
 #include "Image2d.hpp"
+#include "Pipeline.hpp"
 #include "PipelineCompute.hpp"
 #include "Scenes.hpp"
 
@@ -12,6 +14,7 @@ InterpolationBackWarpSubrender::InterpolationBackWarpSubrender(const Pipeline::S
     , pipelineWarpDepth("Shader/Interpolation/InterpolationDepth.comp", {}, false)
     , pipelineWarpMV("Shader/Interpolation/InterpolationMV.comp", {}, false)
     , pipelineBlend("Shader/Interpolation/BackwardWarpAlpha.comp", {}, false)
+    , pipelineFinement("Shader/Interpolation/RefinementMV.comp", {}, false)
     , uniformCameraWarpDepth(true)
     , pushHandlerWarpMV(true)
     , uniformCameraBlend(true)
@@ -30,13 +33,21 @@ void InterpolationBackWarpSubrender::PreRender(const CommandBuffer& commandBuffe
     const auto& Zero2AlphaMV      = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2AlphaMV"));
     const auto& Alpha2OneMV       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Alpha2OneMV"));
 
-    pushHandlerWarpDepth.Push("alpha", static_cast<float>(0.7));
-    pushHandlerWarpMV.Push("alpha", static_cast<float>(0.7));
+    const auto& Zero2OneColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2OneColor"));
+    const auto& One2ZeroColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("One2ZeroColor"));
+    const auto& BlockInit     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockInit"));
+
+
+    pushHandlerWarpDepth.Push("alpha", static_cast<float>(0.0));
+    pushHandlerWarpMV.Push("alpha", static_cast<float>(0.0));
 
     Zero2OneDepth_Int->ClearImage2d(commandBuffer, glm::vec4(1.0f));
     One2ZeroDepth_Int->ClearImage2d(commandBuffer, glm::vec4(1.0f));
     Zero2AlphaMV->ClearImage2d(commandBuffer, glm::vec4(0.0f));
     Alpha2OneMV->ClearImage2d(commandBuffer, glm::vec4(0.0f));
+
+    Zero2OneColor->ClearImage2d(commandBuffer, glm::vec4(0.0f));
+    One2ZeroColor->ClearImage2d(commandBuffer, glm::vec4(0.0f));
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCameraWarpDepth);
@@ -75,6 +86,7 @@ void InterpolationBackWarpSubrender::PreRender(const CommandBuffer& commandBuffe
 
     descriptorSetWarpMV.Push("Zero2AlphaMV", Zero2AlphaMV);
     descriptorSetWarpMV.Push("Alpha2OneMV", Alpha2OneMV);
+    descriptorSetWarpDepth.Push("BlockInit", BlockInit);
 
     if (!descriptorSetWarpMV.Update(pipelineWarpMV)) return;
 
@@ -84,6 +96,27 @@ void InterpolationBackWarpSubrender::PreRender(const CommandBuffer& commandBuffe
     pushHandlerWarpMV.BindPush(commandBuffer, pipelineWarpMV);
 
     pipelineWarpMV.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
+
+    Zero2AlphaMV->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+    Alpha2OneMV->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+
+    const auto& FinedZero2AlphaMV = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedZero2AlphaMV"));
+    const auto& FinedAlpha2OneMV  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedAlpha2OneMV"));
+
+    descriptorSetFinement.Push("UniformCamera", uniformCameraWarpDepth);
+    descriptorSetFinement.Push("Zero2AlphaMV", Zero2AlphaMV);
+    descriptorSetFinement.Push("Alpha2OneMV", Alpha2OneMV);
+    descriptorSetFinement.Push("FinedZero2AlphaMV", FinedZero2AlphaMV);
+    descriptorSetFinement.Push("FinedAlpha2OneMV", FinedAlpha2OneMV);
+
+    if (!descriptorSetFinement.Update(pipelineFinement)) return;
+
+    pipelineFinement.BindPipeline(commandBuffer);
+
+    descriptorSetFinement.BindDescriptor(commandBuffer, pipelineFinement);
+
+    pipelineFinement.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
+
 
     if (frameID == 8) {
         ComputeBlend();
@@ -98,17 +131,19 @@ void InterpolationBackWarpSubrender::Render(const CommandBuffer& commandBuffer)
 
 void InterpolationBackWarpSubrender::PostRender(const CommandBuffer& commandBuffer)
 {
-    const auto& depth        = dynamic_cast<const ImageDepth*>(Graphics::Get()->GetAttachment("depth"));
-    const auto& prevDepth    = dynamic_cast<const ImageDepth*>(Graphics::Get()->GetAttachment("prevDepth"));
-    const auto& lighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
-    const auto& prevLighting = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
-    const auto& Zero2AlphaMV = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2AlphaMV"));
-    const auto& Alpha2OneMV  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Alpha2OneMV"));
+    const auto& depth             = dynamic_cast<const ImageDepth*>(Graphics::Get()->GetAttachment("depth"));
+    const auto& prevDepth         = dynamic_cast<const ImageDepth*>(Graphics::Get()->GetAttachment("prevDepth"));
+    const auto& lighting          = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
+    const auto& prevLighting      = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
+    const auto& FinedZero2AlphaMV = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedZero2AlphaMV"));
+    const auto& FinedAlpha2OneMV  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedAlpha2OneMV"));
 
-    const auto& AlphaColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("AlphaColor"));
-    const auto& AlphaDepth = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("AlphaDepth"));
+    const auto& AlphaColor    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("AlphaColor"));
+    const auto& AlphaDepth    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("AlphaDepth"));
+    const auto& Zero2OneColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2OneColor"));
+    const auto& One2ZeroColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("One2ZeroColor"));
 
-    pushHandlerBlend.Push("alpha", static_cast<float>(0.7));
+    pushHandlerBlend.Push("alpha", static_cast<float>(0.0));
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCameraBlend);
@@ -118,12 +153,15 @@ void InterpolationBackWarpSubrender::PostRender(const CommandBuffer& commandBuff
     descriptorSetBlend.Push("prevLighting", prevLighting);
     descriptorSetBlend.Push("depth", depth);
     descriptorSetBlend.Push("prevDepth", prevDepth);
-    descriptorSetBlend.Push("Zero2AlphaMV", Zero2AlphaMV);
-    descriptorSetBlend.Push("Alpha2OneMV", Alpha2OneMV);
+    descriptorSetBlend.Push("Zero2AlphaMV", FinedZero2AlphaMV);
+    descriptorSetBlend.Push("Alpha2OneMV", FinedAlpha2OneMV);
     descriptorSetBlend.Push("PushObject", pushHandlerBlend);
 
     descriptorSetBlend.Push("AlphaColor", AlphaColor);
     descriptorSetBlend.Push("AlphaDepth", AlphaDepth);
+    descriptorSetBlend.Push("Zero2OneColor", Zero2OneColor);
+    descriptorSetBlend.Push("One2ZeroColor", One2ZeroColor);
+
 
     if (!descriptorSetBlend.Update(pipelineBlend)) return;
 
@@ -140,6 +178,7 @@ void InterpolationBackWarpSubrender::ComputeBlend()
     PipelineCompute computeWarpDepth("Shader/Interpolation/InterpolationDepth.comp", {}, false);
     PipelineCompute computeWarpMV("Shader/Interpolation/InterpolationMV.comp", {}, false);
     PipelineCompute computeBlend("Shader/Interpolation/BackwardWarpAlpha.comp", {}, false);
+    PipelineCompute computeFinement("Shader/Interpolation/RefinementMV.comp", {}, false);
 
     const auto& prevLighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
     const auto& lighting         = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
@@ -152,14 +191,19 @@ void InterpolationBackWarpSubrender::ComputeBlend()
     const auto& One2ZeroDepth_Int = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("One2ZeroDepth_Int"));
     const auto& Zero2AlphaMV      = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2AlphaMV"));
     const auto& Alpha2OneMV       = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Alpha2OneMV"));
+    const auto& Zero2OneColor     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("Zero2OneColor"));
+    const auto& One2ZeroColor     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("One2ZeroColor"));
     const auto& AlphaColor        = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("AlphaColor"));
     const auto& AlphaDepth        = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("AlphaDepth"));
+    const auto& FinedZero2AlphaMV = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedZero2AlphaMV"));
+    const auto& FinedAlpha2OneMV  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedAlpha2OneMV"));
 
     DescriptorsHandler descriptorSet_1(computeWarpDepth);
     DescriptorsHandler descriptorSet_2(computeWarpMV);
-    DescriptorsHandler descriptorSet_3(computeBlend);
+    DescriptorsHandler descriptorSet_3(computeFinement);
+    DescriptorsHandler descriptorSet_4(computeBlend);
 
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i <= 30; i++) {
         pushHandlerWarpDepth.Push("alpha", static_cast<float>(i) / static_cast<float>(30));
 
         CommandBuffer commandBuffer_1(true, VK_QUEUE_COMPUTE_BIT);
@@ -219,30 +263,52 @@ void InterpolationBackWarpSubrender::ComputeBlend()
 
         CommandBuffer commandBuffer_3(true, VK_QUEUE_COMPUTE_BIT);
 
-        descriptorSet_3.Push("UniformCamera", uniformCameraBlend);
-        descriptorSet_3.Push("lighting", lighting);
-        descriptorSet_3.Push("prevLighting", prevLighting);
-        descriptorSet_3.Push("depth", depth);
-        descriptorSet_3.Push("prevDepth", prevDepth);
+        descriptorSet_3.Push("UniformCamera", uniformCameraWarpDepth);
         descriptorSet_3.Push("Zero2AlphaMV", Zero2AlphaMV);
         descriptorSet_3.Push("Alpha2OneMV", Alpha2OneMV);
-        descriptorSet_3.Push("PushObject", pushHandlerWarpDepth);
+        descriptorSet_3.Push("FinedZero2AlphaMV", FinedZero2AlphaMV);
+        descriptorSet_3.Push("FinedAlpha2OneMV", FinedAlpha2OneMV);
 
-        descriptorSet_3.Push("AlphaColor", AlphaColor);
-        descriptorSet_3.Push("AlphaDepth", AlphaDepth);
+        descriptorSet_3.Update(computeFinement);
 
-        descriptorSet_3.Update(computeBlend);
+        computeFinement.BindPipeline(commandBuffer_3);
+        descriptorSet_3.BindDescriptor(commandBuffer_3, computeFinement);
 
-        computeBlend.BindPipeline(commandBuffer_3);
-        descriptorSet_3.BindDescriptor(commandBuffer_3, computeBlend);
-        pushHandlerWarpDepth.BindPush(commandBuffer_3, computeBlend);
+        computeFinement.CmdRender(commandBuffer_3, Graphics::Get()->GetNonRTAttachmentSize());
 
-        computeBlend.CmdRender(commandBuffer_3, Graphics::Get()->GetNonRTAttachmentSize());
-
-        AlphaColor->Image2dPipelineBarrierComputeToCompute(commandBuffer_3);
-        AlphaDepth->Image2dPipelineBarrierComputeToCompute(commandBuffer_3);
+        FinedZero2AlphaMV->Image2dPipelineBarrierComputeToCompute(commandBuffer_3);
+        FinedAlpha2OneMV->Image2dPipelineBarrierComputeToCompute(commandBuffer_3);
 
         commandBuffer_3.SubmitIdle();
+
+        CommandBuffer commandBuffer_4(true, VK_QUEUE_COMPUTE_BIT);
+
+        descriptorSet_4.Push("UniformCamera", uniformCameraBlend);
+        descriptorSet_4.Push("lighting", lighting);
+        descriptorSet_4.Push("prevLighting", prevLighting);
+        descriptorSet_4.Push("depth", depth);
+        descriptorSet_4.Push("prevDepth", prevDepth);
+        descriptorSet_4.Push("Zero2AlphaMV", FinedZero2AlphaMV);
+        descriptorSet_4.Push("Alpha2OneMV", FinedAlpha2OneMV);
+        descriptorSet_4.Push("PushObject", pushHandlerWarpDepth);
+
+        descriptorSet_4.Push("AlphaColor", AlphaColor);
+        descriptorSet_4.Push("AlphaDepth", AlphaDepth);
+        descriptorSet_4.Push("Zero2OneColor", Zero2OneColor);
+        descriptorSet_4.Push("One2ZeroColor", One2ZeroColor);
+
+        descriptorSet_4.Update(computeBlend);
+
+        computeBlend.BindPipeline(commandBuffer_4);
+        descriptorSet_4.BindDescriptor(commandBuffer_4, computeBlend);
+        pushHandlerWarpDepth.BindPush(commandBuffer_4, computeBlend);
+
+        computeBlend.CmdRender(commandBuffer_4, Graphics::Get()->GetNonRTAttachmentSize());
+
+        AlphaColor->Image2dPipelineBarrierComputeToCompute(commandBuffer_4);
+        AlphaDepth->Image2dPipelineBarrierComputeToCompute(commandBuffer_4);
+
+        commandBuffer_4.SubmitIdle();
 
         Graphics::Get()->CaptureImage2d("Screenshots/AlphaColor" + std::to_string(i) + ".png", AlphaColor);
         Graphics::Get()->CaptureImage2d("Screenshots/AlphaDepth" + std::to_string(i) + ".png", AlphaDepth);

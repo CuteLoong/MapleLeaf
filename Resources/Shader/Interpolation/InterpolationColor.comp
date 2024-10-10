@@ -24,6 +24,8 @@ layout(set=0, binding=9, rgba32f) uniform image2D Zero2OneColor;
 layout(set=0, binding=10, r32f) uniform image2D Zero2OneDepth;
 layout(set=0, binding=11, rgba32f) uniform image2D One2ZeroColor;
 layout(set=0, binding=12, r32f) uniform image2D One2ZeroDepth;
+layout(set=0, binding=13) writeonly uniform image2D BlockZero2Alpha;
+layout(set=0, binding=14) writeonly uniform image2D BlockOne2Alpha;
 
 #include <Misc/Camera.glsl>
 
@@ -62,17 +64,23 @@ void main()
     vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
     vec2 stereoUV = ScreenUVToStereoUV(screenUV, viewIndex);
 
-    vec2 mv = texelFetch(motionVector, pixel, 0).xy;
-    vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy;
+    vec2 mv = texelFetch(motionVector, pixel, 0).xy * (1.0 - object.alpha);
+    vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy * object.alpha;
 
     vec3 current_color = texture(lighting, screenUV).xyz;
     vec3 prev_color = texture(prevLighting, screenUV).xyz;
 
-    float current_depth = texture(depth, screenUV).r;
-    float prev_depth = texture(prevDepth, screenUV).r;
+    float current_depth = texelFetch(depth, pixel, 0).r;
+    float prev_depth = texelFetch(prevDepth, pixel, 0).r;
 
-    vec2 zero2oneUV = StereoUVToScreenUV(stereoUV + prevMV * object.alpha, viewIndex);
-    vec2 one2zeroUV = StereoUVToScreenUV(stereoUV - mv * (1.0 - object.alpha), viewIndex);
+    vec2 zero2alphaStereoUV = stereoUV + prevMV;
+    vec2 one2alphaStereoUV = stereoUV - mv;
+
+    bool valid_zero2alpha = zero2alphaStereoUV.x >= 0.0f && zero2alphaStereoUV.x <= 1.0f && zero2alphaStereoUV.y >= 0.0f && zero2alphaStereoUV.y <= 1.0f;
+    bool valid_one2alpha = one2alphaStereoUV.x >= 0.0f && one2alphaStereoUV.x <= 1.0f && one2alphaStereoUV.y >= 0.0f && one2alphaStereoUV.y <= 1.0f;
+
+    vec2 zero2oneUV = StereoUVToScreenUV(zero2alphaStereoUV, viewIndex);
+    vec2 one2zeroUV = StereoUVToScreenUV(one2alphaStereoUV, viewIndex);
 
     vec2 zero2onePixel = zero2oneUV * camera.pixelSize.xy;
     vec2 one2zeroPixel = one2zeroUV * camera.pixelSize.xy;
@@ -80,11 +88,35 @@ void main()
     int current_depth_int = floatBitsToInt(current_depth);
     int prev_depth_int = floatBitsToInt(prev_depth);
 
-    int rawDepth_021 = texture(Zero2OneDepth_Int, zero2oneUV).r;
-    int rawDepth_120 = texture(One2ZeroDepth_Int, one2zeroUV).r;
+    // int rawDepth_021 = texture(Zero2OneDepth_Int, zero2oneUV).r;
+    // int rawDepth_120 = texture(One2ZeroDepth_Int, one2zeroUV).r;
 
-    if(rawDepth_021 == prev_depth_int) imageStore(Zero2OneColor, ivec2(zero2onePixel), vec4(prev_color, 1.0f));
-    if(rawDepth_120 == current_depth_int) imageStore(One2ZeroColor, ivec2(one2zeroPixel), vec4(current_color, 1.0f));
+    int rawDepth_021 = texelFetch(Zero2OneDepth_Int, ivec2(zero2onePixel), 0).r;
+    int rawDepth_120 = texelFetch(One2ZeroDepth_Int, ivec2(one2zeroPixel), 0).r;
+
+    vec3 blockColor = vec3(0.0f);
+    if(stereoUV.x < 0.5f && stereoUV.y > 0.5f) {
+        blockColor = vec3(1.0f, 0.0f, 0.0f);
+    }
+    else if(stereoUV.x > 0.5f && stereoUV.y < 0.5f) {
+        blockColor = vec3(0.0f, 1.0f, 0.0f);
+    }
+    else if(stereoUV.x < 0.5f && stereoUV.y < 0.5f) {
+        blockColor = vec3(0.0f, 0.0f, 1.0f);
+    }
+    else if(stereoUV.x > 0.5f && stereoUV.y > 0.5f) {
+        blockColor = vec3(1.0f, 1.0f, 0.0f);
+    }
+
+    if(rawDepth_021 == prev_depth_int && valid_zero2alpha) {
+        imageStore(Zero2OneColor, ivec2(zero2onePixel), vec4(prev_color, 1.0f));
+        imageStore(BlockZero2Alpha, ivec2(zero2onePixel), vec4(blockColor, 1.0f));
+    }
+    if(rawDepth_120 == current_depth_int && valid_one2alpha) {
+        imageStore(One2ZeroColor, ivec2(one2zeroPixel), vec4(current_color, 1.0f));
+        imageStore(BlockOne2Alpha, ivec2(one2zeroPixel), vec4(blockColor, 1.0f));
+    }
+
     imageStore(Zero2OneDepth, ivec2(zero2onePixel), vec4(intBitsToFloat(rawDepth_021)));
     imageStore(One2ZeroDepth, ivec2(one2zeroPixel), vec4(intBitsToFloat(rawDepth_120)));
 }

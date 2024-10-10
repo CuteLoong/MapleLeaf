@@ -1,0 +1,95 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_shader_atomic_float : enable
+
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
+
+layout(set=0, binding=1) uniform sampler2D Zero2AlphaMV;
+layout(set=0, binding=2) uniform sampler2D Alpha2OneMV;
+layout(set=0, binding=3) writeonly uniform image2D FinedZero2AlphaMV;
+layout(set=0, binding=4) writeonly uniform image2D FinedAlpha2OneMV;
+
+#include <Misc/Camera.glsl>
+
+bool IsZeroMV(vec2 motionVector) {
+    return motionVector.x == 0.0f && motionVector.y == 0.0f;
+}
+
+vec2 computeAverageMotionVector(sampler2D tex, ivec2 pixelCoord, int viewIndex)
+{
+    vec2 mv = vec2(0.0f);
+    int count = 0;
+    for(int i = -1; i <= 1; ++i)
+    {
+        for(int j = -1; j <= 1; ++j)
+        {
+            ivec2 offsetPixel = ivec2(clamp(pixelCoord.x + i, camera.pixelSize.x / 2 * viewIndex, camera.pixelSize.x / 2 * (1 + viewIndex) - 1), clamp(pixelCoord.y + j, 0, camera.pixelSize.y - 1));
+            vec2 curMV = texelFetch(tex, offsetPixel, 0).xy;
+            if(!IsZeroMV(curMV)) {
+                mv += curMV;
+                count++;
+            }
+        }
+    }
+    return mv / count;
+}
+
+bool detectThinFeatures(sampler2D tex, ivec2 pixelCoord, int viewIndex, float threshold) {
+
+    bool motionMatrix[3][3];
+
+    for(int i = -1; i <= 1; i++) {
+        for(int j = -1; j <= 1; j++) {
+            ivec2 offsetPixel = ivec2(clamp(pixelCoord.x + i, camera.pixelSize.x / 2 * viewIndex, camera.pixelSize.x / 2 * (1 + viewIndex) - 1), clamp(pixelCoord.y + j, 0, camera.pixelSize.y - 1));
+            
+            vec2 mv = texelFetch(tex, offsetPixel, 0).xy;
+            motionMatrix[i + 1][j + 1] = IsZeroMV(mv);
+        }
+    }
+
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < 2; j++) {
+            if((motionMatrix[i][j] && motionMatrix[i + 1][j] && motionMatrix[i][j + 1] && motionMatrix[i + 1][j + 1]) || (!motionMatrix[i][j] && !motionMatrix[i + 1][j] && !motionMatrix[i][j + 1] && !motionMatrix[i + 1][j + 1])) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void main(){
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if(pixel.x >= camera.pixelSize.x || pixel.y >= camera.pixelSize.y)
+        return;
+
+    int viewIndex = pixel.x < (camera.pixelSize.x / 2) ? 0 : 1;
+
+    float threshold = 0.05f;
+
+    bool thinFeature_1 = detectThinFeatures(Zero2AlphaMV, pixel, viewIndex, threshold);
+    bool thinFeature_2 = detectThinFeatures(Alpha2OneMV, pixel, viewIndex, threshold);
+
+    vec2 zero2alphaMV = vec2(0.0f);
+    vec2 alpha2oneMV = vec2(0.0f);
+
+    if(!thinFeature_1) {
+        zero2alphaMV = texelFetch(Zero2AlphaMV, pixel, 0).xy;
+    }
+    else {
+        zero2alphaMV = computeAverageMotionVector(Zero2AlphaMV, pixel, viewIndex);
+    }
+
+    if(!thinFeature_2) {
+        alpha2oneMV = texelFetch(Alpha2OneMV, pixel, 0).xy;
+    }
+    else {
+        alpha2oneMV = computeAverageMotionVector(Alpha2OneMV, pixel, viewIndex);
+    }
+
+    imageStore(FinedZero2AlphaMV, pixel, vec4(zero2alphaMV, 0.0f, 0.0f));
+    imageStore(FinedAlpha2OneMV, pixel, vec4(alpha2oneMV, 0.0f, 0.0f));
+}

@@ -59,11 +59,17 @@ void main()
     vec2 mv = texelFetch(motionVector, pixel, 0).xy * (1.0 - object.alpha);
     vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy * object.alpha;
 
-    float current_depth = texture(depth, screenUV).r;
-    float prev_depth = texture(prevDepth, screenUV).r;
+    float current_depth = texelFetch(depth, pixel, 0).r;
+    float prev_depth = texelFetch(prevDepth, pixel, 0).r;
 
-    vec2 zero2oneUV = StereoUVToScreenUV(stereoUV + prevMV, viewIndex);
-    vec2 one2zeroUV = StereoUVToScreenUV(stereoUV - mv, viewIndex);
+    vec2 zero2alphaStereoUV = stereoUV + prevMV;
+    vec2 alpha2oneStereoUV = stereoUV - mv;
+
+    // if(zero2alphaStereoUV.x < 0.0f || zero2alphaStereoUV.x > 1.0f || alpha2oneStereoUV.x < 0.0f || alpha2oneStereoUV.x > 1.0f || alpha2oneStereoUV.y < 0.0f || alpha2oneStereoUV.y > 1.0f || zero2alphaStereoUV.y < 0.0f || zero2alphaStereoUV.y > 1.0f)
+    //     return;
+
+    vec2 zero2oneUV = StereoUVToScreenUV(zero2alphaStereoUV, viewIndex);
+    vec2 one2zeroUV = StereoUVToScreenUV(alpha2oneStereoUV, viewIndex);
 
     vec2 zero2onePixel = zero2oneUV * camera.pixelSize.xy;
     vec2 one2zeroPixel = one2zeroUV * camera.pixelSize.xy;
@@ -71,9 +77,9 @@ void main()
     int current_depth_int = floatBitsToInt(current_depth);
     int prev_depth_int = floatBitsToInt(prev_depth);
 
-    int rawDepth_021 = texture(Zero2OneDepth_Int, zero2oneUV).r;
-    int rawDepth_120 = texture(One2ZeroDepth_Int, one2zeroUV).r;
+    int rawDepth_021 = texelFetch(Zero2OneDepth_Int, ivec2(zero2onePixel), 0).r;   // texture(Zero2OneDepth_Int, zero2oneUV).r;
+    int rawDepth_120 = texelFetch(One2ZeroDepth_Int, ivec2(one2zeroPixel), 0).r;   // texture(One2ZeroDepth_Int, one2zeroUV).r;
 
-    if(rawDepth_021 == prev_depth_int) imageStore(Zero2AlphaMV, ivec2(zero2onePixel), vec4(prevMV, 0.0f, 1.0f));
-    if(rawDepth_120 == current_depth_int) imageStore(Alpha2OneMV, ivec2(one2zeroPixel), vec4(mv, 0.0f, 1.0f));
+    if(rawDepth_021 >= prev_depth_int) imageStore(Zero2AlphaMV, ivec2(zero2onePixel), vec4(prevMV, 0.0f, 1.0f));
+    if(rawDepth_120 >= current_depth_int) imageStore(Alpha2OneMV, ivec2(one2zeroPixel), vec4(mv, 0.0f, 1.0f));
 }

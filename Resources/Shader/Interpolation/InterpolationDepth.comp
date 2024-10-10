@@ -18,6 +18,7 @@ layout(set=0, binding=4) uniform sampler2D prevMotionVector;
 
 layout(set=0, binding=5, r32i) uniform iimage2D Zero2OneDepth_Int;
 layout(set=0, binding=6, r32i) uniform iimage2D One2ZeroDepth_Int;
+// layout(set=0, binding=7) writeonly uniform image2D BlockInit;
 
 #include <Misc/Camera.glsl>
 
@@ -59,8 +60,17 @@ void main()
     vec2 mv = texelFetch(motionVector, pixel, 0).xy * (1.0 - object.alpha);
     vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy * object.alpha;
 
-    float current_depth = texture(depth, screenUV).r;
-    float prev_depth = texture(prevDepth, screenUV).r;
+    float current_depth = texelFetch(depth, pixel, 0).r;
+    float prev_depth = texelFetch(prevDepth, pixel, 0).r;
+
+    vec2 zero2alphaStereoUV = stereoUV + prevMV;
+    vec2 one2alphaStereoUV = stereoUV - mv;
+
+    bool valid_zero2alpha = zero2alphaStereoUV.x >= 0.0f && zero2alphaStereoUV.x <= 1.0f && zero2alphaStereoUV.y >= 0.0f && zero2alphaStereoUV.y <= 1.0f;
+    bool valid_one2alpha = one2alphaStereoUV.x >= 0.0f && one2alphaStereoUV.x <= 1.0f && one2alphaStereoUV.y >= 0.0f && one2alphaStereoUV.y <= 1.0f;
+
+    // if(zero2alphaStereoUV.x < 0.0f || zero2alphaStereoUV.x > 1.0f || alpha2oneStereoUV.x < 0.0f || alpha2oneStereoUV.x > 1.0f || alpha2oneStereoUV.y < 0.0f || alpha2oneStereoUV.y > 1.0f || zero2alphaStereoUV.y < 0.0f || zero2alphaStereoUV.y > 1.0f)
+    //     return;
 
     vec2 zero2alphaUV = StereoUVToScreenUV(stereoUV + prevMV, viewIndex);
     vec2 one2alphaUV = StereoUVToScreenUV(stereoUV - mv, viewIndex);
@@ -71,6 +81,19 @@ void main()
     int current_depth_int = floatBitsToInt(current_depth);
     int prev_depth_int = floatBitsToInt(prev_depth);
 
-    imageAtomicMin(Zero2OneDepth_Int, ivec2(zero2alphaPixel), prev_depth_int);
-    imageAtomicMin(One2ZeroDepth_Int, ivec2(one2alphaPixel), current_depth_int);
+    if(valid_zero2alpha) imageAtomicMin(Zero2OneDepth_Int, ivec2(zero2alphaPixel), prev_depth_int);
+    if(valid_one2alpha) imageAtomicMin(One2ZeroDepth_Int, ivec2(one2alphaPixel), current_depth_int);
+
+    // if(stereoUV.x < 0.5 && stereoUV.y < 0.5) {
+    //     imageStore(BlockInit, pixel, vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    // }
+    // else if(stereoUV.x >= 0.5 && stereoUV.y < 0.5) {
+    //     imageStore(BlockInit, pixel, vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    // }
+    // else if(stereoUV.x < 0.5 && stereoUV.y >= 0.5) {
+    //     imageStore(BlockInit, pixel, vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    // }
+    // else if(stereoUV.x >= 0.5 && stereoUV.y >= 0.5) {
+    //     imageStore(BlockInit, pixel, vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    // }
 }

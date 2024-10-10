@@ -7,25 +7,35 @@
 
 layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
 
+layout(set=0, binding=1) uniform sampler2D AlphaColor;
+layout(set=0, binding=2) writeonly uniform image2D FinedColor;
+
+#include <Misc/Camera.glsl>
+
 float Luminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
 }
 
-vec3 computeAverageColor(sampler2D texture, vec2 texCoord, vec2 texelSize)
+vec3 computeAverageColor(sampler2D tex, ivec2 pixelCoord, int viewIndex)
 {
     vec3 color = vec3(0.0f);
-    for(int y = -1; y <= 1; ++y)
+    int count = 0;
+    for(int i = -1; i <= 1; ++i)
     {
-        for(int x = -1; x <= 1; ++x)
+        for(int j = -1; j <= 1; ++j)
         {
-            vec2 offset = vec2(x, y) * texelSize;
-            color += texture(texture, texCoord + offset).xyz;
+            ivec2 offsetPixel = ivec2(clamp(pixelCoord.x + i, camera.pixelSize.x / 2 * viewIndex, camera.pixelSize.x / 2 * (1 + viewIndex) - 1), clamp(pixelCoord.y + j, 0, camera.pixelSize.y - 1));
+            vec3 curColor = texelFetch(AlphaColor, offsetPixel, 0).xyz;
+            if(curColor != vec3(0.0f)) {
+                color += curColor;
+                count++;
+            }
         }
     }
-    return color / 9.0f;
+    return color / count;
 }
 
-bool detectThinFeatures(sampler2D tex, vec2 pixelCoord, int viewIndex, float threshold) {
+bool detectThinFeatures(sampler2D tex, ivec2 pixelCoord, int viewIndex, float threshold) {
     vec3 centerColor = texelFetch(tex, pixelCoord, 0).xyz;
     float centerLuminance = Luminance(centerColor);
 
@@ -33,9 +43,9 @@ bool detectThinFeatures(sampler2D tex, vec2 pixelCoord, int viewIndex, float thr
 
     for(int i = -1; i <= 1; i++) {
         for(int j = -1; j <= 1; j++) {
-            vec2 offsetPixel = vec2(clamp(pixelCoord.x + i, camera.pixelSize.x / 2 * viewIndex, camera.pixelSize.x / 2 * (1 + viewIndex) - 1), clamp(pixelCoord.y + j, 0, camera.pixelSize.y - 1));
+            ivec2 offsetPixel = ivec2(clamp(pixelCoord.x + i, camera.pixelSize.x / 2 * viewIndex, camera.pixelSize.x / 2 * (1 + viewIndex) - 1), clamp(pixelCoord.y + j, 0, camera.pixelSize.y - 1));
             
-            vec3 color = texelFetch(tex, pixelCoord + offset, 0).xyz;
+            vec3 color = texelFetch(tex, offsetPixel, 0).xyz;
             luminanceMatrix[i + 1][j + 1] = Luminance(color);
         }
     }
@@ -43,11 +53,11 @@ bool detectThinFeatures(sampler2D tex, vec2 pixelCoord, int viewIndex, float thr
     for(int i = 0; i < 2; i++) {
         for(int j = 0; j < 2; j++) {
             if(abs(centerLuminance - luminanceMatrix[i][j]) < threshold && abs(centerLuminance - luminanceMatrix[i + 1][j]) < threshold && abs(centerLuminance - luminanceMatrix[i][j + 1]) < threshold && abs(centerLuminance - luminanceMatrix[i + 1][j + 1]) < threshold)
-                return true;           
+                return false;           
         }
     }
 
-    return false;
+    return true;
 }
 
 void main()
@@ -58,10 +68,16 @@ void main()
 
     int viewIndex = pixel.x < (camera.pixelSize.x / 2) ? 0 : 1;
 
-    int pixel
+    float threshold = 0.05f;
 
-    vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
-    vec2 stereoUV = ScreenUVToStereoUV(screenUV, viewIndex);
+    bool thinFeature = detectThinFeatures(AlphaColor, pixel, viewIndex, threshold);
+    vec4 color = vec4(0.0f);
+    if(!thinFeature) {
+        color = texelFetch(AlphaColor, pixel, 0);
+    }
+    else {
+        color = vec4(computeAverageColor(AlphaColor, pixel, viewIndex), 1.0f);
+    }
 
-
+    imageStore(FinedColor, pixel, color);
 }

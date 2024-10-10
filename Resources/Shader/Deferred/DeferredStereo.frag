@@ -113,7 +113,7 @@ void main() {
 		vec3 irradiance = texture(samplerIrradiance, N).rgb;
 		vec3 diffuseLo = irradiance * (1 - metallic) * diffuse * brdfPreIntegrated.b * INV_M_PI;
 
-		vec3 ambient = (diffuseLo + specular); //  
+		vec3 ambient = (diffuseLo * 2.5f + specular * 0.2f); //  
 		// vec3 ambient = (diffuseLo + specular) * 2.0f ;
 		// vec3 ambient = (specular) * 1.0f ;
 

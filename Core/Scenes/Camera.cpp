@@ -54,8 +54,8 @@ void Camera::UpdateByCPU()
     // rotation.y += glm::radians(5.0f);
     if (frameID == 1) {
         rotation.y -= glm::radians(20.0f);
-        position.z -= 8.0f;
-        position.y -= 3.0f;
+        // position.z -= 8.0f;
+        // position.y -= 3.0f;
         return;
     }
 

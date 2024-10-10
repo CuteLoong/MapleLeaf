@@ -20,6 +20,8 @@ layout(set=0, binding=6) uniform sampler2D Alpha2OneMV;
 
 layout(set=0, binding=7) writeonly uniform image2D AlphaColor;
 layout(set=0, binding=8, r32f) writeonly uniform image2D AlphaDepth;
+layout(set=0, binding=9) writeonly uniform image2D Zero2OneColor;
+layout(set=0, binding=10) writeonly uniform image2D One2ZeroColor;
 
 #include <Misc/Camera.glsl>
 
@@ -71,6 +73,9 @@ void main()
     vec2 prevMV = texelFetch(Zero2AlphaMV, pixel, 0).xy;
     vec2 mv = texelFetch(Alpha2OneMV, pixel, 0).xy;
 
+    bool prevMV_zero = prevMV.x == 0.0f && prevMV.y == 0.0f;
+    bool mv_zero = mv.x == 0.0f && mv.y == 0.0f;
+
     vec2 zeroScreenUV = StereoUVToScreenUV(stereoUV - prevMV, viewIndex);
     vec2 oneScreenUV = StereoUVToScreenUV(stereoUV + mv, viewIndex);
 
@@ -80,30 +85,48 @@ void main()
     float zeroDepth = texture(prevDepth, zeroScreenUV).r;
     float oneDepth = texture(depth, oneScreenUV).r;
 
-    float deltaDepth = Linear01Depth(zeroDepth) - Linear01Depth(oneDepth);
-    // float deltaDepth = zeroDepth - oneDepth;
-    float deltaColor = Luminance(zeroColor) - Luminance(oneColor);
+    imageStore(Zero2OneColor, pixel, vec4(zeroColor, 1.0f));
+    imageStore(One2ZeroColor, pixel, vec4(oneColor, 1.0f));
+
+    
 
     float alphaDepth = 0.0f;
     vec3 alphaColor = vec3(0.0f);
 
-    bool depthCondition = abs(deltaDepth) < thresholdDepth;
-    bool colorCondition = abs(deltaColor) < thresholdColor;
+    
 
-    if(!depthCondition) {
-        alphaDepth = deltaDepth > thresholdDepth ? zeroDepth : oneDepth;
-        alphaColor = deltaDepth > thresholdDepth ? zeroColor : oneColor;
+    if(!prevMV_zero || !mv_zero) {
+        alphaDepth = prevMV_zero ? oneDepth : zeroDepth;
+        alphaColor = prevMV_zero ? oneColor : zeroColor;
     }
-
-    if(depthCondition && colorCondition) {
+    else if(prevMV_zero && mv_zero) {
         alphaDepth = object.alpha < 0.5 ? zeroDepth : oneDepth;
         alphaColor = object.alpha < 0.5 ? zeroColor : oneColor;
     }
+    else
+    {
+        float deltaDepth = Linear01Depth(zeroDepth) - Linear01Depth(oneDepth);
+        float deltaColor = Luminance(zeroColor) - Luminance(oneColor);
 
-    if(depthCondition && !colorCondition) {
-        alphaDepth = mix(zeroDepth, oneDepth, object.alpha);
-        alphaColor = mix(zeroColor, oneColor, object.alpha);
+        bool depthCondition = abs(deltaDepth) < thresholdDepth;
+        bool colorCondition = abs(deltaColor) < thresholdColor;
+
+        if(!depthCondition) {
+            alphaDepth = deltaDepth > thresholdDepth ? zeroDepth : oneDepth;
+            alphaColor = deltaDepth > thresholdDepth ? zeroColor : oneColor;
+        }
+
+        if(depthCondition && colorCondition) {
+            alphaDepth = object.alpha < 0.5 ? zeroDepth : oneDepth;
+            alphaColor = object.alpha < 0.5 ? zeroColor : oneColor;
+        }
+
+        if(depthCondition && !colorCondition) {
+            alphaDepth = mix(zeroDepth, oneDepth, object.alpha);
+            alphaColor = mix(zeroColor, oneColor, object.alpha);
+        }
     }
+    
 
     imageStore(AlphaColor, pixel, vec4(alphaColor, 1.0f));
     imageStore(AlphaDepth, pixel, vec4(alphaDepth));
