@@ -7,9 +7,8 @@
 
 #include <Misc/Camera.glsl>
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec4 hPos;
-layout(location = 2) in vec4 prevHPos;
+layout(location = 0) in vec4 hPos;
+layout(location = 1) in vec4 prevHPos;
 
 layout(location = 0) out vec4 outMotionVetcor;
 
@@ -18,11 +17,10 @@ void main()
 {
 	vec3 vPos = (hPos.xyz / hPos.w + 1.0f) * 0.5f;
 	vec3 prevVPos = (prevHPos.xyz / prevHPos.w + 1.0f) * 0.5f;
-    vec2 curPixelUV = ivec2(vPos.xy * camera.stereoPixelSize.xy) * camera.stereoPixelSize.zw; 
-    vec2 prevPixelUV = ivec2(prevVPos.xy * camera.stereoPixelSize.xy) * camera.stereoPixelSize.zw;
+    vec2 curPixelUV = ivec2(vPos.xy * camera.pixelSize.xy) * camera.pixelSize.zw; 
+    vec2 prevPixelUV = ivec2(prevVPos.xy * camera.pixelSize.xy) * camera.pixelSize.zw;
 
-	// vec2 mv = vPos - prevVPos;
 	vec2 mv = curPixelUV - prevPixelUV;
 	mv.y = -mv.y;
-	outMotionVetcor = vec4(mv, 0.0f, 1.0f);
+	outMotionVetcor = vec4(mv, 1.0f);
 }

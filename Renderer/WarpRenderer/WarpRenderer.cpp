@@ -1,6 +1,7 @@
 #include "WarpRenderer.hpp"
 
 #include "DeferredStereoSubrender.hpp"
+#include "DeferredSubrender.hpp"
 #include "FrustumCullingSubrender.hpp"
 #include "IndirectDrawPrevMV.hpp"
 #include "IndirectDrawSubrender.hpp"
@@ -27,7 +28,7 @@ WarpRenderer::WarpRenderer()
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
-    // Render Pass for shadow map
+    // Render Pass 0 for shadow map
     std::vector<Attachment> ShadowAttachments = {{0, "shadows", Attachment::Type::Depth, false}};
 
     std::vector<SubpassType> ShadowSubpasses = {{0, {}, {0}}};
@@ -55,12 +56,12 @@ WarpRenderer::WarpRenderer()
     std::vector<SubpassType> renderpassSubpasses3 = {{0, {}, {0}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments3, renderpassSubpasses3));
 
-    // Render Pass for interpolation
+    // Render Pass 4 for interpolation
     std::vector<Attachment>  InterpolationAttachment{{0, "PlaceHolder_interpolation", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
     std::vector<SubpassType> InterpolationSubpasses = {{0, {}, {}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, InterpolationAttachment, InterpolationSubpasses));
 
-    // Render Pass for Present
+    // Render Pass 5 for Present
     std::vector<Attachment> renderpassAttachments6{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {1, "swapchain", Attachment::Type::Swapchain, false}};
 
@@ -75,7 +76,9 @@ void WarpRenderer::Start()
     AddSubrender<IndirectDrawPrevMV>({1, 0});
 
     AddSubrender<FrustumCullingSubrender>({2, 0});
-    AddSubrender<DeferredStereoSubrender>({3, 0});
+    AddSubrender<DeferredSubrender>({3, 0});
+
+    
 }
 
 void WarpRenderer::Update()

@@ -11,10 +11,10 @@ namespace MapleLeaf {
 
 InterpolationBackWarpSubrender::InterpolationBackWarpSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipelineWarpDepth("Shader/Interpolation/InterpolationDepth.comp", {}, false)
-    , pipelineWarpMV("Shader/Interpolation/InterpolationMV.comp", {}, false)
-    , pipelineBlend("Shader/Interpolation/BackwardWarpAlpha.comp", {}, false)
-    , pipelineFinement("Shader/Interpolation/RefinementMV.comp", {}, false)
+    , pipelineWarpDepth("Shader/InterpolationStereo/InterpolationDepth.comp", {}, false)
+    , pipelineWarpMV("Shader/InterpolationStereo/InterpolationMV.comp", {}, false)
+    , pipelineBlend("Shader/InterpolationStereo/BackwardWarpAlpha.comp", {}, false)
+    , pipelineFinement("Shader/InterpolationStereo/RefinementMV.comp", {}, false)
     , uniformCameraWarpDepth(true)
     , pushHandlerWarpMV(true)
     , uniformCameraBlend(true)
@@ -175,10 +175,10 @@ void InterpolationBackWarpSubrender::PostRender(const CommandBuffer& commandBuff
 
 void InterpolationBackWarpSubrender::ComputeBlend()
 {
-    PipelineCompute computeWarpDepth("Shader/Interpolation/InterpolationDepth.comp", {}, false);
-    PipelineCompute computeWarpMV("Shader/Interpolation/InterpolationMV.comp", {}, false);
-    PipelineCompute computeBlend("Shader/Interpolation/BackwardWarpAlpha.comp", {}, false);
-    PipelineCompute computeFinement("Shader/Interpolation/RefinementMV.comp", {}, false);
+    PipelineCompute computeWarpDepth("Shader/InterpolationStereo/InterpolationDepth.comp", {}, false);
+    PipelineCompute computeWarpMV("Shader/InterpolationStereo/InterpolationMV.comp", {}, false);
+    PipelineCompute computeBlend("Shader/InterpolationStereo/BackwardWarpAlpha.comp", {}, false);
+    PipelineCompute computeFinement("Shader/InterpolationStereo/RefinementMV.comp", {}, false);
 
     const auto& prevLighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
     const auto& lighting         = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));

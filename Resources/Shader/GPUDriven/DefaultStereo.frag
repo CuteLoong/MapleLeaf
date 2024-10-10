@@ -77,13 +77,18 @@ void main()
 
 	vec3 vPos = (hPos.xyz / hPos.w + 1.0f) * 0.5f;
 	vec3 prevVPos = (prevHPos.xyz / prevHPos.w + 1.0f) * 0.5f;
-	vPos = ivec3(vPos * camera.stereoPixelSize.x) / camera.stereoPixelSize.x;
-	prevVPos = ivec3(prevVPos * camera.stereoPixelSize.x) / camera.stereoPixelSize.x;
 
-	vec3 mv = vPos - prevVPos;
+	vec2 curPixelUV = ivec2(vPos.xy * camera.stereoPixelSize.xy) * camera.stereoPixelSize.zw; 
+    vec2 prevPixelUV = ivec2(prevVPos.xy * camera.stereoPixelSize.xy) * camera.stereoPixelSize.zw;
+
+	// vPos = ivec3(vPos * camera.stereoPixelSize.x) / camera.stereoPixelSize.x;
+	// prevVPos = ivec3(prevVPos * camera.stereoPixelSize.x) / camera.stereoPixelSize.x;
+
+	// vec3 mv = vPos - prevVPos;
+	vec2 mv = curPixelUV - prevPixelUV;
 
 	mv.y = -mv.y;
-	outMotionVetcor = vec4(mv, 1.0f);
+	outMotionVetcor = vec4(mv, 0.0f, 1.0f);
 
 	outPosition = vec4(inPosition, 1.0f);
 	outDiffuse = diffuse;

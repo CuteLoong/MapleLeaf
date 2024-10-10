@@ -13,7 +13,6 @@ DeferredStereoSubrender::DeferredStereoSubrender(const Pipeline::Stage& pipeline
     : Subrender(pipelineStage)
     , pipeline(pipelineStage, {"Shader/Deferred/Deferred.vert", "Shader/Deferred/DeferredStereo.frag"}, {}, {}, PipelineGraphics::Mode::Polygon,
                PipelineGraphics::Depth::None)
-    , pipelineInterpolation("Shader/SSR/SSRStereoTemporalFilter.comp", {}, false)
     , brdf(Resources::Get()->GetThreadPool().Enqueue(ComputeBRDF, 512))
 {}
 

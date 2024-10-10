@@ -11,8 +11,8 @@
 #include "HBAOStereoWithThickSubrender.hpp"
 #include "HiZDrawSubrender.hpp"
 #include "ImguiSubrender.hpp"
-#include "IndirectDrawPrevMV.hpp"
 #include "IndirectDrawStereoBackSubrender.hpp"
+#include "IndirectDrawStereoPrevMV.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
 #include "InterpolationBackWarpSubrender.hpp"
 #include "InterpolationSubrender.hpp"
@@ -30,6 +30,7 @@
 #include "StereoMaskSubrender.hpp"
 #include "StochasticSSRStereoMultiSPPSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
+
 
 namespace Test {
 RawSSRRenderer::RawSSRRenderer()
@@ -134,7 +135,7 @@ void RawSSRRenderer::Start()
 {
     AddSubrender<ShadowSubrender>({0, 0});
 
-    AddSubrender<IndirectDrawPrevMV>({1, 0});
+    AddSubrender<IndirectDrawStereoPrevMV>({1, 0});
 
     // AddSubrender<SkyboxSubrender>({2, 0});
     AddSubrender<IndirectDrawStereoSubrender>({2, 1});       // Hi-z min and G-Buffer

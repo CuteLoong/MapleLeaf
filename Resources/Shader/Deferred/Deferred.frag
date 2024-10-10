@@ -39,7 +39,7 @@ layout(set=0, binding = 5) uniform sampler2D inDiffuse;
 layout(set=0, binding = 6) uniform sampler2D inNormal;
 layout(set=0, binding = 7) uniform sampler2D inMaterial;
 layout(set=0, binding = 8) uniform sampler2D inShadowMap;
-layout(set=0, binding = 9) uniform sampler2D inAOMap;
+// layout(set=0, binding = 9) uniform sampler2D inAOMap;
 
 layout(location = 0) in vec2 inUV;
 
@@ -60,7 +60,7 @@ void main() {
 	vec3 diffuse = texture(inDiffuse, uv).rgb;
 	vec3 normal = texture(inNormal, uv).rgb;
 	vec3 material = texture(inMaterial, uv).rgb;
-	vec3 ao = texture(inAOMap, uv).rgb;
+	// vec3 ao = texture(inAOMap, uv).rgb;
 
 	float metallic = material.r;
 	float roughness = material.g;
@@ -95,11 +95,11 @@ void main() {
 		float VdotH = clamp(dot(V, H), 0.0f, 1.0f);
 
 		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
-		float pdf = evalPdfGGX_NDF(roughness, NdotH) / (4.0f * VdotH);
+		// float pdf = evalPdfGGX_NDF(roughness, NdotH) / (4.0f * VdotH);
 
 		float NdotL = max(dot(N, L), 0.0f);
 		// Lo += (kD * diffuse / M_PI + specular) * radiance * NdotL;
-		Lo += brdf * radiance * NdotL / pdf;
+		Lo += brdf * radiance * NdotL;
 	}
 
 	for(int i = 1; i <= scene.directionalLightsCount; i++)

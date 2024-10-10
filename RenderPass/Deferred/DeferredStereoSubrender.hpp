@@ -35,7 +35,6 @@ private:
     };
 
     PipelineGraphics pipeline;
-    PipelineCompute  pipelineInterpolation;
 
     DescriptorsHandler descriptorSet;
     UniformHandler     uniformScene;

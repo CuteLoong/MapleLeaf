@@ -26,12 +26,15 @@ layout(location = 1) in vec2 inUV;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in flat uint inMaterialId;
 layout(location = 4) in flat uint inInstanceID;
+layout(location = 5) in vec4 hPos;
+layout(location = 6) in vec4 prevHPos;
 
 layout(location = 0) out vec4 outPosition;
 layout(location = 1) out vec4 outDiffuse;
 layout(location = 2) out vec4 outNormal;
 layout(location = 3) out vec4 outMaterial;
-layout(location = 4) out float outInstanceID;
+layout(location = 4) out vec4 outMotionVetcor;
+layout(location = 5) out float outInstanceID;
 
 void main() 
 {	
@@ -68,6 +71,17 @@ void main()
 
 		normal = TBN * tangentNormal;
 	}
+
+	vec3 vPos = (hPos.xyz / hPos.w + 1.0f) * 0.5f;
+	vec3 prevVPos = (prevHPos.xyz / prevHPos.w + 1.0f) * 0.5f;
+
+	vec2 curPixelUV = ivec2(vPos.xy * camera.pixelSize.xy) * camera.pixelSize.zw; 
+    vec2 prevPixelUV = ivec2(prevVPos.xy * camera.pixelSize.xy) * camera.pixelSize.zw;
+
+	vec2 mv = curPixelUV - prevPixelUV;
+
+	mv.y = -mv.y;
+	outMotionVetcor = vec4(mv, 0.0f, 1.0f);
 
 	outPosition = vec4(inPosition, 1.0f);
 	outDiffuse = diffuse;
