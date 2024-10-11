@@ -22,5 +22,5 @@ void main()
 
 	vec2 mv = curPixelUV - prevPixelUV;
 	mv.y = -mv.y;
-	outMotionVetcor = vec4(mv, 1.0f);
+	outMotionVetcor = vec4(mv, 0.0f, 1.0f);
 }

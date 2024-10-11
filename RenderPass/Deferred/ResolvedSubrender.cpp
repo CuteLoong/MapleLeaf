@@ -62,3 +62,28 @@ std::unique_ptr<Image2d> ResolvedSubrender::ComputeBRDF(uint32_t size)
     return brdfImage;
 }
 }   // namespace MapleLeaf
+
+
+namespace WarpRenderer_SubRender {
+ResolvedSubrender::ResolvedSubrender(const Pipeline::Stage& pipelineStage)
+    : Subrender(pipelineStage)
+    , pipeline(pipelineStage, {"Shader/Resolve/WarpRenderer.vert", "Shader/Resolve/WarpRenderer.frag"}, {}, {}, PipelineGraphics::Mode::Polygon,
+               PipelineGraphics::Depth::None)
+{}
+
+void ResolvedSubrender::PreRender(const CommandBuffer& commandBuffer) {}
+
+void ResolvedSubrender::Render(const CommandBuffer& commandBuffer)
+{
+    descriptorSet.Push("LightingMap", Graphics::Get()->GetAttachment("lighting"));
+
+    if (!descriptorSet.Update(pipeline)) return;
+    pipeline.BindPipeline(commandBuffer);
+
+    descriptorSet.BindDescriptor(commandBuffer, pipeline);
+    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+}
+
+void ResolvedSubrender::PostRender(const CommandBuffer& commandBuffer) {}
+
+}   // namespace WarpRenderer_SubRender

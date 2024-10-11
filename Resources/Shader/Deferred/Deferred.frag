@@ -41,6 +41,10 @@ layout(set=0, binding = 7) uniform sampler2D inMaterial;
 layout(set=0, binding = 8) uniform sampler2D inShadowMap;
 // layout(set=0, binding = 9) uniform sampler2D inAOMap;
 
+layout(set=0, binding = 10) uniform sampler2D samplerBRDF;
+layout(set=0, binding = 11) uniform samplerCube samplerIrradiance;
+layout(set=0, binding = 12) uniform samplerCube samplerPrefiltered;
+
 layout(location = 0) in vec2 inUV;
 
 layout(location = 0) out vec4 outColour;
@@ -65,54 +69,61 @@ void main() {
 	float metallic = material.r;
 	float roughness = material.g;
 	
-	vec3 N = normalize(normal);
-	vec3 V = normalize(camera.cameraPosition.xyz - worldPosition);
-
 	vec3 Lo = vec3(0.0f);
-	vec3 F0 = vec3(0.04f);
-	F0 = mix(F0, diffuse, metallic);
-	for(int i = 1; i <= scene.pointLightsCount; i++)
-	{
-		PointLight light = bufferPointLights.lights[i];
-		vec3 L = light.position - worldPosition;
-		float d = length(L);
-		L = normalize(L);
-		vec3 H = normalize(V + L);
-		vec3 radiance = calcAttenuation(d, light.attenuation) * light.color.rgb;
 
-		// float NDF = DistributionGGX(N, H, roughness);
-		// float G = GeometrySmith(N, V, L, roughness);
-		// vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
+	if(normal != vec3(0.0f)) {
+		vec3 N = normalize(normal);
+		vec3 V = normalize(camera.cameraPosition.xyz - worldPosition);
+		vec3 R = reflect(-V, N);
 
-		// vec3 nominator = NDF * G * F;
-		// float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);
-		// vec3 specular = nominator / max(denominator, 0.001f);
+		float NdotV = clamp(dot(N, V), 0.0f, 1.0f);
 
-		// vec3 kS = F;
-		// vec3 kD = vec3(1.0f) - kS;
-		// kD *= 1.0f - metallic;
-		float NdotH = clamp(dot(N, H), 0.0f, 1.0f);
-		float VdotH = clamp(dot(V, H), 0.0f, 1.0f);
+		vec3 F0 = vec3(0.04f);
+		F0 = mix(F0, diffuse, metallic);
+		for(int i = 1; i <= scene.pointLightsCount; i++)
+		{
+			PointLight light = bufferPointLights.lights[i];
+			vec3 L = light.position - worldPosition;
+			float d = length(L);
+			L = normalize(L);
+			vec3 radiance = calcAttenuation(d, light.attenuation) * light.color.rgb;
 
-		vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
-		// float pdf = evalPdfGGX_NDF(roughness, NdotH) / (4.0f * VdotH);
+			vec3 brdf = (1.0f - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
 
-		float NdotL = max(dot(N, L), 0.0f);
-		// Lo += (kD * diffuse / M_PI + specular) * radiance * NdotL;
-		Lo += brdf * radiance * NdotL;
+			// Lo += brdf * radiance;
+		}
+
+		for(int i = 1; i <= scene.directionalLightsCount; i++)
+		{
+			DirectionalLight light = bufferDirectionalLights.lights[i];
+			vec3 L = normalize(-light.direction);
+
+			float NoL = clamp(dot(N, L), 0.0f, 1.0f);
+			vec3 radiance = light.color.rgb;
+
+			vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) * NoL + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
+
+			float shadowValue = shadowFactor(shadowCoords);
+
+			// Lo += brdf * radiance * shadowValue;
+			// Lo += brdf * radiance;
+		}
+
+		vec3 brdfPreIntegrated = texture(samplerBRDF, vec2(NdotV, roughness)).rgb;
+		vec3 reflection = prefilteredReflection(R, roughness, samplerPrefiltered).rgb;	
+		vec3 specular = reflection * (F0 * brdfPreIntegrated.r + brdfPreIntegrated.g);
+
+		vec3 irradiance = texture(samplerIrradiance, N).rgb;
+		vec3 diffuseLo = irradiance * (1 - metallic) * diffuse * brdfPreIntegrated.b * INV_M_PI;
+
+		vec3 ambient = (diffuseLo * 2.5f + specular * 0.2f); //  
+		// vec3 ambient = (diffuseLo + specular) * 2.0f ;
+		// vec3 ambient = (specular) * 1.0f ;
+
+		Lo += ambient;
 	}
-
-	for(int i = 1; i <= scene.directionalLightsCount; i++)
-	{
-		DirectionalLight light = bufferDirectionalLights.lights[i];
-		vec3 L = normalize(-light.direction);
-		vec3 H = normalize(V + L);
-		vec3 radiance = light.color.rgb;
-
-		vec3 brdf = (1 - metallic) * DiffuseReflectionDisney(diffuse, roughness, N, L, V) + SpecularReflectionMicrofacet(F0, roughness, N, L, V);
-		float shadowValue = shadowFactor(shadowCoords);
-
-		Lo += brdf * radiance;
+	else {
+		Lo = diffuse;
 	}
 
 	// vec3 ambient = vec3(0.1f) * diffuse * ao;

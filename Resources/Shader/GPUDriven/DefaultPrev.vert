@@ -3,6 +3,10 @@
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
+#extension GL_GOOGLE_include_directive : require
+
+#include <Misc/Camera.glsl>
+
 struct GPUInstanceData
 {
     mat4 modelMatrix;

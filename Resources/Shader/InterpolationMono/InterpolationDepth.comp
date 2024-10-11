@@ -1,0 +1,55 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_shader_atomic_float : enable
+
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
+
+layout(push_constant) uniform PushObject {
+	float alpha;
+} object;
+
+layout(set=0, binding=1) uniform sampler2D depth;
+layout(set=0, binding=2) uniform sampler2D prevDepth;
+layout(set=0, binding=3) uniform sampler2D motionVector;
+layout(set=0, binding=4) uniform sampler2D prevMotionVector;
+
+layout(set=0, binding=5, r32i) uniform iimage2D Zero2OneDepth_Int;
+layout(set=0, binding=6, r32i) uniform iimage2D One2ZeroDepth_Int;
+// layout(set=0, binding=7) writeonly uniform image2D BlockInit;
+
+#include <Misc/Camera.glsl>
+
+// #define alpha 0.6
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if(pixel.x >= camera.pixelSize.x || pixel.y >= camera.pixelSize.y)
+        return;
+
+    vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
+
+    vec2 mv = texelFetch(motionVector, pixel, 0).xy * (1.0 - object.alpha);
+    vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy * object.alpha;
+
+    float current_depth = texelFetch(depth, pixel, 0).r;
+    float prev_depth = texelFetch(prevDepth, pixel, 0).r;
+
+    vec2 zero2alphaScreenUV = screenUV + prevMV;
+    vec2 one2alphaScreenUV = screenUV - mv;
+
+    bool valid_zero2alpha = zero2alphaScreenUV.x >= 0.0f && zero2alphaScreenUV.x <= 1.0f && zero2alphaScreenUV.y >= 0.0f && zero2alphaScreenUV.y <= 1.0f;
+    bool valid_one2alpha = one2alphaScreenUV.x >= 0.0f && one2alphaScreenUV.x <= 1.0f && one2alphaScreenUV.y >= 0.0f && one2alphaScreenUV.y <= 1.0f;
+
+    vec2 zero2alphaPixel = zero2alphaScreenUV * camera.pixelSize.xy;
+    vec2 one2alphaPixel = one2alphaScreenUV * camera.pixelSize.xy;
+
+    int current_depth_int = floatBitsToInt(current_depth);
+    int prev_depth_int = floatBitsToInt(prev_depth);
+
+    if(valid_zero2alpha) imageAtomicMin(Zero2OneDepth_Int, ivec2(zero2alphaPixel), prev_depth_int);
+    if(valid_one2alpha) imageAtomicMin(One2ZeroDepth_Int, ivec2(one2alphaPixel), current_depth_int);
+}

@@ -112,6 +112,8 @@ protected:
     glm::vec3 up;
     glm::vec3 forward;
     glm::vec3 right;
+    glm::vec3 initialCenter;
+    glm::vec3 initialRight;
 
     glm::mat4 viewMatrix;
     glm::mat4 prevViewMatrix;

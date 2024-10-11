@@ -28,3 +28,24 @@ private:
     static std::unique_ptr<Image2d>  ComputeBRDF(uint32_t size);
 };
 }   // namespace MapleLeaf
+
+namespace WarpRenderer_SubRender {
+using namespace MapleLeaf;
+
+class ResolvedSubrender : public Subrender
+{
+public:
+    explicit ResolvedSubrender(const Pipeline::Stage& pipelineStage);
+
+    void PreRender(const CommandBuffer& commandBuffer) override;
+    void Render(const CommandBuffer& commandBuffer) override;
+    void PostRender(const CommandBuffer& commandBuffer) override;
+
+private:
+    PipelineGraphics pipeline;
+
+    UniformHandler uniformCamera;
+
+    DescriptorsHandler descriptorSet;
+};
+}   // namespace WarpRenderer_SubRender

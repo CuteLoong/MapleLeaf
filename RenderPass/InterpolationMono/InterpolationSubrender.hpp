@@ -6,13 +6,13 @@
 #include "Subrender.hpp"
 #include "UniformHandler.hpp"
 
-namespace STEREO_Subrender {
+namespace MONO_Subrender {
 using namespace MapleLeaf;
 
-class InterpolationBackWarpSubrender : public Subrender
+class InterpolationSubrender : public Subrender
 {
 public:
-    explicit InterpolationBackWarpSubrender(const Pipeline::Stage& pipelineStage);
+    explicit InterpolationSubrender(const Pipeline::Stage& pipelineStage);
 
     void PreRender(const CommandBuffer& commandBuffer) override;
     void Render(const CommandBuffer& commandBuffer) override;
@@ -22,25 +22,24 @@ public:
 
 private:
     PipelineCompute pipelineWarpDepth;
-    PipelineCompute pipelineWarpMV;
+    PipelineCompute pipelineWarpColor;
     PipelineCompute pipelineBlend;
     PipelineCompute pipelineFinement;
 
-
     DescriptorsHandler descriptorSetWarpDepth;
-    DescriptorsHandler descriptorSetWarpMV;
+    DescriptorsHandler descriptorSetWarpColor;
     DescriptorsHandler descriptorSetBlend;
     DescriptorsHandler descriptorSetFinement;
 
     UniformHandler uniformCameraWarpDepth;
-    UniformHandler uniformCameraWarpMV;
+    UniformHandler uniformCameraWarpColor;
     UniformHandler uniformCameraBlend;
     UniformHandler uniformCameraFinement;
 
     PushHandler pushHandlerWarpDepth;
-    PushHandler pushHandlerWarpMV;
+    PushHandler pushHandlerWarpColor;
     PushHandler pushHandlerBlend;
 
     uint32_t frameID = 0;
 };
-}   // namespace STEREO_Subrender
+}   // namespace MONO_Subrender

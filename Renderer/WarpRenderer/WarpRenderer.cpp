@@ -4,11 +4,12 @@
 #include "DeferredSubrender.hpp"
 #include "FrustumCullingSubrender.hpp"
 #include "IndirectDrawPrevMV.hpp"
-#include "IndirectDrawSubrender.hpp"
+#include "InterpolationMono/InterpolationSubrender.hpp"
+#include "ResolvedSubrender.hpp"
 #include "ShadowSubrender.hpp"
+#include "ToneMapingSubrender.hpp"
 
 namespace Test {
-
 
 WarpRenderer::WarpRenderer()
 {
@@ -24,7 +25,10 @@ WarpRenderer::WarpRenderer()
         {"AlphaDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
         {"Zero2AlphaMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"Alpha2OneMV", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"FinedColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+        {"FinedColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BlockInit", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BlockZero2Alpha", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BlockOne2Alpha", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -75,10 +79,13 @@ void WarpRenderer::Start()
 
     AddSubrender<IndirectDrawPrevMV>({1, 0});
 
-    AddSubrender<FrustumCullingSubrender>({2, 0});
+    AddSubrender<FrustumCullingSubrender>({2, 1});
     AddSubrender<DeferredSubrender>({3, 0});
 
-    
+    AddSubrender<MONO_Subrender::InterpolationSubrender>({4, 0});
+
+    AddSubrender<WarpRenderer_SubRender::ResolvedSubrender>({5, 0});
+    AddSubrender<ToneMapingSubrender>({5, 1});
 }
 
 void WarpRenderer::Update()

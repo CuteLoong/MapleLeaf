@@ -10,6 +10,7 @@
 #include "Scenes.hpp"
 #include "StereoRayTracingRenderer.hpp"
 #include "StereoRenderer.hpp"
+#include "WarpRenderer.hpp"
 
 
 #include "config.h"
@@ -52,7 +53,8 @@ void MainApp::Start()
     // Graphics::Get()->SetRenderer(std::make_unique<MainRenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<GPURenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<StereoRenderer>());
-    Graphics::Get()->SetRenderer(std::make_unique<RawSSRRenderer>());
+    // Graphics::Get()->SetRenderer(std::make_unique<RawSSRRenderer>());
+    Graphics::Get()->SetRenderer(std::make_unique<WarpRenderer>());
     // Graphics::Get()->SetRenderer(std::make_unique<SCSSRRenderer>());
 #endif
 

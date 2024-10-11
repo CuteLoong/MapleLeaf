@@ -39,6 +39,8 @@ Graphics::~Graphics()
     vkDestroyPipelineCache(*logicalDevice, pipelineCache, nullptr);
 
     commandPools.clear();
+    logicalDevice  = nullptr;
+    physicalDevice = nullptr;
 }
 
 const std::shared_ptr<CommandPool>& Graphics::GetCommandPool(const std::thread::id& threadId)

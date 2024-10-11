@@ -14,8 +14,8 @@
 #include "IndirectDrawStereoBackSubrender.hpp"
 #include "IndirectDrawStereoPrevMV.hpp"
 #include "IndirectDrawStereoSubrender.hpp"
-#include "InterpolationBackWarpSubrender.hpp"
-#include "InterpolationSubrender.hpp"
+#include "InterpolationStereo/InterpolationBackWarpSubrender.hpp"
+#include "InterpolationStereo/InterpolationSubrender.hpp"
 #include "MeshesSubrender.hpp"
 #include "NonRTAttachmentsHandler.hpp"
 #include "PipelineGraphics.hpp"
@@ -142,8 +142,8 @@ void RawSSRRenderer::Start()
     AddSubrender<IndirectDrawStereoBackSubrender>({3, 0});   // Hi-z max
     AddSubrender<DeferredStereoSubrender>({4, 0});
 
-    // AddSubrender<InterpolationBackWarpSubrender>({5, 0});
-    AddSubrender<InterpolationSubrender>({5, 0});
+    // AddSubrender<STEREO_Subrender::InterpolationBackWarpSubrender>({5, 0});
+    AddSubrender<STEREO_Subrender::InterpolationSubrender>({5, 0});
 
     AddSubrender<RawSSRStereoSubrender>({6, 0});
     AddSubrender<RawSSRFilterSubrender>({6, 1});

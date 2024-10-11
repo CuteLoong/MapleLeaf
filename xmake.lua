@@ -72,6 +72,7 @@ add_includedirs(
 )
 
 add_includedirs(
+"RenderPass",
 "RenderPass/Deferred",
 "RenderPass/Shadow",
 "RenderPass/IndirectDraw",
@@ -85,8 +86,7 @@ add_includedirs(
 "RenderPass/RawSSR",
 "RenderPass/SCSSR",
 "RenderPass/Skybox",
-"RenderPass/RayTracing",
-"RenderPass/InterpolationStereo"
+"RenderPass/RayTracing"
 )
 
 target("RenderPass")
@@ -106,7 +106,8 @@ target("RenderPass")
     "RenderPass/SCSSR/*.cpp",
     "RenderPass/Skybox/*.cpp",
     "RenderPass/RayTracing/*.cpp",
-    "RenderPass/InterpolationStereo/*.cpp"
+    "RenderPass/InterpolationStereo/*.cpp",
+    "RenderPass/InterpolationMono/*.cpp"
     )
 target_end()
 

@@ -39,32 +39,45 @@ void Camera::Update()
 
     UpdateCameraInfo();
     UpdateStereoCameraInfo();
-
-    // if (frameID != 0 && frameID < 16440 && frameID % 120 == 0) {
-    //     Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
-    // }
-    // if (frameID != 0 && frameID < 884 && frameID % 4 == 0) Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 4) +
-    // ".png"); if (frameID == 120) {
-    //     Graphics::Get()->CaptureScreenshot("Screenshots/" + std::to_string(frameID / 120) + ".png");
-    // }
 }
 
 void Camera::UpdateByCPU()
 {
-    // rotation.y += glm::radians(5.0f);
     if (frameID == 1) {
-        rotation.y -= glm::radians(20.0f);
-        // position.z -= 8.0f;
-        // position.y -= 3.0f;
+        initialCenter = position + forward;
+        initialRight  = right;
+        position -= 0.2f * initialRight;
         return;
     }
 
     if (frameID != 0 && frameID % 2 == 0) {
-        rotation.y += glm::radians(40.0f);
+        position += 0.4f * initialRight;
     }
     else if (frameID != 0 && frameID % 2 != 0) {
-        rotation.y -= glm::radians(40.0f);
+        position -= 0.4f * initialRight;
     }
+
+    forward = glm::normalize(initialCenter - position);
+    right   = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    up      = glm::normalize(glm::cross(right, forward));
+
+    // rotation.y += glm::radians(5.0f);
+
+    // 1
+    // if (frameID == 1) {
+    //     rotation.y -= glm::radians(20.0f);
+    //     // position.z -= 8.0f;
+    //     // position.y -= 3.0f;
+    //     return;
+    // }
+
+    // if (frameID != 0 && frameID % 2 == 0) {
+    //     rotation.y += glm::radians(40.0f);
+    // }
+    // else if (frameID != 0 && frameID % 2 != 0) {
+    //     rotation.y -= glm::radians(40.0f);
+    // }
+    // 1
 
     // if (frameID != 0 && frameID < 14520 && frameID % 120 == 0) {
     //     position = position - 0.2f * right;
@@ -75,15 +88,17 @@ void Camera::UpdateByCPU()
     //     rotation.x += 0.0f;
     //     rotation.x = std::clamp(rotation.x, glm::radians(-90.0f), glm::radians(90.0f));
 
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix           = glm::rotate(rotationMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-    rotationMatrix           = glm::rotate(rotationMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrix           = glm::rotate(rotationMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    forward                  = rotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    // 1
+    // glm::mat4 rotationMatrix = glm::mat4(1.0f);
+    // rotationMatrix           = glm::rotate(rotationMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    // rotationMatrix           = glm::rotate(rotationMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    // rotationMatrix           = glm::rotate(rotationMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    // forward                  = rotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
 
-    forward = glm::normalize(forward);
-    right   = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-    up      = glm::normalize(glm::cross(right, forward));
+    // forward = glm::normalize(forward);
+    // right   = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    // up      = glm::normalize(glm::cross(right, forward));
+    // 1
 
     //     position = position + 0.5f * forward;
     // }

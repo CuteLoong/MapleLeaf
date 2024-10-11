@@ -6,7 +6,9 @@
 #include "Subrender.hpp"
 #include "UniformHandler.hpp"
 
-namespace MapleLeaf {
+namespace STEREO_Subrender {
+using namespace MapleLeaf;
+
 class InterpolationSubrender : public Subrender
 {
 public:
@@ -40,4 +42,4 @@ private:
 
     uint32_t frameID = 0;
 };
-}   // namespace MapleLeaf
+}   // namespace STEREO_Subrender

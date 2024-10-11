@@ -7,14 +7,14 @@
 #include "PipelineCompute.hpp"
 #include "Scenes.hpp"
 
-namespace STEREO_Subrender {
+namespace MONO_Subrender {
 
 InterpolationSubrender::InterpolationSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
-    , pipelineWarpDepth("Shader/InterpolationStereo/InterpolationDepth.comp", {}, false)
-    , pipelineWarpColor("Shader/InterpolationStereo/InterpolationColor.comp", {}, false)
-    , pipelineBlend("Shader/InterpolationStereo/Blend.comp", {}, false)
-    , pipelineFinement("Shader/InterpolationStereo/Refinement.comp", {}, false)
+    , pipelineWarpDepth("Shader/InterpolationMono/InterpolationDepth.comp", {}, false)
+    , pipelineWarpColor("Shader/InterpolationMono/InterpolationColor.comp", {}, false)
+    , pipelineBlend("Shader/InterpolationMono/Blend.comp", {}, false)
+    , pipelineFinement("Shader/InterpolationMono/Refinement.comp", {}, false)
     , uniformCameraWarpDepth(true)
     , pushHandlerWarpColor(true)
     , uniformCameraBlend(true)
@@ -177,10 +177,10 @@ void InterpolationSubrender::PostRender(const CommandBuffer& commandBuffer)
 
 void InterpolationSubrender::ComputeBlend()
 {
-    PipelineCompute computeDepth("Shader/InterpolationStereo/InterpolationDepth.comp");
-    PipelineCompute computeColor("Shader/InterpolationStereo/InterpolationColor.comp");
-    PipelineCompute computeBlend("Shader/InterpolationStereo/Blend.comp");
-    PipelineCompute computeFinement("Shader/InterpolationStereo/Refinement.comp");
+    PipelineCompute computeDepth("Shader/InterpolationMono/InterpolationDepth.comp");
+    PipelineCompute computeColor("Shader/InterpolationMono/InterpolationColor.comp");
+    PipelineCompute computeBlend("Shader/InterpolationMono/Blend.comp");
+    PipelineCompute computeFinement("Shader/InterpolationMono/Refinement.comp");
 
     const auto& prevLighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
     const auto& lighting         = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
@@ -334,4 +334,4 @@ void InterpolationSubrender::ComputeBlend()
     }
 }
 
-}   // namespace STEREO_Subrender
+}   // namespace MONO_Subrender

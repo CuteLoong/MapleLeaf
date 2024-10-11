@@ -7,7 +7,7 @@
 #include "PipelineCompute.hpp"
 #include "Scenes.hpp"
 
-namespace MapleLeaf {
+namespace STEREO_Subrender {
 
 InterpolationBackWarpSubrender::InterpolationBackWarpSubrender(const Pipeline::Stage& pipelineStage)
     : Subrender(pipelineStage)
