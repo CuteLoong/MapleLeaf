@@ -4,10 +4,13 @@
 #include "DeferredSubrender.hpp"
 #include "FrustumCullingSubrender.hpp"
 #include "IndirectDrawPrevMV.hpp"
+#include "InterpolationMono/BackwardFindSubrender.hpp"
 #include "InterpolationMono/InterpolationSubrender.hpp"
+#include "NonRTAttachmentsHandler.hpp"
 #include "ResolvedSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace Test {
 
@@ -28,7 +31,11 @@ WarpRenderer::WarpRenderer()
         {"FinedColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"BlockInit", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"BlockZero2Alpha", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"BlockOne2Alpha", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+        {"BlockOne2Alpha", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BlockAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BlockAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BackwardAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BackwardAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -62,7 +69,7 @@ WarpRenderer::WarpRenderer()
 
     // Render Pass 4 for interpolation
     std::vector<Attachment>  InterpolationAttachment{{0, "PlaceHolder_interpolation", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
-    std::vector<SubpassType> InterpolationSubpasses = {{0, {}, {}}};
+    std::vector<SubpassType> InterpolationSubpasses = {{0, {}, {}}, {1, {}, {}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, InterpolationAttachment, InterpolationSubpasses));
 
     // Render Pass 5 for Present
@@ -83,6 +90,7 @@ void WarpRenderer::Start()
     AddSubrender<DeferredSubrender>({3, 0});
 
     AddSubrender<MONO_Subrender::InterpolationSubrender>({4, 0});
+    AddSubrender<MONO_Subrender::BackwardFindSubrender>({4, 1});
 
     AddSubrender<WarpRenderer_SubRender::ResolvedSubrender>({5, 0});
     AddSubrender<ToneMapingSubrender>({5, 1});

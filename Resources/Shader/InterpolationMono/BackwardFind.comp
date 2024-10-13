@@ -5,6 +5,8 @@
 
 #extension GL_GOOGLE_include_directive : require
 
+#include <Misc/Camera.glsl>
+
 layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
 
 layout(push_constant) uniform PushObject {
@@ -13,6 +15,178 @@ layout(push_constant) uniform PushObject {
 
 layout(set=0, binding=1) uniform sampler2D motionVector;
 layout(set=0, binding=2) uniform sampler2D prevMotionVector;
+layout(set=0, binding=3) uniform sampler2D lighting;
+layout(set=0, binding=4) uniform sampler2D prevLighting;
 
-layout(set=0, binding=3) writeonly uniform image2D BlockAlpha2Zero;
-layout(set=0, binding=4) writeonly uniform image2D BlockAlpha2One;
+layout(set=0, binding=5) writeonly uniform image2D BlockAlpha2Zero;
+layout(set=0, binding=6) writeonly uniform image2D BlockAlpha2One;
+layout(set=0, binding=7) writeonly uniform image2D BackwardAlpha2Zero;
+layout(set=0, binding=8) writeonly uniform image2D BackwardAlpha2One;
+
+struct Block {
+    vec2 left_top;
+    vec2 right_top;
+    vec2 left_bottom;
+    vec2 right_bottom;
+};
+
+float cross2d(vec2 a, vec2 b ) { return a.x*b.y - a.y*b.x; }
+
+vec4 invBilinear(vec2 p, vec2 a, vec2 b, vec2 d, vec2 c) {
+    vec2 e = b - a;
+    vec2 f = d - a;
+    vec2 g = a - b + c - d;
+    vec2 h = p - a;
+
+    float k2 = cross2d(g, f);
+    float k1 = cross2d(e, f) + cross2d(h, g);
+    float k0 = cross2d(h, e);
+
+    float u = 0.0;
+    float v = 0.0;
+
+    if(abs(k2) < 0.001) {
+        u = (h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0);
+        v = -k0 / k1;
+
+        if(u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) return vec4(-1.0);
+    }
+    else {
+        float w = k1 * k1 - 4.0 * k0 * k2;
+        if(w < 0.0) return vec4(-1.0);
+        w = sqrt(w);
+
+        float ik2 = 0.5 / k2;
+        v = (-k1 - w) * ik2;
+        u = (h.x - f.x * v) / (e.x + g.x * v);
+
+        if(u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
+            v = (-k1 + w) * ik2;
+            u = (h.x - f.x * v) / (e.x + g.x * v);
+        }
+    }
+
+    return vec4(1 -u - v + u * v, u - u * v, u * v, v - u * v);
+}
+
+vec3 getBlockColor(vec2 screenUV) {
+    vec3 blockColor = vec3(0.0f);
+    if(screenUV.x < 0.5f && screenUV.y > 0.5f) {
+        vec3 lerpC = vec3(mix(0.5f, 1.0f, screenUV.x * 2), mix(0.5f, 1.0f, (screenUV.y - 0.5f) * 2), 0.0f); 
+        blockColor = vec3(1.0f, 1.0f, 0.0f) * lerpC;
+    }
+    else if(screenUV.x > 0.5f && screenUV.y < 0.5f) {
+        vec3 lerpC = vec3(0.0f, mix(0.5f, 1.0f, (screenUV.x - 0.5f) * 2), mix(0.5f, 1.0f, screenUV.y * 2));
+        blockColor = vec3(0.0f, 1.0f, 1.0f) * lerpC;
+    }
+    else if(screenUV.x < 0.5f && screenUV.y < 0.5f) {
+        vec3 lerpC = vec3(mix(0.5f, 1.0f, screenUV.x * 2), 0.0f, mix(0.5f, 1.0f, screenUV.y * 2));
+        blockColor = vec3(1.0f, 0.0f, 1.0f) * lerpC;
+    }
+    else if(screenUV.x > 0.5f && screenUV.y > 0.5f) {
+        float lerpC = mix(0.5f, 1.0f, screenUV.x * 2 - 1.0f);
+        blockColor = vec3(1.0f, 1.0f, 1.0f) * lerpC;
+    }
+
+    return blockColor;
+}
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if(pixel.x >= camera.pixelSize.x || pixel.y >= camera.pixelSize.y)
+        return;
+
+    vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
+
+    vec2 mv = texelFetch(motionVector, pixel, 0).xy * (1.0 - object.alpha);
+    vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy * object.alpha;
+
+    Block[4] Blocks; // left_top, right_top, left_bottom, right_bottom
+
+    // initialize blocks
+    for(int i = 0; i < 4; i++) {
+        Blocks[i].left_top = vec2(0.5f * (i % 2), 0.5f * (i / 2));
+        Blocks[i].right_top = vec2(0.5f * (i % 2 + 1), 0.5f * (i / 2));
+        Blocks[i].left_bottom = vec2(0.5f * (i % 2), 0.5f * (i / 2 + 1));
+        Blocks[i].right_bottom = vec2(0.5f * (i % 2 + 1), 0.5f * (i / 2 + 1));
+    }
+
+    vec2 alpha2ZeroUV = vec2(0.0f);
+    vec2 alpha2OneUV = vec2(0.0f);
+
+    bool findZero = false;
+    bool findOne = false;
+
+    for(int i = 0; i < 4; i++) {
+        // vec2 zero_left_top_prevMV = texelFetch(prevMotionVector, ivec2(Blocks[i].left_top * camera.pixelSize.xy), 0).xy * object.alpha;
+        // vec2 zero_right_top_prevMV = texelFetch(prevMotionVector, ivec2(Blocks[i].right_top * camera.pixelSize.xy), 0).xy * object.alpha;
+        // vec2 zero_left_bottom_prevMV = texelFetch(prevMotionVector, ivec2(Blocks[i].left_bottom * camera.pixelSize.xy), 0).xy * object.alpha;
+        // vec2 zero_right_bottom_prevMV = texelFetch(prevMotionVector, ivec2(Blocks[i].right_bottom * camera.pixelSize.xy), 0).xy * object.alpha;
+
+        vec2 zero_left_top_prevMV = texture(prevMotionVector, Blocks[i].left_top).xy * object.alpha;
+        vec2 zero_right_top_prevMV = texture(prevMotionVector, Blocks[i].right_top).xy * object.alpha;
+        vec2 zero_left_bottom_prevMV = texture(prevMotionVector, Blocks[i].left_bottom).xy * object.alpha;
+        vec2 zero_right_bottom_prevMV = texture(prevMotionVector, Blocks[i].right_bottom).xy * object.alpha;
+
+        vec2 zero_left_top = Blocks[i].left_top + zero_left_top_prevMV;
+        vec2 zero_right_top = Blocks[i].right_top + zero_right_top_prevMV;
+        vec2 zero_left_bottom = Blocks[i].left_bottom + zero_left_bottom_prevMV;
+        vec2 zero_right_bottom = Blocks[i].right_bottom + zero_right_bottom_prevMV;
+
+        vec4 barycentric = invBilinear(screenUV, zero_left_top, zero_right_top, zero_left_bottom, zero_right_bottom);
+        if(barycentric.x >= 0.0 && barycentric.y >= 0.0 && barycentric.z >= 0.0 && barycentric.w >= 0.0) {
+            findZero = true;
+            alpha2ZeroUV = Blocks[i].left_top * barycentric.x + Blocks[i].right_top * barycentric.y + Blocks[i].left_bottom * barycentric.w + Blocks[i].right_bottom * barycentric.z;
+            break;
+        }
+    }
+
+    for(int i = 0; i < 4; i++) {
+        // vec2 one_left_top_curMV = texelFetch(motionVector, ivec2(Blocks[i].left_top * camera.pixelSize.xy), 0).xy * (1.0 - object.alpha); 
+        // vec2 one_right_top_curMV = texelFetch(motionVector, ivec2(Blocks[i].right_top * camera.pixelSize.xy), 0).xy * (1.0 - object.alpha);
+        // vec2 one_left_bottom_curMV = texelFetch(motionVector, ivec2(Blocks[i].left_bottom * camera.pixelSize.xy), 0).xy * (1.0 - object.alpha);
+        // vec2 one_right_bottom_curMV = texelFetch(motionVector, ivec2(Blocks[i].right_bottom * camera.pixelSize.xy), 0).xy * (1.0 - object.alpha);
+
+        vec2 one_left_top_curMV = texture(motionVector, Blocks[i].left_top).xy * (1.0 - object.alpha);
+        vec2 one_right_top_curMV = texture(motionVector, Blocks[i].right_top).xy * (1.0 - object.alpha);
+        vec2 one_left_bottom_curMV = texture(motionVector, Blocks[i].left_bottom).xy * (1.0 - object.alpha);
+        vec2 one_right_bottom_curMV = texture(motionVector, Blocks[i].right_bottom).xy * (1.0 - object.alpha);
+
+        vec2 one_left_top = Blocks[i].left_top - one_left_top_curMV;
+        vec2 one_right_top = Blocks[i].right_top - one_right_top_curMV;
+        vec2 one_left_bottom = Blocks[i].left_bottom - one_left_bottom_curMV;
+        vec2 one_right_bottom = Blocks[i].right_bottom - one_right_bottom_curMV;
+
+        vec4 barycentric = invBilinear(screenUV, one_left_top, one_right_top, one_left_bottom, one_right_bottom);
+        if(barycentric.x >= 0.0 && barycentric.y >= 0.0 && barycentric.z >= 0.0 && barycentric.w >= 0.0) {
+            findOne = true;
+            alpha2OneUV = Blocks[i].left_top * barycentric.x + Blocks[i].right_top * barycentric.y + Blocks[i].left_bottom * barycentric.w + Blocks[i].right_bottom * barycentric.z;
+            break;
+        }
+    }
+
+    vec3 blockColorZero = getBlockColor(alpha2ZeroUV);
+    vec3 blockColorOne = getBlockColor(alpha2OneUV);
+
+    vec3 colorAlpha2Zero = texture(prevLighting, alpha2ZeroUV).xyz;
+    vec3 colorAlpha2One = texture(lighting, alpha2OneUV).xyz;
+
+    if(findZero) {
+        imageStore(BlockAlpha2Zero, pixel, vec4(blockColorZero, 1.0f));
+        imageStore(BackwardAlpha2Zero, pixel, vec4(colorAlpha2Zero, 1.0f));
+    }
+    else {
+        imageStore(BlockAlpha2Zero, pixel, vec4(0.0f));
+        imageStore(BackwardAlpha2Zero, pixel, vec4(0.0f));
+    }
+    
+    if(findOne) {
+        imageStore(BlockAlpha2One, pixel, vec4(blockColorOne, 1.0f));
+        imageStore(BackwardAlpha2One, pixel, vec4(colorAlpha2One, 1.0f));
+    }
+    else {
+        imageStore(BlockAlpha2One, pixel, vec4(0.0f));
+        imageStore(BackwardAlpha2One, pixel, vec4(0.0f));
+    }
+}

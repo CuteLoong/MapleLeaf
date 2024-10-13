@@ -171,7 +171,6 @@ void InterpolationSubrender::PostRender(const CommandBuffer& commandBuffer)
 
     if (frameID == 9) {
         ComputeBlend();
-        exit(0);
     }
 }
 
