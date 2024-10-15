@@ -169,9 +169,9 @@ void InterpolationSubrender::PostRender(const CommandBuffer& commandBuffer)
 
     pipelineFinement.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
 
-    if (frameID == 9) {
-        ComputeBlend();
-    }
+    // if (frameID == 9) {
+    //     ComputeBlend();
+    // }
 }
 
 void InterpolationSubrender::ComputeBlend()

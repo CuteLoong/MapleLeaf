@@ -39,14 +39,14 @@ void main()
 
     vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
 
-    vec2 mv = texelFetch(motionVector, pixel, 0).xy * (1.0 - object.alpha);
-    vec2 prevMV = texelFetch(prevMotionVector, pixel, 0).xy * object.alpha;
+    vec2 mv = texture(motionVector, screenUV).xy * (1.0 - object.alpha);
+    vec2 prevMV = texture(prevMotionVector, screenUV).xy * object.alpha;
 
     vec3 current_color = texture(lighting, screenUV).xyz;
     vec3 prev_color = texture(prevLighting, screenUV).xyz;
 
-    float current_depth = texelFetch(depth, pixel, 0).r;
-    float prev_depth = texelFetch(prevDepth, pixel, 0).r;
+    float current_depth = texture(depth, screenUV).r;
+    float prev_depth = texture(prevDepth, screenUV).r;
 
     vec2 zero2alphaScreenUV = screenUV + prevMV;
     vec2 one2alphaScreenUV = screenUV - mv;

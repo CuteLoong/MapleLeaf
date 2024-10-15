@@ -34,8 +34,10 @@ WarpRenderer::WarpRenderer()
         {"BlockOne2Alpha", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"BlockAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"BlockAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"BackwardAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"BackwardAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+        {"BackwardDepthAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
+        {"BackwardDepthAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
+        {"BackwardAccurateAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"BackwardAccurateAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 

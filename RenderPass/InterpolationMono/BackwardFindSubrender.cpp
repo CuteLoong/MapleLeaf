@@ -1,4 +1,5 @@
 #include "BackwardFindSubrender.hpp"
+#include "Graphics.hpp"
 #include "InterpolationMono/BackwardFindSubrender.hpp"
 #include "Scenes.hpp"
 
@@ -17,15 +18,17 @@ void BackwardFindSubrender::PreRender(const CommandBuffer& commandBuffer)
     const auto& prevLighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
     const auto& lighting         = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
 
-    const auto& BlockAlpha2Zero    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2Zero"));
-    const auto& BlockAlpha2One     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2One"));
-    const auto& BackwardAlpha2Zero = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAlpha2Zero"));
-    const auto& BackwardAlpha2One  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAlpha2One"));
+    const auto& BlockAlpha2Zero            = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2Zero"));
+    const auto& BlockAlpha2One             = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2One"));
+    const auto& BackwardDepthAlpha2Zero    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardDepthAlpha2Zero"));
+    const auto& BackwardDepthAlpha2One     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardDepthAlpha2One"));
+    const auto& BackwardAccurateAlpha2Zero = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAccurateAlpha2Zero"));
+    const auto& BackwardAccurateAlpha2One  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAccurateAlpha2One"));
 
     BlockAlpha2Zero->ClearImage2d(commandBuffer, glm::vec4(0.0f));
     BlockAlpha2One->ClearImage2d(commandBuffer, glm::vec4(0.0f));
-    BackwardAlpha2Zero->ClearImage2d(commandBuffer, glm::vec4(0.0f));
-    BackwardAlpha2One->ClearImage2d(commandBuffer, glm::vec4(0.0f));
+    BackwardDepthAlpha2Zero->ClearImage2d(commandBuffer, glm::vec4(0.0f));
+    BackwardDepthAlpha2One->ClearImage2d(commandBuffer, glm::vec4(0.0f));
 
     pushHandlerBackwardFind.Push("alpha", static_cast<float>(0.7));
 
@@ -41,8 +44,10 @@ void BackwardFindSubrender::PreRender(const CommandBuffer& commandBuffer)
 
     descriptorSetBackwardFind.Push("BlockAlpha2Zero", BlockAlpha2Zero);
     descriptorSetBackwardFind.Push("BlockAlpha2One", BlockAlpha2One);
-    descriptorSetBackwardFind.Push("BackwardAlpha2Zero", BackwardAlpha2Zero);
-    descriptorSetBackwardFind.Push("BackwardAlpha2One", BackwardAlpha2One);
+    descriptorSetBackwardFind.Push("BackwardDepthAlpha2Zero", BackwardDepthAlpha2Zero);
+    descriptorSetBackwardFind.Push("BackwardDepthAlpha2One", BackwardDepthAlpha2One);
+    descriptorSetBackwardFind.Push("BackwardAccurateAlpha2Zero", BackwardAccurateAlpha2Zero);
+    descriptorSetBackwardFind.Push("BackwardAccurateAlpha2One", BackwardAccurateAlpha2One);
 
     if (!descriptorSetBackwardFind.Update(pipelineBackwardFind)) return;
 
@@ -61,10 +66,10 @@ void BackwardFindSubrender::Render(const CommandBuffer& commandBuffer)
 
 void BackwardFindSubrender::PostRender(const CommandBuffer& commandBuffer)
 {
-    if (frameID == 9) {
-        ComputeBackward();
-        exit(0);
-    }
+    // if (frameID == 9) {
+    //     ComputeBackward();
+    //     exit(0);
+    // }
 }
 
 void BackwardFindSubrender::ComputeBackward()
@@ -76,10 +81,12 @@ void BackwardFindSubrender::ComputeBackward()
     const auto& prevLighting     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("PrevLighting"));
     const auto& lighting         = dynamic_cast<const Image2d*>(Graphics::Get()->GetAttachment("lighting"));
 
-    const auto& BlockAlpha2Zero    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2Zero"));
-    const auto& BlockAlpha2One     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2One"));
-    const auto& BackwardAlpha2Zero = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAlpha2Zero"));
-    const auto& BackwardAlpha2One  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAlpha2One"));
+    const auto& BlockAlpha2Zero            = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2Zero"));
+    const auto& BlockAlpha2One             = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BlockAlpha2One"));
+    const auto& BackwardDepthAlpha2Zero    = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardDepthAlpha2Zero"));
+    const auto& BackwardDepthAlpha2One     = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardDepthAlpha2One"));
+    const auto& BackwardAccurateAlpha2Zero = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAccurateAlpha2Zero"));
+    const auto& BackwardAccurateAlpha2One  = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("BackwardAccurateAlpha2One"));
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
 
@@ -100,8 +107,10 @@ void BackwardFindSubrender::ComputeBackward()
         descriptorSet.Push("lighting", lighting);
         descriptorSet.Push("BlockAlpha2Zero", BlockAlpha2Zero);
         descriptorSet.Push("BlockAlpha2One", BlockAlpha2One);
-        descriptorSet.Push("BackwardAlpha2Zero", BackwardAlpha2Zero);
-        descriptorSet.Push("BackwardAlpha2One", BackwardAlpha2One);
+        descriptorSet.Push("BackwardDepthAlpha2Zero", BackwardDepthAlpha2Zero);
+        descriptorSet.Push("BackwardDepthAlpha2One", BackwardDepthAlpha2One);
+        descriptorSet.Push("BackwardAccurateAlpha2Zero", BackwardAccurateAlpha2Zero);
+        descriptorSet.Push("BackwardAccurateAlpha2One", BackwardAccurateAlpha2One);
         descriptorSet.Push("PushObject", pushHandlerBackwardFind);
 
         descriptorSet.Update(computeBackwardFind);
@@ -113,15 +122,17 @@ void BackwardFindSubrender::ComputeBackward()
 
         BlockAlpha2One->Image2dPipelineBarrierComputeToCompute(commandBuffer);
         BlockAlpha2Zero->Image2dPipelineBarrierComputeToCompute(commandBuffer);
-        BackwardAlpha2Zero->Image2dPipelineBarrierComputeToCompute(commandBuffer);
-        BackwardAlpha2One->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+        BackwardDepthAlpha2Zero->Image2dPipelineBarrierComputeToCompute(commandBuffer);
+        BackwardDepthAlpha2One->Image2dPipelineBarrierComputeToCompute(commandBuffer);
 
         commandBuffer.SubmitIdle();
 
         Graphics::Get()->CaptureImage2d("Screenshots/BlockAlpha2Zero" + std::to_string(i) + ".png", BlockAlpha2Zero);
         Graphics::Get()->CaptureImage2d("Screenshots/BlockAlpha2One" + std::to_string(i) + ".png", BlockAlpha2One);
-        Graphics::Get()->CaptureImage2d("Screenshots/BackwardAlpha2Zero" + std::to_string(i) + ".png", BackwardAlpha2Zero);
-        Graphics::Get()->CaptureImage2d("Screenshots/BackwardAlpha2One" + std::to_string(i) + ".png", BackwardAlpha2One);
+        Graphics::Get()->CaptureImage2d("Screenshots/BackwardDepthAlpha2Zero" + std::to_string(i) + ".png", BackwardDepthAlpha2Zero);
+        Graphics::Get()->CaptureImage2d("Screenshots/BackwardDepthAlpha2One" + std::to_string(i) + ".png", BackwardDepthAlpha2One);
+        Graphics::Get()->CaptureImage2d("Screenshots/BackwardAccurateAlpha2Zero" + std::to_string(i) + ".png", BackwardAccurateAlpha2Zero);
+        Graphics::Get()->CaptureImage2d("Screenshots/BackwardAccurateAlpha2One" + std::to_string(i) + ".png", BackwardAccurateAlpha2One);
     }
 }
 
