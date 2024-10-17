@@ -1,0 +1,85 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 32, local_size_y = 16, local_size_z = 1) in;
+
+layout(push_constant) uniform PushObject {
+	float alpha;
+} object;
+
+layout(set=0, binding=1) uniform sampler2D BackwardAlpha2ZeroColor;
+layout(set=0, binding=2) uniform sampler2D BackwardAlpha2OneColor;
+layout(set=0, binding=3) uniform sampler2D BackwardAlpha2ZeroDepth;
+layout(set=0, binding=4) uniform sampler2D BackwardAlpha2OneDepth;
+
+layout(set=0, binding=5) writeonly uniform image2D AlphaColor;
+layout(set=0, binding=6, r32f) writeonly uniform image2D AlphaDepth;
+
+#include <Misc/Camera.glsl>
+
+// #define alpha 0.6
+#define thresholdDepth 0.0028
+#define thresholdColor 0.13
+
+float Linear01Depth(float z) {
+    z = z * 0.5 + 0.5; // NDC to [0, 1]
+    return 1.0 / (camera.zBufferParams.x * z + camera.zBufferParams.y);
+}
+
+float Luminance(vec3 color) {
+    return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+void main()
+{
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if(pixel.x >= camera.pixelSize.x || pixel.y >= camera.pixelSize.y)
+        return;
+
+    vec2 screenUV = (vec2(pixel) + vec2(0.5f)) * camera.pixelSize.zw;
+
+    vec3 alpha2ZeroColor = texture(BackwardAlpha2ZeroColor, screenUV).xyz;
+    float alpha2ZeroDepth = texture(BackwardAlpha2ZeroDepth, screenUV).r;
+
+    vec3 alpha2OneColor = texture(BackwardAlpha2OneColor, screenUV).xyz;
+    float alpha2OneDepth = texture(BackwardAlpha2OneDepth, screenUV).r;
+
+    bool ZeroValid = alpha2ZeroDepth != 0.0f;
+    bool OneValid = alpha2OneDepth != 0.0f;
+
+    float deltaDepth = Linear01Depth(alpha2ZeroDepth) - Linear01Depth(alpha2OneDepth);
+    // float deltaDepth = alpha2ZeroDepth - alpha2OneDepth;
+    float deltaColor = Luminance(alpha2ZeroColor) - Luminance(alpha2OneColor);
+
+    float alphaDepth = 0.0f;
+    vec3 alphaColor = vec3(0.0f);
+
+    if(!ZeroValid || !OneValid) {
+        alphaDepth = ZeroValid ? alpha2ZeroDepth : alpha2OneDepth;
+        alphaColor = ZeroValid ? alpha2ZeroColor : alpha2OneColor;
+    }
+    else {
+        alphaDepth = object.alpha < 0.5 ? alpha2ZeroDepth : alpha2OneDepth;
+        alphaColor = object.alpha < 0.5 ? alpha2ZeroColor : alpha2OneColor;
+    }
+
+    // bool depthCondition = abs(deltaDepth) < thresholdDepth;
+    // bool colorCondition = abs(deltaColor) < thresholdColor;
+    // if(!depthCondition) {
+    //     alphaDepth = deltaDepth > thresholdDepth ? alpha2ZeroDepth : alpha2OneDepth;
+    //     alphaColor = deltaDepth > thresholdDepth ? alpha2ZeroColor : alpha2OneColor;
+    // }
+    // if(depthCondition && colorCondition) {
+    //     alphaDepth = object.alpha < 0.5 ? alpha2ZeroDepth : alpha2OneDepth;
+    //     alphaColor = object.alpha < 0.5 ? alpha2ZeroColor : alpha2OneColor;
+    // }
+    // if(depthCondition && !colorCondition) {
+    //     alphaDepth = mix(alpha2ZeroDepth, alpha2OneDepth, object.alpha);
+    //     alphaColor = mix(alpha2ZeroColor, alpha2OneColor, object.alpha);
+    // }
+
+    imageStore(AlphaColor, pixel, vec4(alphaColor, 1.0f));
+    imageStore(AlphaDepth, pixel, vec4(alphaDepth));
+}

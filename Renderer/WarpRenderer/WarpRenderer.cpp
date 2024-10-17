@@ -49,7 +49,7 @@ WarpRenderer::WarpRenderer()
 
     // Render Pass 1 for previous motion vector
     std::vector<Attachment>  PrevMVAttachments{{0, "prevDepth", Attachment::Type::Depth, false},
-                                               {1, "prevMotionVector", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+                                               {1, "prevMotionVector", Attachment::Type::Image, false, VK_FORMAT_R32G32_SFLOAT}};
     std::vector<SubpassType> PrevMVSubpasses = {{0, {}, {0, 1}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, PrevMVAttachments, PrevMVSubpasses));
 
@@ -59,7 +59,7 @@ WarpRenderer::WarpRenderer()
                                                     {2, "diffuse", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
                                                     {3, "normal", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                     {4, "material", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM},
-                                                    {5, "motionVector", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+                                                    {5, "motionVector", Attachment::Type::Image, false, VK_FORMAT_R32G32_SFLOAT},
                                                     {6, "instanceId", Attachment::Type::Image, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_NEAREST}};
     std::vector<SubpassType> renderpassSubpasses1 = {{0, {}, {1, 2, 3, 4}}, {1, {}, {0, 1, 2, 3, 4, 5, 6}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, renderpassAttachments1, renderpassSubpasses1));
@@ -91,7 +91,7 @@ void WarpRenderer::Start()
     AddSubrender<FrustumCullingSubrender>({2, 1});
     AddSubrender<DeferredSubrender>({3, 0});
 
-    AddSubrender<MONO_Subrender::InterpolationSubrender>({4, 0});
+    // AddSubrender<MONO_Subrender::InterpolationSubrender>({4, 0});
     AddSubrender<MONO_Subrender::BackwardFindSubrender>({4, 1});
 
     AddSubrender<WarpRenderer_SubRender::ResolvedSubrender>({5, 0});

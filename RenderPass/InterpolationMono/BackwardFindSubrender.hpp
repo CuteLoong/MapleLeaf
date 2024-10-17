@@ -22,10 +22,15 @@ public:
 
 private:
     PipelineCompute pipelineBackwardFind;
+    PipelineCompute pipelineBackwardBlend;
 
     DescriptorsHandler descriptorSetBackwardFind;
-    UniformHandler     uniformCameraBackwardFind;
-    PushHandler        pushHandlerBackwardFind;
+    DescriptorsHandler descriptorSetBackwardBlend;
+
+    UniformHandler uniformCameraBackwardFind;
+    UniformHandler uniformCameraBackwardBlend;
+
+    PushHandler pushHandlerBackwardFind;
 
     uint32_t frameID = 0;
 };
