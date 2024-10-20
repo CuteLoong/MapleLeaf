@@ -6,6 +6,7 @@
 #include "IndirectDrawPrevMV.hpp"
 #include "InterpolationMono/BackwardFindSubrender.hpp"
 #include "InterpolationMono/InterpolationSubrender.hpp"
+#include "InterpolationMono/RadianceFilterSubrender.hpp"
 #include "NonRTAttachmentsHandler.hpp"
 #include "ResolvedSubrender.hpp"
 #include "ShadowSubrender.hpp"
@@ -37,7 +38,8 @@ WarpRenderer::WarpRenderer()
         {"BackwardDepthAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
         {"BackwardDepthAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
         {"BackwardAccurateAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"BackwardAccurateAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+        {"BackwardAccurateAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"RadianceFilterColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -71,7 +73,7 @@ WarpRenderer::WarpRenderer()
 
     // Render Pass 4 for interpolation
     std::vector<Attachment>  InterpolationAttachment{{0, "PlaceHolder_interpolation", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
-    std::vector<SubpassType> InterpolationSubpasses = {{0, {}, {}}, {1, {}, {}}};
+    std::vector<SubpassType> InterpolationSubpasses = {{0, {}, {}}, {1, {}, {}}, {2, {}, {}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, InterpolationAttachment, InterpolationSubpasses));
 
     // Render Pass 5 for Present
@@ -93,6 +95,7 @@ void WarpRenderer::Start()
 
     // AddSubrender<MONO_Subrender::InterpolationSubrender>({4, 0});
     AddSubrender<MONO_Subrender::BackwardFindSubrender>({4, 1});
+    // AddSubrender<MONO_Subrender::RadianceFilterSubrender>({4, 2});
 
     AddSubrender<WarpRenderer_SubRender::ResolvedSubrender>({5, 0});
     AddSubrender<ToneMapingSubrender>({5, 1});

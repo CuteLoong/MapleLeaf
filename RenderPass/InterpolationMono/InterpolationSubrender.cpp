@@ -44,8 +44,8 @@ void InterpolationSubrender::PreRender(const CommandBuffer& commandBuffer)
     //     Graphics::Get()->CaptureImage2d("Screenshots/lighting20_12.png", lighting);
     // }
 
-    pushHandlerWarpDepth.Push("alpha", static_cast<float>(0.7));
-    pushHandlerWarpColor.Push("alpha", static_cast<float>(0.7));
+    pushHandlerWarpDepth.Push("alpha", static_cast<float>(0));
+    pushHandlerWarpColor.Push("alpha", static_cast<float>(0));
 
     Zero2OneDepth_Int->ClearImage2d(commandBuffer, glm::vec4(1.0f));
     One2ZeroDepth_Int->ClearImage2d(commandBuffer, glm::vec4(1.0f));
@@ -129,7 +129,7 @@ void InterpolationSubrender::PostRender(const CommandBuffer& commandBuffer)
     const auto& FinedColor = dynamic_cast<const Image2d*>(Graphics::Get()->GetNonRTAttachment("FinedColor"));
 
 
-    pushHandlerBlend.Push("alpha", static_cast<float>(0.7));
+    pushHandlerBlend.Push("alpha", static_cast<float>(0));
 
     auto camera = Scenes::Get()->GetScene()->GetCamera();
     camera->PushUniforms(uniformCameraBlend);
@@ -169,9 +169,9 @@ void InterpolationSubrender::PostRender(const CommandBuffer& commandBuffer)
 
     pipelineFinement.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
 
-    // if (frameID == 9) {
-    //     ComputeBlend();
-    // }
+    if (frameID == 10) {
+        ComputeBlend();
+    }
 }
 
 void InterpolationSubrender::ComputeBlend()

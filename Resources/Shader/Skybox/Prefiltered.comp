@@ -94,7 +94,7 @@ vec3 prefilterEnvMap(samplerCube envmap, vec3 R, float roughness) {
 
 			// Probability Distribution Function
 			float pdf = D_GGX(dotNH, roughness) * dotNH / (4.0f * dotVH) + 0.0001f;
-			// Slid angle of current smple
+			// Solid angle of current sample
 			float omegaS = 1.0f / (float(samples) * pdf);
 			// Solid angle of 1 pixel across all cube faces
 			float omegaP = 4.0f * PI / (6.0f * envMapDim * envMapDim);

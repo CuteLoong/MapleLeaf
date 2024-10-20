@@ -1,0 +1,63 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_EXT_shader_atomic_float : enable
+
+#extension GL_GOOGLE_include_directive : require
+
+#include <Misc/Camera.glsl>
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(push_constant) uniform PushObject {
+    ivec2 previousLevelDimensions;
+    ivec2 currentDimensions;
+    int mipLevel;
+} object;
+
+layout(set=0, binding=1) uniform sampler2D radianceBuffer;
+
+layout(set=0, binding=3) writeonly uniform image2D RadianceFilterColor;
+// layout(set=0, binding=4, r32f) writeonly uniform image2D DepthFilter;
+
+void main()
+{
+    ivec2 thisLevelTexelCoord = ivec2(gl_GlobalInvocationID.xy);
+    if (thisLevelTexelCoord.x >= object.currentDimensions.x || thisLevelTexelCoord.y >= object.currentDimensions.y)
+        return;
+
+    if (object.mipLevel == 0) {
+        // float depth = texelFetch(depthBuffer, thisLevelTexelCoord, object.mipLevel).r;
+        vec3 radianceColor = texelFetch(radianceBuffer, thisLevelTexelCoord, 0).xyz;
+
+        imageStore(RadianceFilterColor, thisLevelTexelCoord, vec4(radianceColor, 1.0f));
+        // imageStore(DepthFilter, thisLevelTexelCoord, vec4(depth));
+        return;
+    }
+
+    ivec2 previousLevelBaseTexelCoord = 2 * thisLevelTexelCoord;
+    int previousLevel = object.mipLevel - 1;
+
+    // float totalDepth = 0.0f;
+    // totalDepth += texelFetch(depthBuffer, previousLevelBaseTexelCoord, previousLevel).r;
+    // totalDepth += texelFetch(depthBuffer, previousLevelBaseTexelCoord + ivec2(1, 0), previousLevel).r;
+    // totalDepth += texelFetch(depthBuffer, previousLevelBaseTexelCoord + ivec2(1, 1), previousLevel).r;
+    // totalDepth += texelFetch(depthBuffer, previousLevelBaseTexelCoord + ivec2(0, 1), previousLevel).r;
+
+    vec3 totalRadiance = vec3(0.0f);
+    totalRadiance += texelFetch(radianceBuffer, previousLevelBaseTexelCoord, 0).xyz;
+    totalRadiance += texelFetch(radianceBuffer, previousLevelBaseTexelCoord + ivec2(1, 0), 0).xyz;
+    totalRadiance += texelFetch(radianceBuffer, previousLevelBaseTexelCoord + ivec2(1, 1), 0).xyz;
+    totalRadiance += texelFetch(radianceBuffer, previousLevelBaseTexelCoord + ivec2(0, 1), 0).xyz;
+
+    // imageStore(DepthFilter, thisLevelTexelCoord, vec4(totalDepth / 4.0f));
+
+    bool shouldIncludeExtraColumnFromPreviousLevel = ((object.previousLevelDimensions.x & 1) != 0);
+    bool shouldIncludeExtraRowFromPreviousLevel = ((object.previousLevelDimensions.y & 1) != 0);
+
+    if (shouldIncludeExtraColumnFromPreviousLevel) {
+        
+    }
+
+    imageStore(RadianceFilterColor, thisLevelTexelCoord, vec4(totalRadiance / 4.0f, 1.0f));
+}

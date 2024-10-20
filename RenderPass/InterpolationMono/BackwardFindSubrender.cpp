@@ -106,7 +106,7 @@ void BackwardFindSubrender::PostRender(const CommandBuffer& commandBuffer)
 
     pipelineBackwardBlend.CmdRender(commandBuffer, Graphics::Get()->GetNonRTAttachmentSize());
 
-    if (frameID == 10) {
+    if (frameID == 8) {
         ComputeBackward();
         exit(0);
     }

@@ -47,7 +47,7 @@ Image2d::Image2d(std::unique_ptr<Bitmap>&& bitmap, VkFormat format, VkImageLayou
     Image2d::Load(std::move(bitmap));
 }
 
-void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d) const
+void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d, int mipLevel) const
 {
     // Transition destination image to transfer destination layout.
     InsertImageMemoryBarrier(commandBuffer,
@@ -60,7 +60,7 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
                              VK_PIPELINE_STAGE_TRANSFER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             0,
+                             mipLevel,
                              1,
                              0);
 
@@ -88,7 +88,7 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
     imageCopyRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
     imageCopyRegion.dstSubresource.baseArrayLayer = 0;
     imageCopyRegion.dstSubresource.layerCount     = arrayLayers;
-    imageCopyRegion.dstSubresource.mipLevel       = 0;
+    imageCopyRegion.dstSubresource.mipLevel       = mipLevel;
     imageCopyRegion.dstOffset                     = {0, 0, 0};
     imageCopyRegion.extent.width                  = std::min(extent.width, image2d.extent.width);
     imageCopyRegion.extent.height                 = std::min(extent.height, image2d.extent.height);
@@ -113,7 +113,7 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
                              VK_PIPELINE_STAGE_TRANSFER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             0,
+                             mipLevel,
                              1,
                              0);
 

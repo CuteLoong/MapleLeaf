@@ -46,15 +46,15 @@ void Camera::UpdateByCPU()
     if (frameID == 1) {
         initialCenter = position + forward;
         initialRight  = right;
-        position -= 0.2f * initialRight;   // San and Pica 0.2, Door 0.3
+        position -= 0.1f * initialRight;   // San and Pica 0.2, Door 0.3
         return;
     }
 
     if (frameID != 0 && frameID % 2 == 0) {
-        position += 0.4f * initialRight;   // San and Pica 0.4, Door 0.6
+        position += 0.2f * initialRight;   // San and Pica 0.4, Door 0.6
     }
     else if (frameID != 0 && frameID % 2 != 0) {
-        position -= 0.4f * initialRight;
+        position -= 0.2f * initialRight;
     }
 
     forward = glm::normalize(initialCenter - position);

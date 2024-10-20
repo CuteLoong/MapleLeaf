@@ -107,7 +107,7 @@ vec3 getBlockColor(vec2 screenUV) {
 // }
 
 vec2 searchAccuratePixel(vec2 screenUV, vec2 mappedCenter, float weightMV, int depth) {
-    int kernelSize = min(int(camera.pixelSize.y / (1 << depth)), 3);
+    int kernelSize = min(int(camera.pixelSize.y / (1 << depth)), 501);
     if(kernelSize <= 1) return mappedCenter;
 
     for(int i = 0; i < kernelSize; i++) {
