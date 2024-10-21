@@ -18,13 +18,13 @@ layout(set=0, binding=1) uniform sampler2D motionVector;
 layout(set=0, binding=2) uniform sampler2D prevMotionVector;
 layout(set=0, binding=3) uniform sampler2D MultiLevelLighting;
 layout(set=0, binding=4) uniform sampler2D MultiLevelPrevLighting;
-// layout(set=0, binding=5) uniform sampler2D depth;
-// layout(set=0, binding=6) uniform sampler2D prevDepth;
+layout(set=0, binding=5) uniform sampler2D MultiLevelDepth;
+layout(set=0, binding=6) uniform sampler2D MultiLevelPrevDepth;
 
-// layout(set=0, binding=9) writeonly uniform image2D BackwardDepthAlpha2Zero;
-// layout(set=0, binding=10) writeonly uniform image2D BackwardDepthAlpha2One;
-layout(set=0, binding=11) writeonly uniform image2D BackwardMipColorAlpha2Zero;
-layout(set=0, binding=12) writeonly uniform image2D BackwardMipColorAlpha2One;
+layout(set=0, binding=7) writeonly uniform image2D BackwardMipDepthAlpha2Zero;
+layout(set=0, binding=8) writeonly uniform image2D BackwardMipDepthAlpha2One;
+layout(set=0, binding=9) writeonly uniform image2D BackwardMipColorAlpha2Zero;
+layout(set=0, binding=10) writeonly uniform image2D BackwardMipColorAlpha2One;
 
 float cross2d(vec2 a, vec2 b ) { return a.x*b.y - a.y*b.x; }
 
@@ -191,25 +191,25 @@ void main()
 
     if(accurateZeroUV.x >= 0.0) {
         vec3 accurateColorAlpha2Zero = textureLod(MultiLevelPrevLighting, accurateZeroUV, object.mipLevel).xyz;
-        // float accurateDepthAlpha2Zero = texture(prevDepth, accurateZeroUV).r;
+        float accurateDepthAlpha2Zero = texture(MultiLevelPrevDepth, accurateZeroUV).r;
 
         imageStore(BackwardMipColorAlpha2Zero, pixel, vec4(accurateColorAlpha2Zero, 1.0f));
-        // imageStore(BackwardDepthAlpha2Zero, pixel, vec4(accurateDepthAlpha2Zero, 0.0f, 0.0f, 1.0f));
+        imageStore(BackwardMipDepthAlpha2Zero, pixel, vec4(accurateDepthAlpha2Zero, 0.0f, 0.0f, 1.0f));
     }
     else {
-        // imageStore(BackwardDepthAlpha2Zero, pixel, vec4(0.0f));
+        imageStore(BackwardMipDepthAlpha2Zero, pixel, vec4(0.0f));
         imageStore(BackwardMipColorAlpha2Zero, pixel, vec4(0.0f));
     }
 
     if(accurateOneUV.x >= 0.0) {
         vec3 accurateColorAlpha2One = textureLod(MultiLevelLighting, accurateOneUV, object.mipLevel).xyz;
-        // float accurateDepthAlpha2One = texture(depth, accurateOneUV).r;
+        float accurateDepthAlpha2One = texture(MultiLevelDepth, accurateOneUV).r;
 
         imageStore(BackwardMipColorAlpha2One, pixel, vec4(accurateColorAlpha2One, 1.0f));
-        // imageStore(BackwardDepthAlpha2One, pixel, vec4(accurateDepthAlpha2One, 0.0f, 0.0f, 1.0f));
+        imageStore(BackwardMipDepthAlpha2One, pixel, vec4(accurateDepthAlpha2One, 0.0f, 0.0f, 1.0f));
     }
     else {
         imageStore(BackwardMipColorAlpha2One, pixel, vec4(0.0f));
-        // imageStore(BackwardDepthAlpha2One, pixel, vec4(0.0f));
+        imageStore(BackwardMipDepthAlpha2One, pixel, vec4(0.0f));
     }
 }

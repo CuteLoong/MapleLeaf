@@ -34,6 +34,6 @@ private:
 
     PushHandler pushHandlerBackwardFind;
 
-    uint32_t mipLevel = 3;
+    uint32_t mipLevel = 2;
 };
 }   // namespace MONO_Subrender

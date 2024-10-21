@@ -10,13 +10,13 @@ layout(push_constant) uniform PushObject {
     uint  mipLevel;
 } object;
 
-layout(set=0, binding=1) uniform sampler2D BackwardAlpha2ZeroColor;
-layout(set=0, binding=2) uniform sampler2D BackwardAlpha2OneColor;
-layout(set=0, binding=3) uniform sampler2D BackwardAlpha2ZeroDepth;
-layout(set=0, binding=4) uniform sampler2D BackwardAlpha2OneDepth;
+layout(set=0, binding=1) uniform sampler2D BackwardMipColorAlpha2Zero;
+layout(set=0, binding=2) uniform sampler2D BackwardMipColorAlpha2One;
+layout(set=0, binding=3) uniform sampler2D BackwardMipDepthAlpha2Zero;
+layout(set=0, binding=4) uniform sampler2D BackwardMipDepthAlpha2One;
 
-layout(set=0, binding=5) writeonly uniform image2D AlphaColor;
-layout(set=0, binding=6, r32f) writeonly uniform image2D AlphaDepth;
+layout(set=0, binding=5) writeonly uniform image2D MipAlphaColor;
+layout(set=0, binding=6, r32f) writeonly uniform image2D MipAlphaDepth;
 
 #include <Misc/Camera.glsl>
 
@@ -43,11 +43,11 @@ void main()
 
     vec2 screenUV = (vec2(pixel) + vec2(0.5f)) / vec2(mipSize);
 
-    vec3 alpha2ZeroColor = texture(BackwardAlpha2ZeroColor, screenUV).xyz;
-    float alpha2ZeroDepth = texture(BackwardAlpha2ZeroDepth, screenUV).r;
+    vec3 alpha2ZeroColor = textureLod(BackwardMipColorAlpha2Zero, screenUV, object.mipLevel).xyz;
+    float alpha2ZeroDepth = textureLod(BackwardMipDepthAlpha2Zero, screenUV, object.mipLevel).r;
 
-    vec3 alpha2OneColor = texture(BackwardAlpha2OneColor, screenUV).xyz;
-    float alpha2OneDepth = texture(BackwardAlpha2OneDepth, screenUV).r;
+    vec3 alpha2OneColor = textureLod(BackwardMipColorAlpha2One, screenUV, object.mipLevel).xyz;
+    float alpha2OneDepth = textureLod(BackwardMipDepthAlpha2One, screenUV, object.mipLevel).r;
 
     bool ZeroValid = alpha2ZeroDepth != 0.0f;
     bool OneValid = alpha2OneDepth != 0.0f;
@@ -83,6 +83,6 @@ void main()
     //     alphaColor = mix(alpha2ZeroColor, alpha2OneColor, object.alpha);
     // }
 
-    imageStore(AlphaColor, pixel, vec4(alphaColor, 1.0f));
-    imageStore(AlphaDepth, pixel, vec4(alphaDepth));
+    imageStore(MipAlphaColor, pixel, vec4(alphaColor, 1.0f));
+    imageStore(MipAlphaDepth, pixel, vec4(alphaDepth));
 }

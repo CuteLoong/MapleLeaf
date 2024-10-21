@@ -119,6 +119,14 @@ public:
         auto setIndex    = setLocation.first;
         auto location    = setLocation.second;
 
+        if (!setIndex || !location) {
+#ifdef MAPLELEAF_DESCRIPTOR_DEBUG
+            if (shader->ReportedNotFound(descriptorName, true))
+                Log::Error("Could not find descriptor in shader ", shader->GetName(), " of name ", std::quoted(descriptorName), '\n');
+#endif
+            return;
+        }
+
         descriptors[descriptorName].emplace_back(
             DescriptorValue{to_address(descriptor), std::move(writeDescriptorSet), std::nullopt, setIndex.value(), location.value()});
         changed = true;

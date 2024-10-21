@@ -446,8 +446,8 @@ void Graphics::CaptureImage2d(const std::filesystem::path filename, const Image2
 {
     VkImage        dstImage;
     VkDeviceMemory dstImageMemory;
-    auto           supportsBlit =
-        Image::CopyImage(image->GetImage(), dstImage, dstImageMemory, image->GetFormat(), image->GetExtent(), image->GetLayout(), 0, 0);
+    VkExtent3D     extent = {image->GetExtent().width >> mipLevel, image->GetExtent().height >> mipLevel, image->GetExtent().depth};
+    auto supportsBlit = Image::CopyImage(image->GetImage(), dstImage, dstImageMemory, image->GetFormat(), extent, image->GetLayout(), mipLevel, 0);
 
     VkImageSubresource imageSubresource = {};
     imageSubresource.aspectMask         = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -457,7 +457,7 @@ void Graphics::CaptureImage2d(const std::filesystem::path filename, const Image2
     VkSubresourceLayout dstSubresourceLayout;
     vkGetImageSubresourceLayout(*logicalDevice, dstImage, &imageSubresource, &dstSubresourceLayout);
 
-    Bitmap bitmap(std::make_unique<uint8_t[]>(dstSubresourceLayout.size), glm::uvec2(image->GetExtent().width, image->GetExtent().height));
+    Bitmap bitmap(std::make_unique<uint8_t[]>(dstSubresourceLayout.size), glm::uvec2(extent.width, extent.height));
 
     void* data;
     vkMapMemory(*logicalDevice, dstImageMemory, dstSubresourceLayout.offset, dstSubresourceLayout.size, 0, &data);

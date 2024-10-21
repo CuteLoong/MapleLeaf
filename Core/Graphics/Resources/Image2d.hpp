@@ -65,9 +65,9 @@ public:
     void CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d, int mipLevel = 0) const;
     void ClearImage2d(const CommandBuffer& commandBuffer, const glm::vec4& color) const;
 
-    void Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const;
-    void Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const;
-    void Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer) const;
+    void Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer, int mipLevel = 0) const;
+    void Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer, int mipLevel = 0) const;
+    void Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer, int mipLevel = 0) const;
 
 private:
     void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);

@@ -42,11 +42,14 @@ WarpRenderer::WarpRenderer()
         {"RadianceFilterColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"MultiLevelLighting", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
         {"MultiLevelPrevLighting", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
+        {"MultiLevelDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true},
+        {"MultiLevelPrevDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true},
         {"BackwardMipColorAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
         {"BackwardMipColorAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
         {"BackwardMipDepthAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true},
         {"BackwardMipDepthAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true},
-        {"MipAlphaColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true}};
+        {"MipAlphaColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
+        {"MipAlphaDepth", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 

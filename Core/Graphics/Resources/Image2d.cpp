@@ -208,7 +208,7 @@ void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
     }
 }
 
-void Image2d::Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer) const
+void Image2d::Image2dPipelineBarrierComputeToCompute(const CommandBuffer& commandBuffer, int mipLevel) const
 {
     InsertImageMemoryBarrier(commandBuffer,
                              image,
@@ -220,11 +220,11 @@ void Image2d::Image2dPipelineBarrierComputeToCompute(const CommandBuffer& comman
                              VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             0,
+                             mipLevel,
                              1,
                              0);
 }
-void Image2d::Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer) const
+void Image2d::Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& commandBuffer, int mipLevel) const
 {
     InsertImageMemoryBarrier(commandBuffer,
                              image,
@@ -236,11 +236,11 @@ void Image2d::Image2dPipelineBarrierComputeToGraphic(const CommandBuffer& comman
                              VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             0,
+                             mipLevel,
                              1,
                              0);
 }
-void Image2d::Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer) const
+void Image2d::Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& commandBuffer, int mipLevel) const
 {
     InsertImageMemoryBarrier(commandBuffer,
                              image,
@@ -252,7 +252,7 @@ void Image2d::Image2dPipelineBarrierGraphicToCompute(const CommandBuffer& comman
                              VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             0,
+                             mipLevel,
                              1,
                              0);
 }
