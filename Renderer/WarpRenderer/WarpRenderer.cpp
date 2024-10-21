@@ -5,13 +5,13 @@
 #include "FrustumCullingSubrender.hpp"
 #include "IndirectDrawPrevMV.hpp"
 #include "InterpolationMono/BackwardFindSubrender.hpp"
+#include "InterpolationMono/BackwardMipFindSubrender.hpp"
 #include "InterpolationMono/InterpolationSubrender.hpp"
 #include "InterpolationMono/RadianceFilterSubrender.hpp"
 #include "NonRTAttachmentsHandler.hpp"
 #include "ResolvedSubrender.hpp"
 #include "ShadowSubrender.hpp"
 #include "ToneMapingSubrender.hpp"
-#include "vulkan/vulkan_core.h"
 
 namespace Test {
 
@@ -39,7 +39,14 @@ WarpRenderer::WarpRenderer()
         {"BackwardDepthAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT},
         {"BackwardAccurateAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
         {"BackwardAccurateAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
-        {"RadianceFilterColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT}};
+        {"RadianceFilterColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT},
+        {"MultiLevelLighting", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
+        {"MultiLevelPrevLighting", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
+        {"BackwardMipColorAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
+        {"BackwardMipColorAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true},
+        {"BackwardMipDepthAlpha2Zero", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true},
+        {"BackwardMipDepthAlpha2One", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R32_SFLOAT, VK_FILTER_LINEAR, true},
+        {"MipAlphaColor", NonRTAttachment::Type::Image2d, false, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FILTER_LINEAR, true}};
 
     CreateGlobalAttachmentsHanlder(globalAttachments);
 
@@ -76,7 +83,12 @@ WarpRenderer::WarpRenderer()
     std::vector<SubpassType> InterpolationSubpasses = {{0, {}, {}}, {1, {}, {}}, {2, {}, {}}};
     AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, InterpolationAttachment, InterpolationSubpasses));
 
-    // Render Pass 5 for Present
+    // Render Pass 5 for interpolation
+    std::vector<Attachment>  BackwardFindAttachment{{0, "PlaceHolder_interpolation", Attachment::Type::Image, false, VK_FORMAT_R8G8B8A8_UNORM}};
+    std::vector<SubpassType> BackwardFindSubpasses = {{0, {}, {}}};
+    AddRenderStage(std::make_unique<RenderStage>(RenderStage::Type::MONO, BackwardFindAttachment, BackwardFindSubpasses));
+
+    // Render Pass 6 for Present
     std::vector<Attachment> renderpassAttachments6{{0, "resolved", Attachment::Type::Image, false, VK_FORMAT_R16G16B16A16_SFLOAT},
                                                    {1, "swapchain", Attachment::Type::Swapchain, false}};
 
@@ -94,11 +106,13 @@ void WarpRenderer::Start()
     AddSubrender<DeferredSubrender>({3, 0});
 
     // AddSubrender<MONO_Subrender::InterpolationSubrender>({4, 0});
-    AddSubrender<MONO_Subrender::BackwardFindSubrender>({4, 1});
-    // AddSubrender<MONO_Subrender::RadianceFilterSubrender>({4, 2});
+    AddSubrender<MONO_Subrender::RadianceFilterSubrender>({4, 1});
+    // AddSubrender<MONO_Subrender::BackwardFindSubrender>({4, 2});
 
-    AddSubrender<WarpRenderer_SubRender::ResolvedSubrender>({5, 0});
-    AddSubrender<ToneMapingSubrender>({5, 1});
+    AddSubrender<MONO_Subrender::BackwardMipFindSubrender>({5, 0});
+
+    AddSubrender<WarpRenderer_SubRender::ResolvedSubrender>({6, 0});
+    AddSubrender<ToneMapingSubrender>({6, 1});
 }
 
 void WarpRenderer::Update()

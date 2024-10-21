@@ -126,11 +126,22 @@ void PipelineCompute::CreateNormalDescriptorLayout(uint32_t setIndex, const std:
 
     uint32_t bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size());
 
+    VkDescriptorBindingFlags              flag = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+    std::vector<VkDescriptorBindingFlags> flags(bindingCount, flag);
+
+    VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlags{};
+    bindingFlags.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+    bindingFlags.bindingCount  = bindingCount;
+    bindingFlags.pBindingFlags = flags.data();
+
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
     descriptorSetLayoutCreateInfo.sType                           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descriptorSetLayoutCreateInfo.flags                           = pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR : 0;
-    descriptorSetLayoutCreateInfo.bindingCount                    = bindingCount;
-    descriptorSetLayoutCreateInfo.pBindings                       = descriptorSetLayoutBindings.data();
+    descriptorSetLayoutCreateInfo.flags =
+        pushDescriptors ? VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR | VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+                        : VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+    descriptorSetLayoutCreateInfo.bindingCount = bindingCount;
+    descriptorSetLayoutCreateInfo.pBindings    = descriptorSetLayoutBindings.data();
+    descriptorSetLayoutCreateInfo.pNext        = &bindingFlags;
 
     Graphics::CheckVk(vkCreateDescriptorSetLayout(*logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetNormalLayouts[setIndex]));
 }
@@ -143,10 +154,10 @@ void PipelineCompute::CreateDescriptorPool()
 
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
     descriptorPoolCreateInfo.sType                      = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPoolCreateInfo.flags                      = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    descriptorPoolCreateInfo.maxSets                    = 8192;   // 16384;
-    descriptorPoolCreateInfo.poolSizeCount              = static_cast<uint32_t>(descriptorPools.size());
-    descriptorPoolCreateInfo.pPoolSizes                 = descriptorPools.data();
+    descriptorPoolCreateInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+    descriptorPoolCreateInfo.maxSets       = 8192;   // 16384;
+    descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPools.size());
+    descriptorPoolCreateInfo.pPoolSizes    = descriptorPools.data();
     Graphics::CheckVk(vkCreateDescriptorPool(*logicalDevice, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
 }
 

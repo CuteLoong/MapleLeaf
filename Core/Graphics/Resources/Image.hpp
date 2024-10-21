@@ -35,7 +35,8 @@ public:
     const VkImage&        GetImage() const { return image; }
     const VkDeviceMemory& GetMemory() { return memory; }
     const VkSampler&      GetSampler() const { return sampler; }
-    const VkImageView&    GetView() const { return view; }
+    const VkImageView&    GetView(int mipLevel = 0) const { return view; }
+    const VkImageView&    GetMipView(uint32_t mipLevel) const { return mipViews[mipLevel]; }
 
     static uint32_t            GetMipLevels(const VkExtent3D& extent);
     static uint32_t            FindMemoryType(uint32_t typeFilter, const VkMemoryPropertyFlags& requiredProperties);
@@ -64,6 +65,7 @@ public:
                                   uint32_t baseArrayLayer);
     static bool CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
                           VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer);
+    static bool CopyImage(const CommandBuffer& commandBuffer, const Image& srcImage, const Image& dstImage, int srcMipLevel = 0, int dstMipLevel = 0);
 
 protected:
     VkExtent3D            extent;
@@ -82,5 +84,7 @@ protected:
     VkDeviceMemory memory  = VK_NULL_HANDLE;
     VkSampler      sampler = VK_NULL_HANDLE;
     VkImageView    view    = VK_NULL_HANDLE;
+
+    std::vector<VkImageView> mipViews;
 };
 }   // namespace MapleLeaf

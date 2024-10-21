@@ -23,11 +23,13 @@ public:
     };
 
     NonRTAttachment(std::string name, Type type, bool multisampled = false, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM,
-                    VkFilter filter = VK_FILTER_LINEAR, const Color& clearColour = Color::Black, std::optional<glm::uvec2> fixedSize = std::nullopt)
+                    VkFilter filter = VK_FILTER_LINEAR, bool mipmap = false, const Color& clearColour = Color::Black,
+                    std::optional<glm::uvec2> fixedSize = std::nullopt)
         : name(std::move(name))
         , type(type)
         , multisampled(multisampled)
         , format(format)
+        , mipmap(mipmap)
         , filter(filter)
         , clearColour(clearColour)
         , fixedSize(fixedSize)
@@ -38,6 +40,7 @@ public:
     bool               IsMultisampled() const { return multisampled; }
     VkFormat           GetFormat() const { return format; }
     VkFilter           GetFilter() const { return filter; }
+    bool               IsMipmap() const { return mipmap; }
     const Color&       GetClearColour() const { return clearColour; }
 
 private:
@@ -46,6 +49,7 @@ private:
     bool                      multisampled;
     VkFormat                  format;
     VkFilter                  filter;
+    bool                      mipmap;
     Color                     clearColour;
     std::optional<glm::uvec2> fixedSize;   // swapchain size or fixed size
 };

@@ -189,6 +189,7 @@ void LogicalDevice::CreateLogicalDevice()
     indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
     indexingFeatures.descriptorBindingSampledImageUpdateAfterBind  = VK_TRUE;
+    indexingFeatures.descriptorBindingStorageImageUpdateAfterBind  = VK_TRUE;
 
 #ifdef MAPLELEAF_RAY_TRACING
     indexingFeatures.pNext = &rayTracingPipelineFeature;

@@ -442,7 +442,7 @@ void Graphics::CaptureScreenshot(const std::filesystem::path& filename)
 #endif
 }
 
-void Graphics::CaptureImage2d(const std::filesystem::path filename, const Image2d* image)
+void Graphics::CaptureImage2d(const std::filesystem::path filename, const Image2d* image, int mipLevel)
 {
     VkImage        dstImage;
     VkDeviceMemory dstImageMemory;

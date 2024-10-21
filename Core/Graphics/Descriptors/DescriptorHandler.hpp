@@ -2,6 +2,7 @@
 
 #include "Descriptor.hpp"
 #include "DescriptorSets.hpp"
+#include "Image.hpp"
 #include "IndirectHandler.hpp"
 #include "PushHandler.hpp"
 #include "Shader.hpp"
@@ -131,6 +132,8 @@ public:
               const std::optional<OffsetSize>& offsetSize = std::nullopt);
     void Push(const std::string& descriptorName, PushHandler& pushHandler, const std::optional<uint32_t> descriptorArrayIndex = std::nullopt,
               const std::optional<OffsetSize>& offsetSize = std::nullopt);
+    void Push(const std::string& descriptorName, const Image* MipmapImage, const std::optional<uint32_t> mipLevel,
+              const std::optional<uint32_t> descriptorArrayIndex = std::nullopt, const std::optional<OffsetSize>& offsetSize = std::nullopt);
 
     bool Update(const Pipeline& pipeline);
 

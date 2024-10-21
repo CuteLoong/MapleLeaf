@@ -47,7 +47,7 @@ Image2d::Image2d(std::unique_ptr<Bitmap>&& bitmap, VkFormat format, VkImageLayou
     Image2d::Load(std::move(bitmap));
 }
 
-void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d, int mipLevel) const
+void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& image2d, int dstMipLevel) const
 {
     // Transition destination image to transfer destination layout.
     InsertImageMemoryBarrier(commandBuffer,
@@ -60,7 +60,7 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
                              VK_PIPELINE_STAGE_TRANSFER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             mipLevel,
+                             dstMipLevel,
                              1,
                              0);
 
@@ -88,7 +88,7 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
     imageCopyRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
     imageCopyRegion.dstSubresource.baseArrayLayer = 0;
     imageCopyRegion.dstSubresource.layerCount     = arrayLayers;
-    imageCopyRegion.dstSubresource.mipLevel       = mipLevel;
+    imageCopyRegion.dstSubresource.mipLevel       = dstMipLevel;
     imageCopyRegion.dstOffset                     = {0, 0, 0};
     imageCopyRegion.extent.width                  = std::min(extent.width, image2d.extent.width);
     imageCopyRegion.extent.height                 = std::min(extent.height, image2d.extent.height);
@@ -113,7 +113,7 @@ void Image2d::CopyImage2d(const CommandBuffer& commandBuffer, const Image2d& ima
                              VK_PIPELINE_STAGE_TRANSFER_BIT,
                              VK_IMAGE_ASPECT_COLOR_BIT,
                              1,
-                             mipLevel,
+                             dstMipLevel,
                              1,
                              0);
 
@@ -173,6 +173,12 @@ void Image2d::Load(std::unique_ptr<Bitmap> loadBitmap)
                 VK_IMAGE_TYPE_2D);
     CreateImageSampler(sampler, filter, addressMode, anisotropic, mipLevels);
     CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
+
+    if (mipLevels >= 1) {
+        mipViews.resize(mipLevels, VK_NULL_HANDLE);
+        for (uint32_t i = 0; i < mipLevels; i++)
+            CreateImageView(image, mipViews[i], VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_COLOR_BIT, 1, i, arrayLayers, 0);
+    }
 
     if (loadBitmap || mipmap) {
         TransitionImageLayout(

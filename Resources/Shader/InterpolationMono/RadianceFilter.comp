@@ -18,7 +18,7 @@ layout(push_constant) uniform PushObject {
 layout(set=0, binding=1) uniform sampler2D radianceBuffer;
 
 layout(set=0, binding=3) writeonly uniform image2D RadianceFilterColor;
-// layout(set=0, binding=4, r32f) writeonly uniform image2D DepthFilter;
+// layout(set=0, binding=4) writeonly uniform image2D DepthFilter;
 
 void main()
 {
@@ -52,12 +52,13 @@ void main()
 
     // imageStore(DepthFilter, thisLevelTexelCoord, vec4(totalDepth / 4.0f));
 
-    bool shouldIncludeExtraColumnFromPreviousLevel = ((object.previousLevelDimensions.x & 1) != 0);
-    bool shouldIncludeExtraRowFromPreviousLevel = ((object.previousLevelDimensions.y & 1) != 0);
+    // bool shouldIncludeExtraColumnFromPreviousLevel = ((object.previousLevelDimensions.x & 1) != 0);
+    // bool shouldIncludeExtraRowFromPreviousLevel = ((object.previousLevelDimensions.y & 1) != 0);
 
-    if (shouldIncludeExtraColumnFromPreviousLevel) {
+    // if (shouldIncludeExtraColumnFromPreviousLevel) {
         
-    }
+    // }
 
     imageStore(RadianceFilterColor, thisLevelTexelCoord, vec4(totalRadiance / 4.0f, 1.0f));
+    // imageStore(DepthFilter, thisLevelTexelCoord, vec4(totalDepth / 4.0f));
 }

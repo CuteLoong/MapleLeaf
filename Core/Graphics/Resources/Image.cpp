@@ -26,6 +26,7 @@ Image::~Image()
     Graphics::CheckVk(vkQueueWaitIdle(computeQueue));
 
     vkDestroyImageView(*logicalDevice, view, nullptr);
+    for (auto mipView : mipViews) vkDestroyImageView(*logicalDevice, mipView, nullptr);
     vkDestroySampler(*logicalDevice, sampler, nullptr);
     vkFreeMemory(*logicalDevice, memory, nullptr);
     vkDestroyImage(*logicalDevice, image, nullptr);
@@ -35,7 +36,7 @@ WriteDescriptorSet Image::GetWriteDescriptor(uint32_t binding, VkDescriptorType 
 {
     VkDescriptorImageInfo imageInfo = {};
     imageInfo.sampler               = sampler;
-    imageInfo.imageView             = view;
+    imageInfo.imageView             = view;   // get miplevel 0 as initial value.
     imageInfo.imageLayout           = layout;
 
     VkWriteDescriptorSet descriptorWrite = {};
@@ -527,5 +528,99 @@ bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory
     commandBuffer.SubmitIdle();
 
     return supportsBlit;
+}
+
+bool Image::CopyImage(const CommandBuffer& commandBuffer, const Image& srcImage, const Image& dstImage, int srcMipLevel, int dstMipLevel)
+{
+    // arraylayer transitory is not supported.
+    glm::uvec2 srcExtent = {srcImage.extent.width, srcImage.extent.height};
+    glm::uvec2 dstExtent = {dstImage.extent.width, dstImage.extent.height};
+
+    if (srcExtent != dstExtent) return false;
+
+    // Transition destination image to transfer destination layout.
+    InsertImageMemoryBarrier(commandBuffer,
+                             dstImage.image,
+                             0,
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+                             dstImage.layout,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             dstMipLevel,
+                             1,
+                             0);
+
+    // Transition image from previous usage to transfer source layout
+    InsertImageMemoryBarrier(commandBuffer,
+                             srcImage.image,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_ACCESS_TRANSFER_READ_BIT,
+                             srcImage.layout,
+                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             srcMipLevel,
+                             1,
+                             0);
+
+    VkImageCopy imageCopyRegion{};
+    imageCopyRegion.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopyRegion.srcSubresource.baseArrayLayer = 0;
+    imageCopyRegion.srcSubresource.layerCount     = srcImage.arrayLayers;
+    imageCopyRegion.srcSubresource.mipLevel       = srcMipLevel;
+    imageCopyRegion.srcOffset                     = {0, 0, 0};
+    imageCopyRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopyRegion.dstSubresource.baseArrayLayer = 0;
+    imageCopyRegion.dstSubresource.layerCount     = dstImage.arrayLayers;
+    imageCopyRegion.dstSubresource.mipLevel       = dstMipLevel;
+    imageCopyRegion.dstOffset                     = {0, 0, 0};
+    imageCopyRegion.extent.width                  = srcExtent.x >> srcMipLevel;
+    imageCopyRegion.extent.height                 = srcExtent.y >> srcMipLevel;
+    imageCopyRegion.extent.depth                  = 1;
+
+    vkCmdCopyImage(commandBuffer.GetCommandBuffer(),
+                   srcImage.image,
+                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                   dstImage.image,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   1,
+                   &imageCopyRegion);
+
+    // Transition destination image to general layout, which is the required layout for mapping the image memory later on.
+    InsertImageMemoryBarrier(commandBuffer,
+                             dstImage.image,
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             dstImage.layout,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             dstMipLevel,
+                             1,
+                             0);
+
+    // Transition back the image after the blit is done.
+    InsertImageMemoryBarrier(commandBuffer,
+                             srcImage.image,
+                             VK_ACCESS_TRANSFER_READ_BIT,
+                             VK_ACCESS_MEMORY_READ_BIT,
+                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                             srcImage.layout,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_IMAGE_ASPECT_COLOR_BIT,
+                             1,
+                             srcMipLevel,
+                             1,
+                             0);
+
+    return true;
 }
 }   // namespace MapleLeaf

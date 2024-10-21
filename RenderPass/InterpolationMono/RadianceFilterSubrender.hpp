@@ -27,7 +27,7 @@ private:
 
     uint32_t frameID = 0;
 
-    std::unique_ptr<Image2d>              filteredRadiance;
+    // std::unique_ptr<Image2d>              filteredRadiance;
     std::vector<std::unique_ptr<Image2d>> mipImage;
 };
 }   // namespace MONO_Subrender
